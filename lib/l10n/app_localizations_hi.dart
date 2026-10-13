@@ -914,6 +914,16 @@ class AppLocalizationsHi extends AppLocalizations {
       'नाउ प्लेइंग स्क्रीन पर ऑडियो क्वालिटी जानकारी बैज दिखाएं';
 
   @override
+  String get showPlaylistsRow => 'प्लेलिस्ट पंक्ति दिखाएँ';
+
+  @override
+  String get showPlaylistsRowDesc =>
+      'होम स्क्रीन पर प्लेलिस्ट की क्षैतिज सूची दिखाएँ';
+
+  @override
+  String get playlistsRowDesc => 'आपकी प्लेलिस्ट, सबसे हाल में चलाई गई पहले';
+
+  @override
   String get showRecentRow => 'हाल ही में चलाए गए पंक्ति दिखाएं';
 
   @override

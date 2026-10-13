@@ -1784,6 +1784,24 @@ abstract class AppLocalizations {
   /// **'Display audio quality information badge on the now playing screen'**
   String get showQualityBadgeDesc;
 
+  /// No description provided for @showPlaylistsRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Show Playlists Row'**
+  String get showPlaylistsRow;
+
+  /// No description provided for @showPlaylistsRowDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Display a horizontal list of playlists on your Home screen'**
+  String get showPlaylistsRowDesc;
+
+  /// No description provided for @playlistsRowDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Your playlists, most recently played first'**
+  String get playlistsRowDesc;
+
   /// No description provided for @showRecentRow.
   ///
   /// In en, this message translates to:

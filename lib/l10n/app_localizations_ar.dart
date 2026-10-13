@@ -904,6 +904,16 @@ class AppLocalizationsAr extends AppLocalizations {
       'عرض شارة معلومات جودة الصوت على شاشة التشغيل الآن';
 
   @override
+  String get showPlaylistsRow => 'إظهار صف قوائم التشغيل';
+
+  @override
+  String get showPlaylistsRowDesc =>
+      'عرض قائمة أفقية لقوائم التشغيل على الشاشة الرئيسية';
+
+  @override
+  String get playlistsRowDesc => 'قوائم التشغيل، الأحدث تشغيلًا أولًا';
+
+  @override
   String get showRecentRow => 'إظهار صف الأغاني المشغلة مؤخرًا';
 
   @override

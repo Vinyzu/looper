@@ -12,6 +12,7 @@ import 'package:looper_player/core/utils/responsive.dart';
 import 'package:looper_player/features/library/presentation/providers/library/library_notifier.dart';
 import 'package:looper_player/features/library/presentation/widgets/songs/songs_list.dart';
 import 'package:looper_player/features/playback/presentation/providers/playback/playback_notifier.dart';
+import 'package:looper_player/features/playlists/presentation/screens/playlist_view.dart';
 import 'package:looper_player/features/settings/presentation/providers/settings_notifier.dart';
 import 'package:looper_player/l10n/app_localizations.dart';
 import 'package:looper_player/ui/widgets/common/app_refresh_indicator.dart';
@@ -87,6 +88,7 @@ class _AndroidHomeTabState extends ConsumerState<AndroidHomeTab> {
       showHomeAlbums,
       showHomeGenres,
       showHomeRecent,
+      showHomePlaylists,
     ) = ref.watch(
       settingsProvider.select(
         (s) => (
@@ -100,10 +102,12 @@ class _AndroidHomeTabState extends ConsumerState<AndroidHomeTab> {
           s.showHomeAlbums,
           s.showHomeGenres,
           s.showHomeRecent,
+          s.showHomePlaylists ?? true,
         ),
       ),
     );
     final recentSongs = ref.watch(dashboardRecentlyPlayedProvider).value ?? [];
+    final playlists = ref.watch(dashboardPlaylistsProvider).value ?? [];
 
     final albumSort =
         AlbumSortOption.values[albumSortOptionIndex.clamp(
@@ -669,6 +673,29 @@ class _AndroidHomeTabState extends ConsumerState<AndroidHomeTab> {
         orderedSlivers.add(
           const SliverToBoxAdapter(child: SizedBox(height: 16)),
         );
+      } else if (section == 'playlists') {
+        if (showHomePlaylists && playlists.isNotEmpty) {
+          orderedSlivers.add(
+            _buildHorizontalSection(
+              title: l10n.playlists,
+              actionText: l10n.viewAll,
+              onActionTap: () {
+                AppHaptics.medium();
+                ref
+                    .read(appNavigationProvider.notifier)
+                    .setItem(NavItem.playlists);
+              },
+              itemCount: playlists.length,
+              itemBuilder: (context, index) => Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                child: SizedBox(
+                  width: 120,
+                  child: PlaylistCard(playlist: playlists[index]),
+                ),
+              ),
+            ),
+          );
+        }
       } else if (section == 'artists') {
         if (showHomeArtists && artists.isNotEmpty) {
           orderedSlivers.add(

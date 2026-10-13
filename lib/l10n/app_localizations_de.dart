@@ -917,6 +917,16 @@ class AppLocalizationsDe extends AppLocalizations {
       'Zeigen Sie das Informationssymbol zur Audioqualität auf dem Bildschirm der aktuellen Wiedergabe an';
 
   @override
+  String get showPlaylistsRow => 'Playlist-Zeile anzeigen';
+
+  @override
+  String get showPlaylistsRowDesc =>
+      'Zeigen Sie eine horizontale Liste der Playlists auf Ihrem Startbildschirm an';
+
+  @override
+  String get playlistsRowDesc => 'Ihre Playlists, zuletzt gespielte zuerst';
+
+  @override
   String get showRecentRow => 'Zuletzt-gespielt-Zeile anzeigen';
 
   @override

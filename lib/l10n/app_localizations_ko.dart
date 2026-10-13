@@ -868,6 +868,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String get showQualityBadgeDesc => '현재 재생 중인 화면에 오디오 품질 정보 배지 표시';
 
   @override
+  String get showPlaylistsRow => '재생목록 행 표시';
+
+  @override
+  String get showPlaylistsRowDesc => '홈 화면에 재생목록을 가로 목록으로 표시합니다';
+
+  @override
+  String get playlistsRowDesc => '최근 재생한 재생목록부터 표시';
+
+  @override
   String get showRecentRow => '최근 플레이 행 표시';
 
   @override

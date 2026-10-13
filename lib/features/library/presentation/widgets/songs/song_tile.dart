@@ -119,9 +119,15 @@ class SongTile extends ConsumerWidget {
           if (index != -1) {
             ref
                 .read(playbackProvider.notifier)
-                .setPlaylist(songs, initialIndex: index);
+                .setPlaylist(
+                  songs,
+                  initialIndex: index,
+                  sourcePlaylistId: playlist?.id,
+                );
           } else {
-            ref.read(playbackProvider.notifier).play(song);
+            ref
+                .read(playbackProvider.notifier)
+                .play(song, sourcePlaylistId: playlist?.id);
           }
         },
         // A long-press on any row starts a selection (with that row already

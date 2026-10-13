@@ -923,6 +923,17 @@ class AppLocalizationsEs extends AppLocalizations {
       'Mostrar una insignia con la información de calidad de audio en la pantalla de reproducción';
 
   @override
+  String get showPlaylistsRow => 'Mostrar fila de listas de reproducción';
+
+  @override
+  String get showPlaylistsRowDesc =>
+      'Mostrar una lista horizontal de listas de reproducción en la pantalla de inicio';
+
+  @override
+  String get playlistsRowDesc =>
+      'Tus listas de reproducción, las reproducidas más recientemente primero';
+
+  @override
   String get showRecentRow => 'Mostrar fila de reproducidos recientemente';
 
   @override

@@ -908,6 +908,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'Display audio quality information badge on the now playing screen';
 
   @override
+  String get showPlaylistsRow => 'Show Playlists Row';
+
+  @override
+  String get showPlaylistsRowDesc =>
+      'Display a horizontal list of playlists on your Home screen';
+
+  @override
+  String get playlistsRowDesc => 'Your playlists, most recently played first';
+
+  @override
   String get showRecentRow => 'Show Recent Row';
 
   @override

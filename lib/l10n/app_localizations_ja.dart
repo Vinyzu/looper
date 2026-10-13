@@ -865,6 +865,15 @@ class AppLocalizationsJa extends AppLocalizations {
   String get showQualityBadgeDesc => '再生中の画面に音質情報バッジを表示します';
 
   @override
+  String get showPlaylistsRow => 'プレイリストの行を表示';
+
+  @override
+  String get showPlaylistsRowDesc => 'ホーム画面にプレイリストを横並びで表示します';
+
+  @override
+  String get playlistsRowDesc => '最近再生したプレイリストから表示';
+
+  @override
   String get showRecentRow => '最近のプレイ行を表示';
 
   @override

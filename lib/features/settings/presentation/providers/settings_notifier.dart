@@ -154,6 +154,7 @@ class Settings extends _$Settings {
       if (settings.homeSectionOrder.isEmpty) {
         settings.homeSectionOrder = [
           'quick_picks',
+          'playlists',
           'songs',
           'albums',
           'artists',
@@ -165,6 +166,10 @@ class Settings extends _$Settings {
         // Migration: append the newly added Recent section to existing
         // custom orderings instead of resetting the user's preference.
         settings.homeSectionOrder = [...settings.homeSectionOrder, 'recent'];
+        needsSave = true;
+      }
+      if (!settings.homeSectionOrder.contains('playlists')) {
+        settings.homeSectionOrder = [...settings.homeSectionOrder, 'playlists'];
         needsSave = true;
       }
       if (settings.globalEqualizerGains.length < 48) {
@@ -191,8 +196,10 @@ class Settings extends _$Settings {
         ..showHomeAlbums = false
         ..showHomeGenres = true
         ..showHomeRecent = true
+        ..showHomePlaylists = true
         ..homeSectionOrder = [
           'quick_picks',
+          'playlists',
           'songs',
           'albums',
           'artists',
@@ -338,9 +345,18 @@ class Settings extends _$Settings {
       ..showHomeAlbums = s.showHomeAlbums
       ..showHomeGenres = s.showHomeGenres
       ..showHomeRecent = s.showHomeRecent
+      ..showHomePlaylists = s.showHomePlaylists
       ..homeSectionOrder = List.from(
         s.homeSectionOrder.isEmpty
-            ? ['quick_picks', 'songs', 'albums', 'artists', 'genres', 'recent']
+            ? [
+                'quick_picks',
+                'playlists',
+                'songs',
+                'albums',
+                'artists',
+                'genres',
+                'recent',
+              ]
             : s.homeSectionOrder,
       )
       ..enableSlideGesture = s.enableSlideGesture
@@ -544,6 +560,9 @@ class Settings extends _$Settings {
 
   Future<void> updateShowHomeRecent(bool value) =>
       _update((s) => s..showHomeRecent = value);
+
+  Future<void> updateShowHomePlaylists(bool value) =>
+      _update((s) => s..showHomePlaylists = value);
 
   Future<void> updateDisableSquiggle(bool disabled) =>
       _update((s) => s..disableSquiggle = disabled);

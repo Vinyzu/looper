@@ -919,6 +919,16 @@ class AppLocalizationsNl extends AppLocalizations {
       'Geef de informatiebadge voor de audiokwaliteit weer op het scherm dat nu wordt afgespeeld';
 
   @override
+  String get showPlaylistsRow => 'Afspeellijstenrij tonen';
+
+  @override
+  String get showPlaylistsRowDesc =>
+      'Toon een horizontale lijst met afspeellijsten op je startscherm';
+
+  @override
+  String get playlistsRowDesc => 'Je afspeellijsten, laatst afgespeeld eerst';
+
+  @override
   String get showRecentRow => 'Toon rij Recent gespeeld';
 
   @override

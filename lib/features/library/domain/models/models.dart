@@ -133,6 +133,7 @@ class Playlist {
   late List<String> songPaths;
   late DateTime dateCreated;
   late DateTime dateModified;
+  DateTime? lastPlayed;
 }
 
 @collection
@@ -234,8 +235,11 @@ class AppSettings {
   bool showHomeAlbums = false;
   bool showHomeGenres = true;
   bool showHomeRecent = true;
+  // Null enables the new row for libraries created before this setting existed.
+  bool? showHomePlaylists;
   List<String> homeSectionOrder = [
     'quick_picks',
+    'playlists',
     'songs',
     'albums',
     'artists',

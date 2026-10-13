@@ -144,6 +144,8 @@ class SettingsCategoryScreen extends ConsumerWidget {
         const Divider(height: 1, indent: 72, color: Colors.white10),
         const ShowRecentRowTile(),
         const Divider(height: 1, indent: 72, color: Colors.white10),
+        const ShowPlaylistsRowTile(),
+        const Divider(height: 1, indent: 72, color: Colors.white10),
         const ReorderDashboardSectionsTile(),
       ];
     } else if (categoryId == 'playback') {
