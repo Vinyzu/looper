@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:looper_player/core/utils/ui_utils.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:looper_player/features/settings/presentation/providers/settings_notifier.dart';
+import 'package:looper_player/features/playlists/presentation/widgets/playlist_artwork.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:looper_player/features/playback/presentation/providers/playback/playback_notifier.dart';
 import 'package:looper_player/core/providers/navigation_provider.dart';
@@ -205,20 +205,7 @@ class _PlaylistCard extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                color: Theme.of(context).colorScheme.primaryContainer
-                    .withValues(
-                      alpha: ref.watch(settingsProvider).enableDynamicTheming
-                          ? 0.8
-                          : 0.3,
-                    ),
-              ),
-              child: const Center(child: Icon(LucideIcons.listMusic, size: 48)),
-            ),
-          ),
+          Expanded(child: PlaylistArtwork(songPaths: playlist.songPaths)),
           const SizedBox(height: 8),
           Text(
             playlist.name,
