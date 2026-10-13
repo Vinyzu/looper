@@ -391,7 +391,7 @@ class _DesktopSongRowState extends ConsumerState<_DesktopSongRow> {
             children: [
               if (widget.playlist != null) ...[
                 SizedBox(
-                  width: 24,
+                  width: 20,
                   child: FittedBox(
                     fit: BoxFit.scaleDown,
                     alignment: Alignment.center,
@@ -400,12 +400,12 @@ class _DesktopSongRowState extends ConsumerState<_DesktopSongRow> {
                       maxLines: 1,
                       style: AppFonts.jostStyle(
                         color: Colors.white.withValues(alpha: 0.45),
-                        fontSize: 12,
+                        fontSize: 11,
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 4),
               ],
               ClipRRect(
                 borderRadius: BorderRadius.circular(4),

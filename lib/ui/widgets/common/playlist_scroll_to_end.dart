@@ -38,13 +38,16 @@ class _PlaylistScrollToEndState extends State<PlaylistScrollToEnd> {
     if (notification is ScrollUpdateNotification) {
       final metrics = notification.metrics;
       _visible.value =
+          (notification.scrollDelta ?? 0) > 0 &&
           metrics.pixels > 0 &&
           metrics.maxScrollExtent - metrics.pixels > metrics.viewportDimension;
       _hideTimer?.cancel();
-      _hideTimer = Timer(
-        const Duration(milliseconds: 1400),
-        () => _visible.value = false,
-      );
+      if (_visible.value) {
+        _hideTimer = Timer(
+          const Duration(milliseconds: 1400),
+          () => _visible.value = false,
+        );
+      }
     }
     return false;
   }
