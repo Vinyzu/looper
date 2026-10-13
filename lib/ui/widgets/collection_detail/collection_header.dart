@@ -1,8 +1,20 @@
 part of 'collection_detail_view.dart';
 
 extension _CollectionHeader on CollectionDetailView {
-  Widget _buildArt(BuildContext context, bool isNarrow, String? artOverride) {
+  Widget _buildArt(
+    BuildContext context,
+    bool isNarrow,
+    String? artOverride, {
+    Playlist? playlist,
+  }) {
     final double size = 140; // Unified size for a cleaner Row look
+    if (playlist != null) {
+      return PlaylistArtwork(
+        songPaths: playlist.songPaths,
+        size: size,
+        borderRadius: BorderRadius.circular(16),
+      );
+    }
     return OptimizedImage(
       imagePath: artOverride,
       imageUrl: imageUrl,

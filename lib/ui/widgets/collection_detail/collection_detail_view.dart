@@ -10,6 +10,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:looper_player/features/library/presentation/widgets/songs/songs_list.dart';
 import 'package:looper_player/features/playback/presentation/providers/playback/playback_notifier.dart';
 import 'package:looper_player/features/playlists/presentation/screens/playlist_view.dart';
+import 'package:looper_player/features/playlists/presentation/widgets/playlist_artwork.dart';
 import 'package:looper_player/features/playlists/data/services/playlist_service.dart';
 import 'package:looper_player/core/services/storage/db_service.dart';
 import 'package:looper_player/core/providers/navigation_provider.dart';
@@ -236,6 +237,7 @@ class CollectionDetailView extends ConsumerWidget {
                                       context,
                                       true,
                                       artToRender,
+                                      playlist: reactivePlaylist,
                                     ),
                                   ),
                                   const SizedBox(height: 20),
@@ -255,7 +257,12 @@ class CollectionDetailView extends ConsumerWidget {
                             : Row(
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  _buildArt(context, true, artToRender),
+                                  _buildArt(
+                                    context,
+                                    true,
+                                    artToRender,
+                                    playlist: reactivePlaylist,
+                                  ),
                                   const SizedBox(width: 20),
                                   Expanded(
                                     child: _buildInfo(

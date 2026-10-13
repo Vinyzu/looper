@@ -51,24 +51,31 @@ extension _DesktopCollection on CollectionDetailView {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      OptimizedImage(
-                        imagePath: art,
-                        imageUrl: imageUrl,
-                        width: 140,
-                        height: 140,
-                        borderRadius: BorderRadius.circular(6),
-                        placeholder: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.05),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: const Icon(
-                            LucideIcons.music,
-                            size: 48,
-                            color: Colors.grey,
+                      if (reactivePlaylist != null)
+                        PlaylistArtwork(
+                          songPaths: reactivePlaylist.songPaths,
+                          size: 140,
+                          borderRadius: BorderRadius.circular(6),
+                        )
+                      else
+                        OptimizedImage(
+                          imagePath: art,
+                          imageUrl: imageUrl,
+                          width: 140,
+                          height: 140,
+                          borderRadius: BorderRadius.circular(6),
+                          placeholder: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.05),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: const Icon(
+                              LucideIcons.music,
+                              size: 48,
+                              color: Colors.grey,
+                            ),
                           ),
                         ),
-                      ),
                       const SizedBox(width: 22),
                       Expanded(
                         child: Column(
