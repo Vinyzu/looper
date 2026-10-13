@@ -137,8 +137,8 @@ class SongTile extends ConsumerWidget {
         // there's nowhere else in this list a batch action could live.
         onLongPress: selectionMode ? null : onEnterSelection,
         child: ListTile(
-          contentPadding: const EdgeInsets.only(
-            left: 16,
+          contentPadding: EdgeInsets.only(
+            left: playlistIndex != null ? 8 : 16,
             right: 4,
             top: 0,
             bottom: 0,
@@ -162,7 +162,7 @@ class SongTile extends ConsumerWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: 4),
+                const SizedBox(width: 12),
               ],
               ClipRRect(
                 borderRadius: BorderRadius.circular(4),

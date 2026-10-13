@@ -29,7 +29,7 @@ class PlaylistFavoriteButton extends ConsumerWidget {
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
       ),
       icon: Icon(
-        LucideIcons.star300,
+        LucideIcons.star,
         size: 16,
         color: favorite
             ? Theme.of(context).colorScheme.primary

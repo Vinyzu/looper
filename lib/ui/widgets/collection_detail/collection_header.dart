@@ -116,6 +116,9 @@ extension _CollectionHeader on CollectionDetailView {
               width: 44,
               height: 44,
               useExpanded: false,
+              backgroundColor: isShuffle
+                  ? Colors.white.withValues(alpha: 0.10)
+                  : null,
               onTap: () {
                 AppHaptics.light();
                 ref
@@ -129,8 +132,8 @@ extension _CollectionHeader on CollectionDetailView {
                   LucideIcons.shuffle,
                   size: 16,
                   color: isShuffle
-                      ? Theme.of(context).colorScheme.primary
-                      : Colors.white,
+                      ? Colors.white
+                      : Colors.white.withValues(alpha: 0.5),
                 ),
               ),
             ),

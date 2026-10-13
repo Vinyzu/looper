@@ -149,8 +149,11 @@ extension _DesktopCollection on CollectionDetailView {
                                   _DesktopPill.icon(
                                     icon: LucideIcons.shuffle,
                                     iconColor: isShuffle
-                                        ? Theme.of(context).colorScheme.primary
-                                        : Colors.white,
+                                        ? Colors.white
+                                        : Colors.white.withValues(alpha: 0.5),
+                                    backgroundColor: isShuffle
+                                        ? Colors.white.withValues(alpha: 0.10)
+                                        : null,
                                     tooltip: l10n.shuffleTitle,
                                     onTap: () {
                                       ref
@@ -263,14 +266,17 @@ class _DesktopPill extends StatelessWidget {
   final VoidCallback? onTap;
   final String? tooltip;
   final bool circle;
+  final Color? backgroundColor;
 
   const _DesktopPill({required this.child, this.onTap})
     : tooltip = null,
-      circle = false;
+      circle = false,
+      backgroundColor = null;
 
   _DesktopPill.icon({
     required IconData icon,
     Color iconColor = Colors.white,
+    this.backgroundColor,
     this.onTap,
     this.tooltip,
   }) : child = Icon(icon, size: 15, color: iconColor),
@@ -279,7 +285,7 @@ class _DesktopPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final pill = Material(
-      color: _DesktopCollection._pillColor,
+      color: backgroundColor ?? _DesktopCollection._pillColor,
       shape: const StadiumBorder(),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -380,7 +386,10 @@ class _DesktopSongRowState extends ConsumerState<_DesktopSongRow> {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 120),
           height: 56,
-          padding: const EdgeInsets.only(left: 8, right: 12),
+          padding: EdgeInsets.only(
+            left: widget.playlist != null ? 0 : 8,
+            right: 12,
+          ),
           decoration: BoxDecoration(
             color: lit
                 ? Colors.white.withValues(alpha: 0.04)
@@ -405,7 +414,7 @@ class _DesktopSongRowState extends ConsumerState<_DesktopSongRow> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 4),
+                const SizedBox(width: 12),
               ],
               ClipRRect(
                 borderRadius: BorderRadius.circular(4),
