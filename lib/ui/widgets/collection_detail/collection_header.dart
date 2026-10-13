@@ -42,6 +42,11 @@ extension _CollectionHeader on CollectionDetailView {
     String? subtitleToRender,
     List<Song> songsToRender,
   ) {
+    final l10n = AppLocalizations.of(context)!;
+    final isShuffle = ref.watch(playbackProvider.select((s) => s.isShuffle));
+    final subtitle = reactivePlaylist != null
+        ? _playlistSubtitle(songsToRender, l10n)
+        : subtitleToRender;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -55,10 +60,10 @@ extension _CollectionHeader on CollectionDetailView {
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),
-        if (subtitleToRender != null) ...[
+        if (subtitle != null) ...[
           const SizedBox(height: 4),
           Text(
-            subtitleToRender,
+            subtitle,
             style: AppFonts.jostStyle(
               fontSize: 16,
               color: Colors.white.withValues(alpha: 0.5),
@@ -78,7 +83,12 @@ extension _CollectionHeader on CollectionDetailView {
               useExpanded: false,
               onTap: () {
                 AppHaptics.medium();
-                ref.read(playbackProvider.notifier).setPlaylist(songsToRender);
+                final playback = ref.read(playbackProvider.notifier);
+                if (reactivePlaylist != null) {
+                  playback.playCollection(songsToRender);
+                } else {
+                  playback.setPlaylist(songsToRender);
+                }
               },
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -90,7 +100,7 @@ extension _CollectionHeader on CollectionDetailView {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    AppLocalizations.of(context)!.playAll,
+                    reactivePlaylist != null ? l10n.play : l10n.playAll,
                     style: AppFonts.jostStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
@@ -108,13 +118,20 @@ extension _CollectionHeader on CollectionDetailView {
               useExpanded: false,
               onTap: () {
                 AppHaptics.light();
-                ref.read(playbackProvider.notifier).toggleShuffle();
-                ref.read(playbackProvider.notifier).setPlaylist(songsToRender);
+                ref
+                    .read(playbackProvider.notifier)
+                    .toggleCollectionShuffle(songsToRender);
               },
-              child: const Icon(
-                LucideIcons.shuffle,
-                size: 16,
-                color: Colors.white,
+              child: Semantics(
+                label: l10n.shuffleTitle,
+                toggled: isShuffle,
+                child: Icon(
+                  LucideIcons.shuffle,
+                  size: 16,
+                  color: isShuffle
+                      ? Theme.of(context).colorScheme.primary
+                      : Colors.white,
+                ),
               ),
             ),
             const SizedBox(width: 8),

@@ -602,6 +602,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get plainTimestamps => 'Carimbos de data e hora simples';
 
   @override
+  String get scrollToEnd => 'Ir ao final';
+
+  @override
   String get play => 'Jogar';
 
   @override

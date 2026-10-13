@@ -568,6 +568,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get plainTimestamps => '일반 타임스탬프';
 
   @override
+  String get scrollToEnd => '끝으로 스크롤';
+
+  @override
   String get play => '플레이';
 
   @override

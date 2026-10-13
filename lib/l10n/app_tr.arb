@@ -181,6 +181,7 @@
   "permanentFocusChangePause": "Kalıcı Odak Kaybında Duraklat",
   "permanentFocusChangePauseDesc": "Kalıcı ses odağı kaybında otomatik olarak çalmayı duraklat",
   "plainTimestamps": "Düz Zaman Damgaları",
+  "scrollToEnd": "Sona kaydır",
   "play": "Oyna",
   "playAll": "Hepsini Çal",
   "playbackAudio": "Oynatma ve Dil",

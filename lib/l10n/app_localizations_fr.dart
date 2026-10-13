@@ -607,6 +607,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get plainTimestamps => 'Horodatages simples';
 
   @override
+  String get scrollToEnd => 'Aller à la fin';
+
+  @override
   String get play => 'Lire';
 
   @override

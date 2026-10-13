@@ -598,6 +598,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get plainTimestamps => 'Plain Timestamps';
 
   @override
+  String get scrollToEnd => 'Scroll to end';
+
+  @override
   String get play => 'Play';
 
   @override

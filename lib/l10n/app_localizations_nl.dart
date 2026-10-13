@@ -607,6 +607,9 @@ class AppLocalizationsNl extends AppLocalizations {
   String get plainTimestamps => 'Duidelijke tijdstempels';
 
   @override
+  String get scrollToEnd => 'Naar het einde scrollen';
+
+  @override
   String get play => 'Spelen';
 
   @override

@@ -194,6 +194,7 @@
   "permanentFocusChangePause": "Permanent Focus Change Pause",
   "permanentFocusChangePauseDesc": "Pause playing automatically on permanent audio focus loss",
   "plainTimestamps": "Plain Timestamps",
+  "scrollToEnd": "Scroll to end",
   "play": "Play",
   "playAll": "Play All",
   "playbackAudio": "Playback & Language",

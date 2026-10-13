@@ -181,6 +181,7 @@
   "permanentFocusChangePause": "영구 포커스 상실 시 일시정지",
   "permanentFocusChangePauseDesc": "오디오 포커스를 영구적으로 잃으면 자동으로 재생을 일시정지합니다",
   "plainTimestamps": "일반 타임스탬프",
+  "scrollToEnd": "끝으로 스크롤",
   "play": "플레이",
   "playAll": "전체 재생",
   "playbackAudio": "재생 및 언어",

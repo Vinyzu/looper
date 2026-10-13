@@ -608,6 +608,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get plainTimestamps => 'Marcas de tiempo simples';
 
   @override
+  String get scrollToEnd => 'Ir al final';
+
+  @override
   String get play => 'Reproducir';
 
   @override

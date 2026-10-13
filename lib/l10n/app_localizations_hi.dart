@@ -600,6 +600,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get plainTimestamps => 'सादा टाइमस्टैम्प';
 
   @override
+  String get scrollToEnd => 'अंत तक स्क्रॉल करें';
+
+  @override
   String get play => 'चलाएं';
 
   @override

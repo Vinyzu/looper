@@ -181,6 +181,7 @@
   "permanentFocusChangePause": "永久失去焦点时暂停",
   "permanentFocusChangePauseDesc": "在永久失去音频焦点时自动暂停播放",
   "plainTimestamps": "普通时间戳",
+  "scrollToEnd": "滚动到底部",
   "play": "玩",
   "playAll": "全部播放",
   "playbackAudio": "播放与语言",

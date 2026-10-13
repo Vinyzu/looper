@@ -565,6 +565,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get plainTimestamps => 'プレーンなタイムスタンプ';
 
   @override
+  String get scrollToEnd => '最後までスクロール';
+
+  @override
   String get play => '遊ぶ';
 
   @override

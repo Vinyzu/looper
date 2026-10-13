@@ -605,6 +605,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get plainTimestamps => 'Простые временные метки';
 
   @override
+  String get scrollToEnd => 'Прокрутить до конца';
+
+  @override
   String get play => 'Играть';
 
   @override

@@ -1202,6 +1202,12 @@ abstract class AppLocalizations {
   /// **'Plain Timestamps'**
   String get plainTimestamps;
 
+  /// No description provided for @scrollToEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Scroll to end'**
+  String get scrollToEnd;
+
   /// No description provided for @play.
   ///
   /// In en, this message translates to:

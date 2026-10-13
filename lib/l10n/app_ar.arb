@@ -181,6 +181,7 @@
   "permanentFocusChangePause": "إيقاف مؤقت عند فقدان التركيز الدائم",
   "permanentFocusChangePauseDesc": "إيقاف التشغيل مؤقتًا عند فقدان التركيز الصوتي بشكل دائم من النظام",
   "plainTimestamps": "الطوابع الزمنية عادي",
+  "scrollToEnd": "الانتقال إلى النهاية",
   "play": "يلعب",
   "playAll": "تشغيل الكل",
   "playbackAudio": "التشغيل واللغة",

@@ -554,6 +554,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get plainTimestamps => '普通时间戳';
 
   @override
+  String get scrollToEnd => '滚动到底部';
+
+  @override
   String get play => '玩';
 
   @override

@@ -458,7 +458,37 @@ class Playback extends _$Playback {
     }
   }
 
-  void setPlaylist(List<Song> songs, {int initialIndex = 0}) {
+  /// Starts a collection, or continues its current track without seeking.
+  Future<void> playCollection(List<Song> songs, {bool shuffle = false}) async {
+    if (songs.isEmpty) return;
+    if (shuffle && !state.isShuffle) await toggleShuffle();
+
+    final currentIndex = songs.indexWhere(
+      (song) => song.path == state.currentSong?.path,
+    );
+    setPlaylist(
+      songs,
+      initialIndex: shuffle
+          ? math.Random().nextInt(songs.length)
+          : math.max(0, currentIndex),
+      continueCurrent: !shuffle && currentIndex != -1,
+    );
+  }
+
+  Future<void> toggleCollectionShuffle(List<Song> songs) async {
+    if (songs.isEmpty) return;
+    if (state.isShuffle) {
+      await toggleShuffle();
+    } else {
+      await playCollection(songs, shuffle: true);
+    }
+  }
+
+  void setPlaylist(
+    List<Song> songs, {
+    int initialIndex = 0,
+    bool continueCurrent = false,
+  }) {
     // Extract manual queue songs before replacing the playlist
     final start = _currentIndex + 1;
     final end = (start + _manualQueueCount).clamp(0, _playlist.length);
@@ -503,7 +533,13 @@ class Playback extends _$Playback {
 
     state = state.copyWith(queue: List.from(_playlist));
     if (_playlist.isNotEmpty && _currentIndex != -1) {
-      play(_playlist[_currentIndex]);
+      if (continueCurrent &&
+          _playlist[_currentIndex].path == state.currentSong?.path) {
+        unawaited(_saveQueueState());
+        if (!state.isPlaying) unawaited(togglePlay());
+      } else {
+        play(_playlist[_currentIndex]);
+      }
     }
   }
 

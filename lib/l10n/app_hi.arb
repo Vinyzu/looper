@@ -181,6 +181,7 @@
   "permanentFocusChangePause": "स्थायी फ़ोकस हटने पर रोकें",
   "permanentFocusChangePauseDesc": "स्थायी रूप से ऑडियो फ़ोकस खोने पर स्वचालित रूप से रोकें",
   "plainTimestamps": "सादा टाइमस्टैम्प",
+  "scrollToEnd": "अंत तक स्क्रॉल करें",
   "play": "चलाएं",
   "playAll": "सभी चलाएं",
   "playbackAudio": "प्लेबैक और भाषा",

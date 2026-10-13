@@ -595,6 +595,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get plainTimestamps => 'الطوابع الزمنية عادي';
 
   @override
+  String get scrollToEnd => 'الانتقال إلى النهاية';
+
+  @override
   String get play => 'يلعب';
 
   @override

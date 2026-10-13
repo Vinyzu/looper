@@ -181,6 +181,7 @@
   "permanentFocusChangePause": "永続的なフォーカス喪失時に一時停止",
   "permanentFocusChangePauseDesc": "オーディオフォーカスを永続的に失ったときに自動的に一時停止します",
   "plainTimestamps": "プレーンなタイムスタンプ",
+  "scrollToEnd": "最後までスクロール",
   "play": "遊ぶ",
   "playAll": "すべて再生",
   "playbackAudio": "再生と言語",

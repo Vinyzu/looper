@@ -603,6 +603,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get plainTimestamps => 'Düz Zaman Damgaları';
 
   @override
+  String get scrollToEnd => 'Sona kaydır';
+
+  @override
   String get play => 'Oyna';
 
   @override

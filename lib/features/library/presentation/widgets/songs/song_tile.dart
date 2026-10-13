@@ -2,6 +2,9 @@ import 'package:looper_player/core/theme/app_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:looper_player/ui/widgets/common/optimized_image.dart';
+import 'package:looper_player/ui/widgets/common/playlist_favorite_button.dart';
+import 'package:looper_player/ui/widgets/common/playlist_reorderable_listener.dart';
+import 'package:looper_player/ui/widgets/common/song_playback_overlay.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:looper_player/features/playback/presentation/providers/playback/playback_notifier.dart';
 import 'package:looper_player/core/providers/navigation_provider.dart';
@@ -9,7 +12,6 @@ import 'package:looper_player/core/services/storage/db_service.dart';
 import 'package:isar_community/isar.dart';
 import 'package:looper_player/l10n/app_localizations.dart';
 import 'package:looper_player/ui/widgets/sheets/song_options_bottom_sheet.dart';
-import 'package:looper_player/core/theme/app_assets.dart';
 import 'package:looper_player/core/services/haptics/app_haptics.dart';
 
 class SongTile extends ConsumerWidget {
@@ -22,9 +24,8 @@ class SongTile extends ConsumerWidget {
   final bool selected;
   final VoidCallback? onToggleSelect;
   final VoidCallback? onEnterSelection;
-  // Non-null only when this tile is rendered inside a SliverReorderableList
-  // (a playlist showing its own saved order) - its presence is what decides
-  // whether the drag-handle grip icon shows up at all.
+  // A displayed position is independent of whether sorting permits reordering.
+  final int? playlistIndex;
   final int? reorderIndex;
 
   const SongTile({
@@ -37,6 +38,7 @@ class SongTile extends ConsumerWidget {
     this.selected = false,
     this.onToggleSelect,
     this.onEnterSelection,
+    this.playlistIndex,
     this.reorderIndex,
     super.key,
   });
@@ -99,13 +101,18 @@ class SongTile extends ConsumerWidget {
       playbackProvider.select((s) => s.currentSong?.path == song.path),
     );
     final isPlaying = ref.watch(playbackProvider.select((s) => s.isPlaying));
+    final artist = song.artist ?? l10n.unknownArtist;
+    final album = song.album?.trim();
+    final songSubtitle = playlist != null
+        ? '$artist • ${album == null || album.isEmpty ? l10n.unknownAlbum : album}'
+        : artist;
 
     String? lyricSnippet;
     if (searchQuery != null && searchQuery!.isNotEmpty && song.lyrics != null) {
       lyricSnippet = _getLyricSnippet(song.lyrics!, searchQuery!);
     }
 
-    return Material(
+    final tile = Material(
       color: selected
           ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.08)
           : Colors.transparent,
@@ -115,7 +122,8 @@ class SongTile extends ConsumerWidget {
             onToggleSelect?.call();
             return;
           }
-          final index = songs.indexWhere((s) => s.path == song.path);
+          final index =
+              playlistIndex ?? songs.indexWhere((s) => s.path == song.path);
           if (index != -1) {
             ref
                 .read(playbackProvider.notifier)
@@ -135,72 +143,62 @@ class SongTile extends ConsumerWidget {
             top: 0,
             bottom: 0,
           ),
-          leading: ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: Stack(
-              children: [
-                isCurrent
-                    ? Stack(
-                        children: [
-                          OptimizedImage(
-                            imagePath: song.artPath,
-                            width: 52,
-                            height: 52,
-                            fit: BoxFit.cover,
-                          ),
-                          Positioned.fill(
-                            child: AnimatedOpacity(
-                              duration: const Duration(milliseconds: 300),
-                              opacity: isPlaying ? 1.0 : 0.0,
-                              child: Container(
-                                color: Colors.black.withValues(alpha: 0.4),
-                                child: Center(
-                                  // Animated GIF frame decoding doesn't respect
-                                  // TickerMode - an Image.asset(.gif) keeps
-                                  // ticking on its own Timer even while offstage
-                                  // (e.g. this tab sitting inactive behind
-                                  // another one - see AndroidMainScreen). Skip
-                                  // mounting it entirely while offstage, where
-                                  // it wouldn't be visible anyway.
-                                  child: TickerMode.of(context)
-                                      ? Image.asset(
-                                          AppAssets.playingGif,
-                                          width: 24,
-                                          height: 24,
-                                          color: Colors.white,
-                                        )
-                                      : const SizedBox.shrink(),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      )
-                    : OptimizedImage(
-                        imagePath: song.artPath,
-                        width: 52,
-                        height: 52,
-                        fit: BoxFit.cover,
+          leading: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (playlistIndex != null) ...[
+                SizedBox(
+                  width: 24,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.center,
+                    child: Text(
+                      '${playlistIndex! + 1}',
+                      maxLines: 1,
+                      style: AppFonts.jostStyle(
+                        color: Colors.white.withValues(alpha: 0.5),
+                        fontSize: 13,
                       ),
-                if (selectionMode)
-                  Positioned.fill(
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 150),
-                      curve: Curves.easeOutCubic,
-                      color: selected
-                          ? Colors.black.withValues(alpha: 0.35)
-                          : Colors.transparent,
-                      child: selected
-                          ? Icon(
-                              LucideIcons.checkCircle2,
-                              color: Theme.of(context).colorScheme.primary,
-                              size: 24,
-                            )
-                          : null,
                     ),
                   ),
+                ),
+                const SizedBox(width: 8),
               ],
-            ),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: Stack(
+                  children: [
+                    OptimizedImage(
+                      imagePath: song.artPath,
+                      width: 52,
+                      height: 52,
+                      fit: BoxFit.cover,
+                    ),
+                    if (isCurrent)
+                      Positioned.fill(
+                        child: SongPlaybackOverlay(isPlaying: isPlaying),
+                      ),
+                    if (selectionMode)
+                      Positioned.fill(
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 150),
+                          curve: Curves.easeOutCubic,
+                          color: selected
+                              ? Colors.black.withValues(alpha: 0.35)
+                              : Colors.transparent,
+                          child: selected
+                              ? Icon(
+                                  LucideIcons.checkCircle2,
+                                  color: Theme.of(context).colorScheme.primary,
+                                  size: 24,
+                                )
+                              : null,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
           ),
           title: Text(
             song.title,
@@ -240,7 +238,7 @@ class SongTile extends ConsumerWidget {
                         }
                       },
                       child: Text(
-                        song.artist ?? l10n.unknownArtist,
+                        songSubtitle,
                         style: AppFonts.jostStyle(
                           color: Colors.white.withValues(alpha: 0.5),
                           fontSize: 13,
@@ -321,7 +319,7 @@ class SongTile extends ConsumerWidget {
                     }
                   },
                   child: Text(
-                    song.artist ?? l10n.unknownArtist,
+                    songSubtitle,
                     style: AppFonts.jostStyle(
                       color: Colors.white.withValues(alpha: 0.5),
                       fontSize: 13,
@@ -333,20 +331,22 @@ class SongTile extends ConsumerWidget {
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (reorderIndex != null)
-                ReorderableDragStartListener(
-                  index: reorderIndex!,
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 4),
-                    child: Icon(
-                      LucideIcons.gripVertical,
-                      size: 20,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ),
+              if (playlist != null) PlaylistFavoriteButton(song: song),
               IconButton(
-                icon: const Icon(Icons.more_vert, color: Colors.grey),
+                padding: playlist != null ? EdgeInsets.zero : null,
+                constraints: playlist != null
+                    ? const BoxConstraints.tightFor(width: 32, height: 36)
+                    : null,
+                style: playlist != null
+                    ? IconButton.styleFrom(
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      )
+                    : null,
+                icon: Icon(
+                  Icons.more_vert,
+                  size: playlist != null ? 20 : 24,
+                  color: Colors.grey,
+                ),
                 onPressed: () => showSongOptionsBottomSheet(
                   context: context,
                   ref: ref,
@@ -360,6 +360,13 @@ class SongTile extends ConsumerWidget {
         ),
       ),
     );
+    return reorderIndex == null
+        ? tile
+        : PlaylistReorderableListener(
+            index: reorderIndex!,
+            enabled: !selectionMode,
+            child: tile,
+          );
   }
 
   String? _getLyricSnippet(String lyrics, String query) {

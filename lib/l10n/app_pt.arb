@@ -181,6 +181,7 @@
   "permanentFocusChangePause": "Pausar com Perda de Foco Permanente",
   "permanentFocusChangePauseDesc": "Pausa a reprodução automaticamente na perda permanente do foco de áudio",
   "plainTimestamps": "Carimbos de data e hora simples",
+  "scrollToEnd": "Ir ao final",
   "play": "Jogar",
   "playAll": "Reproduzir tudo",
   "playbackAudio": "Reprodução e idioma",

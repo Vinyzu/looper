@@ -5,6 +5,10 @@ import 'package:looper_player/core/utils/responsive.dart';
 import 'package:looper_player/ui/android/widgets/premium_section.dart';
 import 'package:looper_player/features/settings/presentation/providers/settings_notifier.dart';
 import 'package:looper_player/ui/widgets/common/optimized_image.dart';
+import 'package:looper_player/ui/widgets/common/playlist_favorite_button.dart';
+import 'package:looper_player/ui/widgets/common/playlist_reorderable_listener.dart';
+import 'package:looper_player/ui/widgets/common/song_playback_overlay.dart';
+import 'package:looper_player/ui/widgets/common/playlist_scroll_to_end.dart';
 import 'package:looper_player/ui/widgets/sheets/app_bottom_sheet.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:looper_player/features/library/presentation/widgets/songs/songs_list.dart';
@@ -61,6 +65,20 @@ class CollectionDetailView extends ConsumerWidget {
     this.playlist,
     this.album,
   });
+
+  String _durationLabel(List<Song> songs, AppLocalizations l10n) {
+    final totalMs = songs.fold<int>(
+      0,
+      (sum, song) => sum + (song.duration ?? 0),
+    );
+    final minutes = (totalMs / 60000).round();
+    return minutes >= 60
+        ? l10n.durationHoursMinutes(minutes ~/ 60, minutes % 60)
+        : l10n.minutesShort(minutes);
+  }
+
+  String _playlistSubtitle(List<Song> songs, AppLocalizations l10n) =>
+      '${l10n.playlist} • ${l10n.songsCount(songs.length)} • ${_durationLabel(songs, l10n)}';
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -197,7 +215,23 @@ class CollectionDetailView extends ConsumerWidget {
             final isLandscape = Responsive.isLandscape(
               MediaQuery.sizeOf(context),
             );
-            final scrollView = CustomScrollView(
+            Widget songRow(int index, {int? reorderIndex}) => SongTile(
+              key: ValueKey((sortedSongs[index].path, index)),
+              song: sortedSongs[index],
+              l10n: AppLocalizations.of(context)!,
+              songs: sortedSongs,
+              playlist: reactivePlaylist,
+              playlistIndex: reactivePlaylist != null ? index : null,
+              reorderIndex: reorderIndex,
+            );
+            final songDelegate = SliverChildBuilderDelegate(
+              (context, index) => songRow(index),
+              childCount: sortedSongs.length,
+            );
+            Widget buildScrollView(
+              ScrollController controller,
+            ) => CustomScrollView(
+              controller: controller,
               physics: const BouncingScrollPhysics(),
               slivers: [
                 SliverToBoxAdapter(
@@ -291,19 +325,16 @@ class CollectionDetailView extends ConsumerWidget {
                   // playlist.songPaths that dragging could sensibly write to.
                   if (canReorderPlaylist)
                     SliverReorderableList(
-                      itemBuilder: (context, index) {
-                        final song = sortedSongs[index];
-                        final l10n = AppLocalizations.of(context)!;
-                        return SongTile(
-                          key: ValueKey(song.path),
-                          song: song,
-                          l10n: l10n,
-                          songs: sortedSongs,
-                          playlist: reactivePlaylist,
-                          reorderIndex: index,
-                        );
-                      },
+                      // Equal-height rows let Flutter jump without laying out
+                      // every intervening song. Measure one for text scaling.
+                      prototypeItem: TickerMode(
+                        enabled: false,
+                        child: songRow(0),
+                      ),
+                      itemBuilder: (context, index) =>
+                          songRow(index, reorderIndex: index),
                       itemCount: sortedSongs.length,
+                      onReorderStart: (_) => AppHaptics.medium(),
                       onReorder: (oldIndex, newIndex) {
                         PlaylistService.reorderSong(
                           reactivePlaylist,
@@ -312,20 +343,16 @@ class CollectionDetailView extends ConsumerWidget {
                         );
                       },
                     )
+                  else if (reactivePlaylist != null)
+                    SliverPrototypeExtentList(
+                      prototypeItem: TickerMode(
+                        enabled: false,
+                        child: songRow(0),
+                      ),
+                      delegate: songDelegate,
+                    )
                   else
-                    SliverList(
-                      delegate: SliverChildBuilderDelegate((context, index) {
-                        final song = sortedSongs[index];
-                        final l10n = AppLocalizations.of(context)!;
-                        return SongTile(
-                          key: ValueKey(song.path),
-                          song: song,
-                          l10n: l10n,
-                          songs: sortedSongs,
-                          playlist: reactivePlaylist,
-                        );
-                      }, childCount: sortedSongs.length),
-                    ),
+                    SliverList(delegate: songDelegate),
                 const SliverToBoxAdapter(
                   child: SizedBox(
                     height: 200,
@@ -335,14 +362,18 @@ class CollectionDetailView extends ConsumerWidget {
             );
             // In landscape, cap the reading width and center it instead of
             // stretching the song list edge-to-edge across the whole window.
-            return isLandscape
-                ? Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 700),
-                      child: scrollView,
-                    ),
-                  )
-                : scrollView;
+            return PlaylistScrollToEnd(
+              enabled: reactivePlaylist != null,
+              bottomPadding: activeSong != null ? 100 : 16,
+              builder: (controller) => isLandscape
+                  ? Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 700),
+                        child: buildScrollView(controller),
+                      ),
+                    )
+                  : buildScrollView(controller),
+            );
           },
         ),
       ),

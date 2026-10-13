@@ -181,6 +181,7 @@
   "permanentFocusChangePause": "Pause sur perte de focus permanente",
   "permanentFocusChangePauseDesc": "Mettre en pause automatiquement lors de la perte définitive du focus audio",
   "plainTimestamps": "Horodatages simples",
+  "scrollToEnd": "Aller à la fin",
   "play": "Lire",
   "playAll": "Tout lire",
   "playbackAudio": "Lecture & Langue",
