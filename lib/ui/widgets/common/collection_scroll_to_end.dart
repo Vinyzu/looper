@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:looper_player/core/utils/l10n.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-class PlaylistScrollToEnd extends StatefulWidget {
-  const PlaylistScrollToEnd({
+class CollectionScrollToEnd extends StatefulWidget {
+  const CollectionScrollToEnd({
     super.key,
     required this.builder,
     this.enabled = true,
@@ -17,10 +17,10 @@ class PlaylistScrollToEnd extends StatefulWidget {
   final double bottomPadding;
 
   @override
-  State<PlaylistScrollToEnd> createState() => _PlaylistScrollToEndState();
+  State<CollectionScrollToEnd> createState() => _CollectionScrollToEndState();
 }
 
-class _PlaylistScrollToEndState extends State<PlaylistScrollToEnd> {
+class _CollectionScrollToEndState extends State<CollectionScrollToEnd> {
   final _controller = ScrollController();
   final _visible = ValueNotifier(false);
   Timer? _hideTimer;

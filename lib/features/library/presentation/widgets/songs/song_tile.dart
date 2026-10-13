@@ -1,8 +1,9 @@
 import 'package:looper_player/core/theme/app_fonts.dart';
+import 'package:looper_player/core/utils/song_metadata.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:looper_player/ui/widgets/common/optimized_image.dart';
-import 'package:looper_player/ui/widgets/common/playlist_favorite_button.dart';
+import 'package:looper_player/ui/widgets/common/song_favorite_button.dart';
 import 'package:looper_player/ui/widgets/common/playlist_reorderable_listener.dart';
 import 'package:looper_player/ui/widgets/common/song_playback_overlay.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -20,12 +21,13 @@ class SongTile extends ConsumerWidget {
   final AppLocalizations l10n;
   final String? searchQuery;
   final Playlist? playlist;
+  final bool showAlbum;
   final bool selectionMode;
   final bool selected;
   final VoidCallback? onToggleSelect;
   final VoidCallback? onEnterSelection;
   // A displayed position is independent of whether sorting permits reordering.
-  final int? playlistIndex;
+  final int? collectionIndex;
   final int? reorderIndex;
 
   const SongTile({
@@ -34,11 +36,12 @@ class SongTile extends ConsumerWidget {
     required this.l10n,
     this.searchQuery,
     this.playlist,
+    this.showAlbum = false,
     this.selectionMode = false,
     this.selected = false,
     this.onToggleSelect,
     this.onEnterSelection,
-    this.playlistIndex,
+    this.collectionIndex,
     this.reorderIndex,
     super.key,
   });
@@ -101,11 +104,10 @@ class SongTile extends ConsumerWidget {
       playbackProvider.select((s) => s.currentSong?.path == song.path),
     );
     final isPlaying = ref.watch(playbackProvider.select((s) => s.isPlaying));
-    final artist = song.artist ?? l10n.unknownArtist;
-    final album = song.album?.trim();
-    final songSubtitle = playlist != null
-        ? '$artist • ${album == null || album.isEmpty ? l10n.unknownAlbum : album}'
-        : artist;
+    final isCollection = collectionIndex != null || playlist != null;
+    final songSubtitle = showAlbum || isCollection
+        ? artistAlbumLabel(song, l10n)
+        : song.artist ?? l10n.unknownArtist;
 
     String? lyricSnippet;
     if (searchQuery != null && searchQuery!.isNotEmpty && song.lyrics != null) {
@@ -123,7 +125,7 @@ class SongTile extends ConsumerWidget {
             return;
           }
           final index =
-              playlistIndex ?? songs.indexWhere((s) => s.path == song.path);
+              collectionIndex ?? songs.indexWhere((s) => s.path == song.path);
           if (index != -1) {
             ref
                 .read(playbackProvider.notifier)
@@ -138,7 +140,7 @@ class SongTile extends ConsumerWidget {
         onLongPress: selectionMode ? null : onEnterSelection,
         child: ListTile(
           contentPadding: EdgeInsets.only(
-            left: playlistIndex != null ? 8 : 16,
+            left: collectionIndex != null ? 8 : 16,
             right: 4,
             top: 0,
             bottom: 0,
@@ -146,14 +148,14 @@ class SongTile extends ConsumerWidget {
           leading: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (playlistIndex != null) ...[
+              if (collectionIndex != null) ...[
                 SizedBox(
                   width: 20,
                   child: FittedBox(
                     fit: BoxFit.scaleDown,
                     alignment: Alignment.center,
                     child: Text(
-                      '${playlistIndex! + 1}',
+                      '${collectionIndex! + 1}',
                       maxLines: 1,
                       style: AppFonts.jostStyle(
                         color: Colors.white.withValues(alpha: 0.5),
@@ -331,20 +333,20 @@ class SongTile extends ConsumerWidget {
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (playlist != null) PlaylistFavoriteButton(song: song),
+              if (isCollection) SongFavoriteButton(song: song),
               IconButton(
-                padding: playlist != null ? EdgeInsets.zero : null,
-                constraints: playlist != null
+                padding: isCollection ? EdgeInsets.zero : null,
+                constraints: isCollection
                     ? const BoxConstraints.tightFor(width: 32, height: 36)
                     : null,
-                style: playlist != null
+                style: isCollection
                     ? IconButton.styleFrom(
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       )
                     : null,
                 icon: Icon(
                   Icons.more_vert,
-                  size: playlist != null ? 20 : 24,
+                  size: isCollection ? 20 : 24,
                   color: Colors.grey,
                 ),
                 onPressed: () => showSongOptionsBottomSheet(

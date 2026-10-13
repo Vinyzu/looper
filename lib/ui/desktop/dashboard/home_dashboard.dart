@@ -1,9 +1,10 @@
+import 'package:looper_player/core/utils/song_metadata.dart';
 import 'package:flutter/material.dart';
+import 'package:looper_player/ui/widgets/common/song_artwork.dart';
 import 'package:looper_player/core/utils/ui_utils.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:looper_player/ui/widgets/common/optimized_image.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:looper_player/ui/widgets/player/global_playing_indicator.dart';
 import 'package:looper_player/features/library/presentation/widgets/library_grids.dart';
 import 'package:looper_player/features/settings/presentation/providers/settings_notifier.dart';
 import 'package:looper_player/ui/widgets/common/color_maper.dart';

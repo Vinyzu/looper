@@ -72,30 +72,8 @@ extension _MiniPlayerContent on _PremiumMusicBarState {
                                     fit: BoxFit.cover,
                                   ),
                                   Positioned.fill(
-                                    child: AnimatedOpacity(
-                                      duration: const Duration(
-                                        milliseconds: 300,
-                                      ),
-                                      opacity: isPlaying ? 1.0 : 0.0,
-                                      child: Container(
-                                        color: Colors.black.withValues(
-                                          alpha: 0.4,
-                                        ),
-                                        child: Center(
-                                          // GIF frame decoding doesn't respect
-                                          // TickerMode - skip it while ticking
-                                          // is paused (e.g. mid route
-                                          // transition).
-                                          child: TickerMode.of(context)
-                                              ? Image.asset(
-                                                  AppAssets.playingGif,
-                                                  width: 24,
-                                                  height: 24,
-                                                  color: Colors.white,
-                                                )
-                                              : const SizedBox.shrink(),
-                                        ),
-                                      ),
+                                    child: SongPlaybackOverlay(
+                                      isPlaying: isPlaying,
                                     ),
                                   ),
                                 ],
@@ -125,7 +103,7 @@ extension _MiniPlayerContent on _PremiumMusicBarState {
                       buildHero(
                         tag: 'song_artist',
                         child: ScrollingText(
-                          text: song.artist ?? context.l10n.unknownArtist,
+                          text: artistAlbumLabel(song, context.l10n),
                           style: AppFonts.jostStyle(
                             color: Colors.white.withValues(alpha: 0.5),
                             fontSize: artistFontSize.ts,

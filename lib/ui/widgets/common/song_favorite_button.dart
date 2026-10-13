@@ -12,8 +12,8 @@ final _favoriteProvider = StreamProvider.autoDispose.family<bool, int>(
       .map((song) => song?.isFavorite ?? false),
 );
 
-class PlaylistFavoriteButton extends ConsumerWidget {
-  const PlaylistFavoriteButton({super.key, required this.song});
+class SongFavoriteButton extends ConsumerWidget {
+  const SongFavoriteButton({super.key, required this.song});
 
   final Song song;
 

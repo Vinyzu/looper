@@ -44,9 +44,6 @@ extension _CollectionHeader on CollectionDetailView {
   ) {
     final l10n = AppLocalizations.of(context)!;
     final isShuffle = ref.watch(playbackProvider.select((s) => s.isShuffle));
-    final subtitle = reactivePlaylist != null
-        ? _playlistSubtitle(songsToRender, l10n)
-        : subtitleToRender;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -60,18 +57,14 @@ extension _CollectionHeader on CollectionDetailView {
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),
-        if (subtitle != null) ...[
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: AppFonts.jostStyle(
-              fontSize: 16,
-              color: Colors.white.withValues(alpha: 0.5),
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
+        const SizedBox(height: 4),
+        _buildCollectionSubtitle(
+          reactivePlaylist != null ? l10n.playlist : subtitleToRender,
+          songsToRender,
+          l10n,
+          fontSize: 16,
+          color: Colors.white.withValues(alpha: 0.5),
+        ),
         const SizedBox(height: 16),
         Row(
           mainAxisAlignment: MainAxisAlignment.start,
@@ -84,11 +77,7 @@ extension _CollectionHeader on CollectionDetailView {
               onTap: () {
                 AppHaptics.medium();
                 final playback = ref.read(playbackProvider.notifier);
-                if (reactivePlaylist != null) {
-                  playback.playCollection(songsToRender);
-                } else {
-                  playback.setPlaylist(songsToRender);
-                }
+                playback.playCollection(songsToRender);
               },
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -100,7 +89,7 @@ extension _CollectionHeader on CollectionDetailView {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    reactivePlaylist != null ? l10n.play : l10n.playAll,
+                    l10n.play,
                     style: AppFonts.jostStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w600,

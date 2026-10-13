@@ -1,3 +1,4 @@
+import 'package:looper_player/core/utils/song_metadata.dart';
 import 'package:flutter/material.dart';
 import 'package:looper_player/core/theme/app_fonts.dart';
 import 'package:looper_player/features/library/domain/models/models.dart';
@@ -76,7 +77,7 @@ class LyricsShareCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      song.artist ?? context.l10n.unknownArtist,
+                      artistAlbumLabel(song, context.l10n),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: AppFonts.jostStyle(

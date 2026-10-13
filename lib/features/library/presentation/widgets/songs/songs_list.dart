@@ -350,6 +350,7 @@ class _SongsListState extends ConsumerState<SongsList> {
       // re-measuring each row as it scrolls into view - this is
       // the list a fast fling scroll actually has to keep up with.
       prototypeItem: SongTile(
+        showAlbum: true,
         song: widget.songs.first,
         l10n: l10n,
         songs: widget.songs,
@@ -363,6 +364,7 @@ class _SongsListState extends ConsumerState<SongsList> {
       itemBuilder: (context, index) {
         final song = widget.songs[index];
         return SongTile(
+          showAlbum: true,
           key: ValueKey(song.path),
           song: song,
           l10n: l10n,
@@ -381,6 +383,7 @@ class _SongsListState extends ConsumerState<SongsList> {
   Widget _buildRow(int index, AppLocalizations l10n) {
     final song = widget.songs[index];
     return SongTile(
+      showAlbum: true,
       key: ValueKey(song.path),
       song: song,
       l10n: l10n,
@@ -430,6 +433,7 @@ class _SongsListState extends ConsumerState<SongsList> {
             // sliver one real instance to measure once instead of
             // re-measuring each row as it scrolls into view.
             prototypeItem: SongTile(
+              showAlbum: true,
               song: widget.songs.first,
               l10n: l10n,
               songs: widget.songs,
@@ -443,6 +447,7 @@ class _SongsListState extends ConsumerState<SongsList> {
             itemBuilder: (context, index) {
               final song = widget.songs[index];
               return SongTile(
+                showAlbum: true,
                 key: ValueKey(song.path),
                 song: song,
                 l10n: l10n,

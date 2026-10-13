@@ -431,16 +431,11 @@ extension _HomeTabSections on _AndroidHomeTabState {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ClipRRect(
+            SongArtwork(
+              song: song,
+              size: 24,
               borderRadius: BorderRadius.circular(4),
-              child: SizedBox(
-                width: 24,
-                height: 24,
-                child: OptimizedImage(
-                  imagePath: song.artPath,
-                  fit: BoxFit.cover,
-                ),
-              ),
+              indicatorSize: 16,
             ),
             const SizedBox(width: 6),
             Text(

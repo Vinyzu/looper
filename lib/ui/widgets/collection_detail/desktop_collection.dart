@@ -20,10 +20,6 @@ extension _DesktopCollection on CollectionDetailView {
   }) {
     final l10n = AppLocalizations.of(context)!;
     final isShuffle = ref.watch(playbackProvider.select((s) => s.isShuffle));
-    final durationLabel = _durationLabel(songs, l10n);
-    final subtitleLabel = reactivePlaylist != null
-        ? _playlistSubtitle(songs, l10n)
-        : subtitle;
 
     Widget row(int index, {int? reorderIndex}) {
       final song = songs[index];
@@ -40,8 +36,7 @@ extension _DesktopCollection on CollectionDetailView {
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: PlaylistScrollToEnd(
-        enabled: reactivePlaylist != null,
+      body: CollectionScrollToEnd(
         bottomPadding: activePath != null ? 100 : 16,
         builder: (controller) => CustomScrollView(
           controller: controller,
@@ -98,18 +93,16 @@ extension _DesktopCollection on CollectionDetailView {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
-                              if (subtitleLabel != null) ...[
-                                const SizedBox(height: 4),
-                                Text(
-                                  subtitleLabel,
-                                  style: AppFonts.jostStyle(
-                                    fontSize: 22,
-                                    color: Colors.white.withValues(alpha: 0.45),
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
+                              const SizedBox(height: 4),
+                              _buildCollectionSubtitle(
+                                reactivePlaylist != null
+                                    ? l10n.playlist
+                                    : subtitle,
+                                songs,
+                                l10n,
+                                fontSize: 22,
+                                color: Colors.white.withValues(alpha: 0.45),
+                              ),
                               const SizedBox(height: 16),
                               Row(
                                 children: [
@@ -118,11 +111,7 @@ extension _DesktopCollection on CollectionDetailView {
                                       final playback = ref.read(
                                         playbackProvider.notifier,
                                       );
-                                      if (reactivePlaylist != null) {
-                                        playback.playCollection(songs);
-                                      } else {
-                                        playback.setPlaylist(songs);
-                                      }
+                                      playback.playCollection(songs);
                                     },
                                     child: Row(
                                       mainAxisSize: MainAxisSize.min,
@@ -134,9 +123,7 @@ extension _DesktopCollection on CollectionDetailView {
                                         ),
                                         const SizedBox(width: 6),
                                         Text(
-                                          reactivePlaylist != null
-                                              ? l10n.play
-                                              : l10n.playAll,
+                                          l10n.play,
                                           style: AppFonts.jostStyle(
                                             color: Colors.white,
                                             fontSize: 14,
@@ -192,32 +179,11 @@ extension _DesktopCollection on CollectionDetailView {
                     const SizedBox(height: 38),
                     Row(
                       children: [
-                        if (reactivePlaylist == null)
-                          _DesktopPill(
-                            child: Text(
-                              l10n.songsCountTitle(songs.length),
-                              style: AppFonts.jostStyle(
-                                color: Colors.white,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ),
                         const Spacer(),
                         _DesktopPill.icon(
                           icon: LucideIcons.arrowUpDown,
                           onTap: () => _showSortBottomSheet(context, ref),
                         ),
-                        const SizedBox(width: 12),
-                        if (reactivePlaylist == null)
-                          _DesktopPill(
-                            child: Text(
-                              durationLabel,
-                              style: AppFonts.jostStyle(
-                                color: Colors.white.withValues(alpha: 0.45),
-                                fontSize: 14,
-                              ),
-                            ),
-                          ),
                       ],
                     ),
                     const SizedBox(height: 16),
@@ -330,16 +296,6 @@ class _DesktopSongRow extends ConsumerStatefulWidget {
 
 class _DesktopSongRowState extends ConsumerState<_DesktopSongRow> {
   bool _hovered = false;
-  late bool _favorite = widget.song.isFavorite;
-
-  @override
-  void didUpdateWidget(_DesktopSongRow oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (!identical(oldWidget.song, widget.song)) {
-      _favorite = widget.song.isFavorite;
-    }
-  }
-
   void _play() {
     final playback = ref.read(playbackProvider.notifier);
     playback.setPlaylist(widget.songs, initialIndex: widget.index);
@@ -366,15 +322,6 @@ class _DesktopSongRowState extends ConsumerState<_DesktopSongRow> {
     final song = widget.song;
     final isPlaying = ref.watch(playbackProvider.select((s) => s.isPlaying));
     final lit = _hovered || widget.isCurrent;
-    // The playing song's favourite state lives in the playback state.
-    final favorite = widget.isCurrent
-        ? ref.watch(
-            playbackProvider.select(
-              (s) => s.currentSong?.isFavorite ?? _favorite,
-            ),
-          )
-        : _favorite;
-
     final row = MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hovered = true),
@@ -386,10 +333,7 @@ class _DesktopSongRowState extends ConsumerState<_DesktopSongRow> {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 120),
           height: 56,
-          padding: EdgeInsets.only(
-            left: widget.playlist != null ? 0 : 8,
-            right: 12,
-          ),
+          padding: const EdgeInsets.only(right: 12),
           decoration: BoxDecoration(
             color: lit
                 ? Colors.white.withValues(alpha: 0.04)
@@ -398,24 +342,22 @@ class _DesktopSongRowState extends ConsumerState<_DesktopSongRow> {
           ),
           child: Row(
             children: [
-              if (widget.playlist != null) ...[
-                SizedBox(
-                  width: 20,
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.center,
-                    child: Text(
-                      '${widget.index + 1}',
-                      maxLines: 1,
-                      style: AppFonts.jostStyle(
-                        color: Colors.white.withValues(alpha: 0.45),
-                        fontSize: 11,
-                      ),
+              SizedBox(
+                width: 20,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.center,
+                  child: Text(
+                    '${widget.index + 1}',
+                    maxLines: 1,
+                    style: AppFonts.jostStyle(
+                      color: Colors.white.withValues(alpha: 0.45),
+                      fontSize: 11,
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
-              ],
+              ),
+              const SizedBox(width: 12),
               ClipRRect(
                 borderRadius: BorderRadius.circular(4),
                 child: Stack(
@@ -459,9 +401,7 @@ class _DesktopSongRowState extends ConsumerState<_DesktopSongRow> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      widget.playlist != null
-                          ? '${song.artist ?? l10n.unknownArtist} • ${song.album?.trim().isNotEmpty == true ? song.album : l10n.unknownAlbum}'
-                          : song.artist ?? l10n.unknownArtist,
+                      artistAlbumLabel(song, l10n),
                       style: AppFonts.jostStyle(
                         color: Colors.white.withValues(alpha: 0.45),
                         fontSize: 12,
@@ -491,26 +431,7 @@ class _DesktopSongRowState extends ConsumerState<_DesktopSongRow> {
                   onPressed: _showOptions,
                 ),
               ),
-              if (widget.playlist != null)
-                PlaylistFavoriteButton(song: song)
-              else
-                IconButton(
-                  visualDensity: VisualDensity.compact,
-                  tooltip: l10n.toggleFavorite,
-                  icon: SvgPicture.asset(
-                    favorite ? AppAssets.desktopLiked : AppAssets.desktopLike,
-                    width: 16,
-                    height: 16,
-                    colorFilter: ColorFilter.mode(
-                      favorite ? Colors.red : Colors.white54,
-                      BlendMode.srcIn,
-                    ),
-                  ),
-                  onPressed: () {
-                    setState(() => _favorite = !favorite);
-                    ref.read(libraryProvider.notifier).toggleFavorite(song);
-                  },
-                ),
+              SongFavoriteButton(song: song),
               const SizedBox(width: 12),
               SizedBox(
                 width: 48,

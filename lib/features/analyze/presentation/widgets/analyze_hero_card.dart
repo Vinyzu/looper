@@ -1,9 +1,10 @@
+import 'package:looper_player/core/utils/song_metadata.dart';
 import 'package:flutter/material.dart';
 import 'package:looper_player/core/theme/app_fonts.dart';
 import 'package:looper_player/core/utils/l10n.dart';
 import 'package:looper_player/features/analyze/domain/analyze_models.dart';
 import 'package:looper_player/features/analyze/presentation/widgets/analyze_common.dart';
-import 'package:looper_player/ui/widgets/common/optimized_image.dart';
+import 'package:looper_player/ui/widgets/common/song_artwork.dart';
 import 'package:looper_player/core/services/haptics/app_haptics.dart';
 
 /// The report's opener: the most-played song, big artwork and a play button
@@ -46,17 +47,12 @@ class AnalyzeHeroCard extends StatelessWidget {
                 ),
               ],
             ),
-            child: ClipRRect(
+            child: SongArtwork(
+              song: stat.song,
+              size: 118,
               borderRadius: BorderRadius.circular(20),
-              child: SizedBox(
-                width: 118,
-                height: 118,
-                child: OptimizedImage(
-                  imagePath: stat.song.artPath,
-                  cacheWidth: 320,
-                  cacheHeight: 320,
-                ),
-              ),
+              cacheWidth: 320,
+              cacheHeight: 320,
             ),
           ),
           const SizedBox(width: 16),
@@ -90,7 +86,7 @@ class AnalyzeHeroCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  stat.song.artist ?? context.l10n.unknownArtist,
+                  artistAlbumLabel(stat.song, context.l10n),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppFonts.jostStyle(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:looper_player/ui/widgets/common/song_artwork.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:looper_player/core/providers/navigation_provider.dart';
 import 'package:looper_player/features/library/presentation/providers/library/library_notifier.dart';
@@ -435,16 +436,11 @@ class AndroidLibraryTab extends ConsumerWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ClipRRect(
+            SongArtwork(
+              song: song,
+              size: 24,
               borderRadius: BorderRadius.circular(4),
-              child: SizedBox(
-                width: 24,
-                height: 24,
-                child: OptimizedImage(
-                  imagePath: song.artPath,
-                  fit: BoxFit.cover,
-                ),
-              ),
+              indicatorSize: 16,
             ),
             const SizedBox(width: 6),
             Text(

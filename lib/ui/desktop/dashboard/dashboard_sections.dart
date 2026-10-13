@@ -41,10 +41,9 @@ extension _DashboardSections on HomeDashboard {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        OptimizedImage(
-                          imagePath: song.artPath,
-                          height: isNarrow ? 104 : 124,
-                          width: isNarrow ? 104 : 124,
+                        SongArtwork(
+                          song: song,
+                          size: isNarrow ? 104 : 124,
                           borderRadius: BorderRadius.circular(12),
                           placeholder: Container(
                             decoration: BoxDecoration(
@@ -68,7 +67,7 @@ extension _DashboardSections on HomeDashboard {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          song.artist ?? context.l10n.unknown,
+                          artistAlbumLabel(song, l10n),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
@@ -123,9 +122,6 @@ extension _DashboardSections on HomeDashboard {
                     (s) => s.currentSong?.path == song.path,
                   ),
                 );
-                final isPlaying = ref.watch(
-                  playbackProvider.select((s) => s.isPlaying),
-                );
 
                 return InkWell(
                   onTap: () => ref.read(playbackProvider.notifier).play(song),
@@ -143,19 +139,11 @@ extension _DashboardSections on HomeDashboard {
                     ),
                     child: Row(
                       children: [
-                        PlayingOverlay(
-                          isPlaying: isCurrent && isPlaying,
-                          borderRadius: 4,
-                          child: OptimizedImage(
-                            imagePath: song.artPath,
-                            width: 54,
-                            height: 54,
-                            borderRadius: BorderRadius.circular(4),
-                            placeholder: const Icon(
-                              LucideIcons.music,
-                              size: 20,
-                            ),
-                          ),
+                        SongArtwork(
+                          song: song,
+                          size: 54,
+                          borderRadius: BorderRadius.circular(4),
+                          placeholder: const Icon(LucideIcons.music, size: 20),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -173,7 +161,7 @@ extension _DashboardSections on HomeDashboard {
                                 ),
                               ),
                               Text(
-                                song.artist ?? context.l10n.unknown,
+                                artistAlbumLabel(song, l10n),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(

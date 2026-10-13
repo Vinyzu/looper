@@ -1,3 +1,6 @@
+import 'dart:ui';
+
+import 'package:looper_player/core/utils/song_metadata.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -17,13 +20,12 @@ import 'package:looper_player/core/providers/player_expand_focus.dart';
 import 'package:looper_player/core/providers/player_expand_provider.dart';
 import 'package:looper_player/features/library/domain/models/models.dart';
 
-import 'dart:ui';
 
 import 'fluid_player_motion.dart';
 import '../../widgets/premium_section.dart';
 
 import 'package:looper_player/core/utils/l10n.dart';
-import 'package:looper_player/core/theme/app_assets.dart';
+import 'package:looper_player/ui/widgets/common/song_playback_overlay.dart';
 import 'package:looper_player/core/services/haptics/app_haptics.dart';
 part 'mini_player_content.dart';
 
@@ -400,16 +402,7 @@ class _PremiumMusicBarState extends ConsumerState<PremiumMusicBar>
         fit: BoxFit.cover,
         cacheWidth: (decodeWidth * dpr).toInt(),
       );
-      // GIF frame decoding doesn't respect TickerMode - skip it while
-      // ticking is paused (e.g. mid route transition).
-      morphPlayingIcon = TickerMode.of(context)
-          ? Image.asset(
-              AppAssets.playingGif,
-              width: 24,
-              height: 24,
-              color: Colors.white,
-            )
-          : const SizedBox(width: 24, height: 24);
+      morphPlayingIcon = SongPlaybackIndicator(isPlaying: isPlaying);
     }
 
     return GestureDetector(
@@ -620,25 +613,19 @@ class _PremiumMusicBarState extends ConsumerState<PremiumMusicBar>
                                       morphImage!,
                                       if (morphPlayingIcon != null && p < 0.25)
                                         Positioned.fill(
-                                          child: AnimatedOpacity(
-                                            duration: const Duration(
-                                              milliseconds: 300,
+                                          child: Opacity(
+                                            opacity: (1.0 - p * 4.0).clamp(
+                                              0.0,
+                                              1.0,
                                             ),
-                                            opacity: isPlaying ? 1.0 : 0.0,
-                                            child: Opacity(
-                                              opacity: (1.0 - p * 4.0).clamp(
-                                                0.0,
-                                                1.0,
+                                            child: ColoredBox(
+                                              color: Colors.black.withValues(
+                                                alpha: 0.4,
                                               ),
-                                              child: ColoredBox(
-                                                color: Colors.black.withValues(
-                                                  alpha: 0.4,
-                                                ),
-                                                child: Center(
-                                                  child: Transform.scale(
-                                                    scale: 1.0 / scale,
-                                                    child: morphPlayingIcon,
-                                                  ),
+                                              child: Center(
+                                                child: Transform.scale(
+                                                  scale: 1.0 / scale,
+                                                  child: morphPlayingIcon,
                                                 ),
                                               ),
                                             ),

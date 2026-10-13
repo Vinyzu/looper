@@ -5,10 +5,10 @@ import 'package:looper_player/core/utils/responsive.dart';
 import 'package:looper_player/ui/android/widgets/premium_section.dart';
 import 'package:looper_player/features/settings/presentation/providers/settings_notifier.dart';
 import 'package:looper_player/ui/widgets/common/optimized_image.dart';
-import 'package:looper_player/ui/widgets/common/playlist_favorite_button.dart';
+import 'package:looper_player/ui/widgets/common/song_favorite_button.dart';
 import 'package:looper_player/ui/widgets/common/playlist_reorderable_listener.dart';
 import 'package:looper_player/ui/widgets/common/song_playback_overlay.dart';
-import 'package:looper_player/ui/widgets/common/playlist_scroll_to_end.dart';
+import 'package:looper_player/ui/widgets/common/collection_scroll_to_end.dart';
 import 'package:looper_player/ui/widgets/sheets/app_bottom_sheet.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:looper_player/features/library/presentation/widgets/songs/songs_list.dart';
@@ -23,8 +23,7 @@ import 'package:looper_player/core/theme/app_fonts.dart';
 import 'package:looper_player/features/library/presentation/widgets/library_grids.dart';
 import 'package:looper_player/ui/widgets/sheets/edit_album_sheet.dart';
 import 'package:looper_player/core/services/haptics/app_haptics.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:looper_player/core/theme/app_assets.dart';
+import 'package:looper_player/core/utils/song_metadata.dart';
 import 'package:looper_player/core/utils/ui_utils.dart';
 import 'package:looper_player/features/library/presentation/providers/library/library_notifier.dart';
 import 'package:looper_player/ui/widgets/sheets/song_options_bottom_sheet.dart';
@@ -77,8 +76,33 @@ class CollectionDetailView extends ConsumerWidget {
         : l10n.minutesShort(minutes);
   }
 
-  String _playlistSubtitle(List<Song> songs, AppLocalizations l10n) =>
-      '${l10n.playlist} • ${l10n.songsCount(songs.length)} • ${_durationLabel(songs, l10n)}';
+  Widget _buildCollectionSubtitle(
+    String? label,
+    List<Song> songs,
+    AppLocalizations l10n, {
+    required double fontSize,
+    required Color color,
+  }) {
+    final hasLabel = label?.trim().isNotEmpty == true;
+    final style = AppFonts.jostStyle(fontSize: fontSize, color: color);
+    return Row(
+      children: [
+        if (hasLabel)
+          Flexible(
+            child: Text(
+              label!,
+              style: style,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        Text(
+          '${hasLabel ? ' • ' : ''}${l10n.songsCount(songs.length)} • ${_durationLabel(songs, l10n)}',
+          style: style,
+        ),
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -221,7 +245,7 @@ class CollectionDetailView extends ConsumerWidget {
               l10n: AppLocalizations.of(context)!,
               songs: sortedSongs,
               playlist: reactivePlaylist,
-              playlistIndex: reactivePlaylist != null ? index : null,
+              collectionIndex: index,
               reorderIndex: reorderIndex,
             );
             final songDelegate = SliverChildBuilderDelegate(
@@ -343,16 +367,14 @@ class CollectionDetailView extends ConsumerWidget {
                         );
                       },
                     )
-                  else if (reactivePlaylist != null)
+                  else
                     SliverPrototypeExtentList(
                       prototypeItem: TickerMode(
                         enabled: false,
                         child: songRow(0),
                       ),
                       delegate: songDelegate,
-                    )
-                  else
-                    SliverList(delegate: songDelegate),
+                    ),
                 const SliverToBoxAdapter(
                   child: SizedBox(
                     height: 200,
@@ -362,8 +384,7 @@ class CollectionDetailView extends ConsumerWidget {
             );
             // In landscape, cap the reading width and center it instead of
             // stretching the song list edge-to-edge across the whole window.
-            return PlaylistScrollToEnd(
-              enabled: reactivePlaylist != null,
+            return CollectionScrollToEnd(
               bottomPadding: activeSong != null ? 100 : 16,
               builder: (controller) => isLandscape
                   ? Center(

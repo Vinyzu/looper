@@ -1,3 +1,4 @@
+import 'package:looper_player/core/utils/song_metadata.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:looper_player/core/theme/app_fonts.dart';
@@ -5,7 +6,7 @@ import 'package:looper_player/features/analyze/domain/analyze_models.dart';
 import 'package:looper_player/features/analyze/presentation/providers/analyze_notifier.dart';
 import 'package:looper_player/features/playback/presentation/providers/playback/playback_notifier.dart';
 import 'package:looper_player/features/analyze/presentation/widgets/analyze_common.dart';
-import 'package:looper_player/ui/widgets/common/optimized_image.dart';
+import 'package:looper_player/ui/widgets/common/song_artwork.dart';
 import 'package:looper_player/core/utils/l10n.dart';
 import 'package:looper_player/core/services/haptics/app_haptics.dart';
 
@@ -187,13 +188,10 @@ class _TopSongRow extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  ClipRRect(
+                  SongArtwork(
+                    song: stat.song,
+                    size: 46,
                     borderRadius: BorderRadius.circular(11),
-                    child: SizedBox(
-                      width: 46,
-                      height: 46,
-                      child: OptimizedImage(imagePath: stat.song.artPath),
-                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -212,7 +210,7 @@ class _TopSongRow extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          stat.song.artist ?? context.l10n.unknownArtist,
+                          artistAlbumLabel(stat.song, context.l10n),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: AppFonts.jostStyle(

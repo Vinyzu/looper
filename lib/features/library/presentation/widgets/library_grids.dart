@@ -9,7 +9,7 @@ import 'package:looper_player/core/services/storage/db_service.dart';
 import 'package:looper_player/core/providers/navigation_provider.dart';
 import 'package:looper_player/ui/widgets/common/optimized_image.dart';
 import 'package:looper_player/features/playback/presentation/providers/playback/playback_notifier.dart';
-import 'package:looper_player/ui/widgets/player/global_playing_indicator.dart';
+import 'package:looper_player/ui/widgets/player/playing_overlay.dart';
 import 'package:isar_community/isar.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:looper_player/core/utils/l10n.dart';
@@ -75,15 +75,11 @@ class _AlbumCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Combined into one select so this card only rebuilds when ITS OWN
-    // playing state flips, instead of every album card rebuilding on any
-    // play/pause toggle.
-    final isPlayingThisAlbum = ref.watch(
-      playbackProvider.select(
-        (s) => s.isPlaying && s.currentSong?.album == album.name,
-      ),
+    // Keep identifying the current album while its song is paused.
+    final isCurrentAlbum = ref.watch(
+      playbackProvider.select((s) => s.currentSong?.album == album.name),
     );
-    // Same reasoning as isPlayingThisAlbum above: select just whether THIS
+    // Same reasoning as isCurrentAlbum above: select just whether THIS
     // album is the selected one, instead of watching the whole nav state
     // (which would rebuild every visible card on any navigation change).
     final isSelected = ref.watch(
@@ -130,7 +126,10 @@ class _AlbumCard extends ConsumerWidget {
                   color: Colors.white.withValues(alpha: 0.05),
                 ),
                 child: PlayingOverlay(
-                  isPlaying: isPlayingThisAlbum,
+                  isCurrent: isCurrentAlbum,
+                  isPlaying:
+                      isCurrentAlbum &&
+                      ref.watch(playbackProvider.select((s) => s.isPlaying)),
                   borderRadius: 16,
                   child: album.artPath != null
                       ? ClipRRect(

@@ -1,4 +1,6 @@
 import 'dart:io';
+
+import 'package:looper_player/core/utils/song_metadata.dart';
 import 'package:flutter/material.dart' hide RepeatMode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:looper_player/core/utils/ui_utils.dart';
@@ -142,7 +144,7 @@ class ExpandedPlayer extends ConsumerWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      song.artist ?? l10n.unknownArtist,
+                      artistAlbumLabel(song, l10n),
                       style: AppFonts.jostStyle(
                         color: Colors.white.withValues(alpha: 0.6),
                         fontSize: 16.ts,

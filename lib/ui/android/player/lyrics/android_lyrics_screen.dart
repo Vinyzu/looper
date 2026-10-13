@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'dart:async';
 import 'dart:ui';
+
+import 'package:looper_player/core/utils/song_metadata.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,7 +12,7 @@ import 'package:looper_player/features/playback/presentation/providers/playback/
 import 'package:looper_player/features/playback/presentation/screens/lyrics_view.dart';
 import 'package:looper_player/features/settings/presentation/providers/settings_notifier.dart';
 import 'package:looper_player/ui/android/widgets/premium_section.dart';
-import 'package:looper_player/ui/widgets/common/optimized_image.dart';
+import 'package:looper_player/ui/widgets/common/song_artwork.dart';
 import 'package:looper_player/core/utils/ui_utils.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:looper_player/core/theme/app_icons.dart';
@@ -261,9 +263,7 @@ class _AndroidLyricsScreenState extends ConsumerState<AndroidLyricsScreen>
     final song = playback.currentSong;
     if (song == null) return const SizedBox.shrink();
 
-    final text = isArtist
-        ? (song.artist ?? context.l10n.unknownArtist)
-        : song.title;
+    final text = isArtist ? artistAlbumLabel(song, context.l10n) : song.title;
 
     final fallbackFrom = isArtist
         ? AppFonts.jostStyle(
@@ -385,12 +385,7 @@ class _AndroidLyricsScreenState extends ConsumerState<AndroidLyricsScreen>
                     tag: 'album_art',
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(12),
-                      child: OptimizedImage(
-                        imagePath: song.artPath,
-                        width: 60.s,
-                        height: 60.s,
-                        fit: BoxFit.cover,
-                      ),
+                      child: SongArtwork(song: song, size: 60.s),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -415,7 +410,7 @@ class _AndroidLyricsScreenState extends ConsumerState<AndroidLyricsScreen>
                           tag: 'song_artist',
                           flightShuttleBuilder: _buildHeroTextShuttle,
                           child: ScrollingText(
-                            text: song.artist ?? context.l10n.unknownArtist,
+                            text: artistAlbumLabel(song, context.l10n),
                             style: AppFonts.jostStyle(
                               color: Colors.white.withValues(alpha: 0.6),
                               fontSize: 14,

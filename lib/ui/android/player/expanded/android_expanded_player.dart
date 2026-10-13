@@ -1,5 +1,7 @@
 import 'dart:math' as math;
 
+import 'package:looper_player/core/utils/song_metadata.dart';
+
 import 'package:flutter/material.dart' hide RepeatMode;
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -584,7 +586,7 @@ class _AndroidExpandedPlayerState extends ConsumerState<AndroidExpandedPlayer>
                                   child: Align(
                                     alignment: Alignment.centerLeft,
                                     child: Text(
-                                      song.artist ?? context.l10n.unknownArtist,
+                                      artistAlbumLabel(song, context.l10n),
                                       style: TextStyle.lerp(
                                         fromStyle,
                                         toStyle,
@@ -635,7 +637,7 @@ class _AndroidExpandedPlayerState extends ConsumerState<AndroidExpandedPlayer>
                           }
                         },
                         child: ScrollingText(
-                          text: song.artist ?? context.l10n.unknownArtist,
+                          text: artistAlbumLabel(song, context.l10n),
                           lockLineHeight: true,
                           style: AppFonts.jostStyle(
                             color: Colors.white.withValues(alpha: 0.6),
