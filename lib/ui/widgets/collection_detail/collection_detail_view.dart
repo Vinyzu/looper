@@ -205,24 +205,49 @@ class CollectionDetailView extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(8, 8, 16, 0),
-                        child: PremiumSection(
-                          useExpanded: false,
-                          borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(32),
-                            bottomLeft: Radius.circular(32),
-                            topRight: Radius.circular(10),
-                            bottomRight: Radius.circular(10),
-                          ),
-                          width: 44,
-                          height: 44,
-                          onTap: () =>
-                              ref.read(appNavigationProvider.notifier).goBack(),
-                          child: const Icon(
-                            LucideIcons.chevronLeft,
-                            color: Colors.white,
-                            size: 20,
-                          ),
+                        padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+                        child: Row(
+                          children: [
+                            PremiumSection(
+                              useExpanded: false,
+                              borderRadius: const BorderRadius.only(
+                                topLeft: Radius.circular(32),
+                                bottomLeft: Radius.circular(32),
+                                topRight: Radius.circular(10),
+                                bottomRight: Radius.circular(10),
+                              ),
+                              width: 44,
+                              height: 44,
+                              onTap: () => ref
+                                  .read(appNavigationProvider.notifier)
+                                  .goBack(),
+                              child: const Icon(
+                                LucideIcons.chevronLeft,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                            ),
+                            if (reactivePlaylist != null) ...[
+                              const Spacer(),
+                              PremiumSection(
+                                useExpanded: false,
+                                borderRadius: const BorderRadius.only(
+                                  topLeft: Radius.circular(10),
+                                  bottomLeft: Radius.circular(10),
+                                  topRight: Radius.circular(32),
+                                  bottomRight: Radius.circular(32),
+                                ),
+                                width: 44,
+                                height: 44,
+                                onTap: () => _showAddSongsHint(context),
+                                child: const Icon(
+                                  LucideIcons.plus,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                       ),
                       // Header - Now always a Row for cover and name

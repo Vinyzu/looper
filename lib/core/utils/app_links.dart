@@ -7,14 +7,18 @@ class AppLinks {
   static const String githubRepo = 'https://github.com/SthrNilshaaa/looper';
   static const String githubReleasesApi =
       'https://api.github.com/repos/SthrNilshaaa/looper/releases/latest';
+
+  /// Everyone who has committed to the repo; the About screen's maintainers
+  /// row is built from it, so new contributors show up without a release.
+  static const String githubContributorsApi =
+      'https://api.github.com/repos/SthrNilshaaa/looper/contributors';
   static const String githubReleasesWeb =
       'https://github.com/SthrNilshaaa/looper/releases';
   static const String playStoreWeb =
       'https://play.google.com/store/apps/details?id=com.looper.player';
 
-  // Support & Donation (UPI payment & Web fallback)
-  static const String upiPay = 'https://ko-fi.com/sthrnilshaaa';
-  static const String buyMeACoffee = 'https://buymeacoffee.com/sthrnilshaaa';
+  // Support & Donation
+  static const String koFi = 'https://ko-fi.com/L2L124TL7L';
 
   // Maintainers & Developer Profiles
   static const String nileshGithub = 'https://github.com/SthrNilshaaa';

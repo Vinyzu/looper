@@ -57,33 +57,46 @@ class PlaylistArtwork extends ConsumerWidget {
             color: Theme.of(context).colorScheme.primaryContainer.withValues(
               alpha: dynamicTheming ? 0.8 : 0.3,
             ),
-            child: songPaths.isEmpty
-                ? const Center(child: Icon(LucideIcons.listMusic, size: 48))
-                : LayoutBuilder(
-                    builder: (context, constraints) {
-                      final tileSize = constraints.maxWidth / 2;
-                      return Column(
-                        children: List.generate(2, (row) {
-                          return Expanded(
-                            child: Row(
-                              children: List.generate(2, (column) {
-                                final index = row * 2 + column;
-                                return Expanded(
-                                  child: OptimizedImage(
-                                    imagePath: index < artwork.length
-                                        ? artwork[index]
-                                        : null,
-                                    width: tileSize,
-                                    height: tileSize,
-                                  ),
-                                );
-                              }),
-                            ),
-                          );
-                        }),
-                      );
-                    },
+            child: switch (songPaths.length) {
+              0 => const Center(child: Icon(LucideIcons.listMusic, size: 48)),
+              // Fewer than four songs can't fill the grid: show one cover,
+              // the first song that has artwork.
+              < 4 => LayoutBuilder(
+                builder: (context, constraints) => OptimizedImage(
+                  imagePath: artwork.firstWhere(
+                    (art) => art != null,
+                    orElse: () => null,
                   ),
+                  width: constraints.maxWidth,
+                  height: constraints.maxWidth,
+                ),
+              ),
+              _ => LayoutBuilder(
+                builder: (context, constraints) {
+                  final tileSize = constraints.maxWidth / 2;
+                  return Column(
+                    children: List.generate(2, (row) {
+                      return Expanded(
+                        child: Row(
+                          children: List.generate(2, (column) {
+                            final index = row * 2 + column;
+                            return Expanded(
+                              child: OptimizedImage(
+                                imagePath: index < artwork.length
+                                    ? artwork[index]
+                                    : null,
+                                width: tileSize,
+                                height: tileSize,
+                              ),
+                            );
+                          }),
+                        ),
+                      );
+                    }),
+                  );
+                },
+              ),
+            },
           ),
         ),
       ),

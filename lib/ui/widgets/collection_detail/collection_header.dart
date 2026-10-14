@@ -1,6 +1,26 @@
 part of 'collection_detail_view.dart';
 
 extension _CollectionHeader on CollectionDetailView {
+  /// Songs join a playlist from their own options menu, so the playlist's +
+  /// button explains where that is rather than opening a picker.
+  void _showAddSongsHint(BuildContext context) {
+    AppHaptics.light();
+    final l10n = AppLocalizations.of(context)!;
+    ScaffoldMessenger.of(context)
+      ..clearSnackBars()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            UiUtils.isDesktop
+                ? l10n.addSongsToPlaylistHintDesktop
+                : l10n.addSongsToPlaylistHint,
+          ),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 5),
+        ),
+      );
+  }
+
   Widget _buildArt(
     BuildContext context,
     bool isNarrow,

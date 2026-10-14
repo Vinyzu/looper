@@ -95,7 +95,7 @@ class SettingsView extends ConsumerWidget {
                       onTap: () {
                         AppHaptics.light();
                         launchUrl(
-                          Uri.parse(AppLinks.buyMeACoffee),
+                          Uri.parse(AppLinks.koFi),
                           mode: LaunchMode.externalApplication,
                         );
                       },

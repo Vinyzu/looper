@@ -68,27 +68,12 @@ extension _SettingsSupportUsDialog on _SettingsViewState {
                     child: InkWell(
                       onTap: () async {
                         AppHaptics.medium();
-                        final upiUri = Uri.parse(AppLinks.upiPay);
-                        final webUri = Uri.parse(AppLinks.buyMeACoffee);
                         try {
-                          final launched = await launchUrl(
-                            upiUri,
+                          await launchUrl(
+                            Uri.parse(AppLinks.koFi),
                             mode: LaunchMode.externalApplication,
                           );
-                          if (!launched) {
-                            await launchUrl(
-                              webUri,
-                              mode: LaunchMode.externalApplication,
-                            );
-                          }
-                        } catch (_) {
-                          try {
-                            await launchUrl(
-                              webUri,
-                              mode: LaunchMode.externalApplication,
-                            );
-                          } catch (_) {}
-                        }
+                        } catch (_) {}
                       },
                       borderRadius: BorderRadius.circular(16),
                       child: Center(
@@ -102,7 +87,7 @@ extension _SettingsSupportUsDialog on _SettingsViewState {
                             ),
                             const SizedBox(width: 10),
                             Text(
-                              l10n.buyMeCoffee,
+                              l10n.supportOnKofi,
                               style: AppFonts.jostStyle(
                                 color: Colors.black,
                                 fontSize: 15,

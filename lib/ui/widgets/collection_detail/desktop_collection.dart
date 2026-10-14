@@ -154,6 +154,12 @@ extension _DesktopCollection on CollectionDetailView {
                                 if (reactivePlaylist != null) ...[
                                   const SizedBox(width: 10),
                                   _DesktopPill.icon(
+                                    icon: LucideIcons.plus,
+                                    tooltip: l10n.addSongsToPlaylistTitle,
+                                    onTap: () => _showAddSongsHint(context),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  _DesktopPill.icon(
                                     icon: LucideIcons.moreHorizontal,
                                     onTap: () => _showPlaylistOptions(
                                       context,
