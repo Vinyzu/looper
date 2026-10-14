@@ -31,6 +31,7 @@ import 'package:looper_player/core/utils/ui_utils.dart';
 import 'song_columns.dart';
 
 import 'package:looper_player/core/utils/l10n.dart';
+import 'package:looper_player/ui/widgets/sheets/add_to_playlist_sheet.dart';
 import 'package:looper_player/core/services/haptics/app_haptics.dart';
 
 export 'song_tile.dart';
@@ -116,44 +117,13 @@ class _SongsListState extends ConsumerState<SongsList> {
 
   Future<void> _bulkAddToPlaylist(AppLocalizations l10n) async {
     final selected = _selectedSongs;
-    final playlists = ref.read(playlistProvider);
-    final chosen = await showDialog<Playlist>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: Theme.of(dialogContext).colorScheme.surfaceContainer,
-        title: Text(l10n.addToPlaylists),
-        content: playlists.isEmpty
-            ? Text(l10n.noPlaylistsCreated)
-            : SizedBox(
-                width: double.maxFinite,
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: playlists.length,
-                  itemBuilder: (context, index) {
-                    final p = playlists[index];
-                    return ListTile(
-                      leading: const Icon(LucideIcons.listMusic),
-                      title: Text(p.name),
-                      onTap: () => Navigator.pop(dialogContext, p),
-                    );
-                  },
-                ),
-              ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(l10n.cancel),
-          ),
-        ],
-      ),
-    );
+    final chosen = await showAddToPlaylistSheet(context, selected);
     if (chosen == null) return;
-    await PlaylistService.addSongsToPlaylist(chosen, selected);
     if (!mounted) return;
     _clearSelection();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(l10n.addedTo(chosen.name)),
+        content: Text(l10n.addedTo(chosen)),
         behavior: SnackBarBehavior.floating,
       ),
     );

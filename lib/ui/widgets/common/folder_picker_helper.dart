@@ -162,7 +162,6 @@ class FolderPickerHelper {
           ScaffoldMessenger.of(context).clearSnackBars();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              backgroundColor: const Color(0xFF1E1E1E),
               duration: const Duration(
                 seconds: 4,
               ), // Explicit auto-hide duration

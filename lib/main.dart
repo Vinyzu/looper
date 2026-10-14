@@ -283,6 +283,31 @@ class MyApp extends ConsumerWidget {
           fontFamily: fontFamily,
           fontFamilyFallback: fontFallback,
           textTheme: textTheme,
+          // Material 3 defaults snackbars to inverseSurface, a near-white
+          // block on this dark theme. Match the app's dark sheets instead,
+          // tinted with the accent.
+          snackBarTheme: SnackBarThemeData(
+            backgroundColor: Color.alphaBlend(
+              colorScheme.primary.withValues(alpha: 0.16),
+              const Color(0xFF1E1E1E),
+            ),
+            contentTextStyle: TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontFamily: fontFamily,
+              fontFamilyFallback: fontFallback,
+            ),
+            actionTextColor: colorScheme.primary,
+            closeIconColor: Colors.white70,
+            behavior: SnackBarBehavior.floating,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(
+                color: colorScheme.primary.withValues(alpha: 0.25),
+              ),
+            ),
+          ),
         ),
         themeAnimationDuration: const Duration(milliseconds: 1000),
         themeAnimationCurve: Curves.easeInOut,

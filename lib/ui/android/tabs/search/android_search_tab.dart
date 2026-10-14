@@ -10,6 +10,7 @@ import 'package:looper_player/core/services/haptics/app_haptics.dart';
 import 'package:looper_player/core/services/storage/db_service.dart';
 import 'package:looper_player/core/theme/app_fonts.dart';
 import 'package:looper_player/core/utils/l10n.dart';
+import 'package:looper_player/ui/widgets/sheets/add_to_playlist_sheet.dart';
 import 'package:looper_player/core/utils/motion.dart';
 import 'package:looper_player/features/library/presentation/widgets/songs/song_tile.dart';
 import 'package:looper_player/features/playback/presentation/providers/lyrics/lyrics_search_provider.dart';
@@ -113,9 +114,8 @@ class _AndroidSearchTabState extends ConsumerState<AndroidSearchTab> {
   Future<void> _addSelectedToPlaylist(List<Song> songs) async {
     final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
-    final playlistName = await _addSongsToPlaylist(
+    final playlistName = await showAddToPlaylistSheet(
       context,
-      ref,
       songs.where((s) => _selected.contains(s.path)).toList(),
       suggestedName: _controller.text.trim(),
     );

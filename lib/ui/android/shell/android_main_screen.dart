@@ -208,12 +208,8 @@ class _AndroidMainScreenState extends ConsumerState<AndroidMainScreen>
             l10n.supportPromptMessage,
             style: AppFonts.jostStyle(color: Colors.white),
           ),
-          backgroundColor: Colors.black87,
           duration: const Duration(seconds: 10),
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
           margin: EdgeInsets.only(
             bottom: hasSong ? 180 : 100, // Above the navbar
             left: 20,
@@ -548,12 +544,8 @@ class _AndroidMainScreenState extends ConsumerState<AndroidMainScreen>
                 l10n.pressBackExit,
                 style: AppFonts.jostStyle(color: Colors.white),
               ),
-              backgroundColor: Colors.black87,
               duration: const Duration(seconds: 2),
               behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
               margin: EdgeInsets.only(
                 bottom: song != null ? 180 : 100, // Above the navbar
                 left: 20,
