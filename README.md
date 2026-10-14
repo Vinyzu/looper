@@ -3,7 +3,9 @@
 </p>
 
 <p align="center">
-  <b>A local music player for Android and Linux that takes its colours from whatever you're playing.</b>
+  <b>A music player that makes your own collection feel new again.</b>
+  <br />
+  Lyrics that follow every word, a look that changes with each album, and no ads, no account and no tracking. Just your music, on Android and Linux.
 </p>
 
 <p align="center">
