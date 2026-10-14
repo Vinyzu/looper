@@ -126,7 +126,8 @@ class SongTile extends ConsumerWidget {
     final isCurrent = ref.watch(
       playbackProvider.select((s) => s.currentSong?.path == song.path),
     );
-    final isPlaying = ref.watch(playbackProvider.select((s) => s.isPlaying));
+    final isPlaying =
+        isCurrent && ref.watch(playbackProvider.select((s) => s.isPlaying));
     final isCollection = collectionIndex != null || playlist != null;
     final songSubtitle = showAlbum || isCollection
         ? artistAlbumLabel(song, l10n)
@@ -160,9 +161,10 @@ class SongTile extends ConsumerWidget {
     }
 
     final tile = Material(
+      type: selected ? MaterialType.canvas : MaterialType.transparency,
       color: selected
           ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.08)
-          : Colors.transparent,
+          : null,
       child: _SongTileBouncyTap(
         onTap: () {
           if (selectionMode) {

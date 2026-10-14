@@ -23,6 +23,7 @@ import 'package:looper_player/features/playlists/presentation/screens/playlist_v
     show playlistProvider;
 import 'package:looper_player/features/library/domain/song_full_plays.dart';
 import 'package:looper_player/ui/widgets/common/fast_scroller.dart';
+import 'package:looper_player/ui/widgets/common/momentum_scroll_controller.dart';
 
 import 'song_tile.dart';
 
@@ -71,7 +72,7 @@ class _SongsListState extends ConsumerState<SongsList> {
   // one get their own.
   ScrollController? _ownController;
   ScrollController get _scrollController =>
-      widget.controller ?? (_ownController ??= ScrollController());
+      widget.controller ?? (_ownController ??= MomentumScrollController());
 
   @override
   void dispose() {

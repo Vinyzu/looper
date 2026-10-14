@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:looper_player/ui/widgets/common/momentum_scroll_controller.dart';
 import 'package:looper_player/core/utils/l10n.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -21,7 +22,7 @@ class CollectionScrollToEnd extends StatefulWidget {
 }
 
 class _CollectionScrollToEndState extends State<CollectionScrollToEnd> {
-  final _controller = ScrollController();
+  final _controller = MomentumScrollController();
   final _visible = ValueNotifier(false);
   Timer? _hideTimer;
 
@@ -35,6 +36,9 @@ class _CollectionScrollToEndState extends State<CollectionScrollToEnd> {
 
   bool _onScroll(ScrollNotification notification) {
     if (!widget.enabled || notification.depth != 0) return false;
+    if (notification is ScrollStartNotification) {
+      _hideTimer?.cancel();
+    }
     if (notification is ScrollUpdateNotification) {
       final metrics = notification.metrics;
       _visible.value =
@@ -42,12 +46,11 @@ class _CollectionScrollToEndState extends State<CollectionScrollToEnd> {
           metrics.pixels > 0 &&
           metrics.maxScrollExtent - metrics.pixels > metrics.viewportDimension;
       _hideTimer?.cancel();
-      if (_visible.value) {
-        _hideTimer = Timer(
-          const Duration(milliseconds: 1400),
-          () => _visible.value = false,
-        );
-      }
+    } else if (notification is ScrollEndNotification && _visible.value) {
+      _hideTimer = Timer(
+        const Duration(milliseconds: 1400),
+        () => _visible.value = false,
+      );
     }
     return false;
   }
