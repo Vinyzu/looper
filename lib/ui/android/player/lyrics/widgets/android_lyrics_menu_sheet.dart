@@ -158,7 +158,7 @@ class _LyricsMenuSheetContent extends ConsumerWidget {
                           overflow: TextOverflow.ellipsis,
                           style: AppFonts.jostStyle(
                             color: Colors.white54,
-                            fontSize: 13,
+                            fontSize: 12,
                           ),
                         ),
                       ],

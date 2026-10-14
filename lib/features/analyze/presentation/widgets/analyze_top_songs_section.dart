@@ -215,7 +215,7 @@ class _TopSongRow extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                           style: AppFonts.jostStyle(
                             color: Colors.white.withValues(alpha: 0.5),
-                            fontSize: 12.5,
+                            fontSize: 12,
                           ),
                         ),
                       ],

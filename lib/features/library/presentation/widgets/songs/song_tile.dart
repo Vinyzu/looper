@@ -46,6 +46,29 @@ class SongTile extends ConsumerWidget {
     super.key,
   });
 
+  Future<void> _openArtist(BuildContext context, WidgetRef ref) async {
+    final artistName = song.artist;
+    if (artistName == null || artistName.trim().isEmpty) return;
+    final artistSongs = await DbService.isar.songs
+        .filter()
+        .artistEqualTo(artistName)
+        .findAll();
+    final artist = await DbService.isar.artists
+        .filter()
+        .nameEqualTo(artistName)
+        .findFirst();
+    if (!context.mounted) return;
+    ref
+        .read(appNavigationProvider.notifier)
+        .showCollection(
+          title: artistName,
+          subtitle: l10n.artists,
+          art: artist?.artPath ?? song.artPath,
+          imageUrl: artist?.artistImageUrl,
+          songs: artistSongs,
+        );
+  }
+
   Widget _buildHighlightedText({
     required BuildContext context,
     required String text,
@@ -108,6 +131,28 @@ class SongTile extends ConsumerWidget {
     final songSubtitle = showAlbum || isCollection
         ? artistAlbumLabel(song, l10n)
         : song.artist ?? l10n.unknownArtist;
+
+    // The ListTile subtitle fills its column. Loosen those constraints so the
+    // link only covers the smaller text, leaving row taps around it for Play.
+    final subtitle = Align(
+      alignment: Alignment.centerLeft,
+      heightFactor: 1,
+      child: InkWell(
+        onTap: !selectionMode && song.artist?.trim().isNotEmpty == true
+            ? () => _openArtist(context, ref)
+            : null,
+        child: Text(
+          songSubtitle,
+          style: AppFonts.jostStyle(
+            color: Colors.white.withValues(alpha: 0.5),
+            fontSize: 12,
+            height: 1.15,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
+    );
 
     String? lyricSnippet;
     if (searchQuery != null && searchQuery!.isNotEmpty && song.lyrics != null) {
@@ -217,38 +262,7 @@ class SongTile extends ConsumerWidget {
               ? Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    InkWell(
-                      onTap: () async {
-                        if (song.artist != null) {
-                          final artistSongs = await DbService.isar.songs
-                              .filter()
-                              .artistEqualTo(song.artist!)
-                              .findAll();
-                          final artist = await DbService.isar.artists
-                              .filter()
-                              .nameEqualTo(song.artist!)
-                              .findFirst();
-                          ref
-                              .read(appNavigationProvider.notifier)
-                              .showCollection(
-                                title: song.artist!,
-                                subtitle: l10n.artists,
-                                art: artist?.artPath ?? song.artPath,
-                                imageUrl: artist?.artistImageUrl,
-                                songs: artistSongs,
-                              );
-                        }
-                      },
-                      child: Text(
-                        songSubtitle,
-                        style: AppFonts.jostStyle(
-                          color: Colors.white.withValues(alpha: 0.5),
-                          fontSize: 13,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
+                    subtitle,
                     const SizedBox(height: 6),
                     Container(
                       padding: const EdgeInsets.symmetric(
@@ -298,38 +312,7 @@ class SongTile extends ConsumerWidget {
                     ),
                   ],
                 )
-              : InkWell(
-                  onTap: () async {
-                    if (song.artist != null) {
-                      final artistSongs = await DbService.isar.songs
-                          .filter()
-                          .artistEqualTo(song.artist!)
-                          .findAll();
-                      final artist = await DbService.isar.artists
-                          .filter()
-                          .nameEqualTo(song.artist!)
-                          .findFirst();
-                      ref
-                          .read(appNavigationProvider.notifier)
-                          .showCollection(
-                            title: song.artist!,
-                            subtitle: l10n.artists,
-                            art: artist?.artPath ?? song.artPath,
-                            imageUrl: artist?.artistImageUrl,
-                            songs: artistSongs,
-                          );
-                    }
-                  },
-                  child: Text(
-                    songSubtitle,
-                    style: AppFonts.jostStyle(
-                      color: Colors.white.withValues(alpha: 0.5),
-                      fontSize: 13,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
+              : subtitle,
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [

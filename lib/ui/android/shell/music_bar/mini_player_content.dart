@@ -18,7 +18,7 @@ extension _MiniPlayerContent on _PremiumMusicBarState {
     final double artSize = compact ? 40.0 : 50.0;
     final double artRadius = compact ? 26.0 : 32.0;
     final double titleFontSize = compact ? 16.0 : 18.0;
-    final double artistFontSize = compact ? 13.0 : 16.0;
+    final double artistFontSize = compact ? 12.0 : 14.0;
 
     return Padding(
       padding: EdgeInsets.symmetric(

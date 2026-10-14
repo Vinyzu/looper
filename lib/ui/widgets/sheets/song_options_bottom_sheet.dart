@@ -317,7 +317,7 @@ class _SongOptionsSheetContent extends ConsumerWidget {
                       Text(
                         artistAlbumLabel(song, l10n),
                         style: AppFonts.jostStyle(
-                          fontSize: 13,
+                          fontSize: 12,
                           color: Colors.white54,
                         ),
                         maxLines: 1,

@@ -555,12 +555,12 @@ class _AndroidExpandedPlayerState extends ConsumerState<AndroidExpandedPlayer>
 
                           final fallbackFrom = AppFonts.jostStyle(
                             color: Colors.white.withValues(alpha: 0.5),
-                            fontSize: 14,
+                            fontSize: 12,
                             letterSpacing: 0.2,
                           );
                           final fallbackTo = AppFonts.jostStyle(
                             color: Colors.white.withValues(alpha: 0.6),
-                            fontSize: 18,
+                            fontSize: 16,
                             letterSpacing: 0.2,
                           );
 
@@ -602,47 +602,53 @@ class _AndroidExpandedPlayerState extends ConsumerState<AndroidExpandedPlayer>
                             },
                           );
                         },
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () async {
-                          if (song.artist != null) {
-                            final artistSongs = await DbService.isar.songs
-                                .filter()
-                                .artistEqualTo(song.artist!)
-                                .findAll();
-                            final artist = await DbService.isar.artists
-                                .filter()
-                                .nameEqualTo(song.artist!)
-                                .findFirst();
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      heightFactor: 1,
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () async {
+                            if (song.artist != null) {
+                              final artistSongs = await DbService.isar.songs
+                                  .filter()
+                                  .artistEqualTo(song.artist!)
+                                  .findAll();
+                              final artist = await DbService.isar.artists
+                                  .filter()
+                                  .nameEqualTo(song.artist!)
+                                  .findFirst();
 
-                            if (enableSlide) {
+                              if (enableSlide) {
+                                ref
+                                    .read(
+                                      playerCollapseTriggerProvider.notifier,
+                                    )
+                                    .bump();
+                              }
+
                               ref
-                                  .read(playerCollapseTriggerProvider.notifier)
-                                  .bump();
+                                  .read(appNavigationProvider.notifier)
+                                  .showCollection(
+                                    title: song.artist!,
+                                    subtitle: l10n.artists,
+                                    art: artist?.artPath ?? song.artPath,
+                                    imageUrl: artist?.artistImageUrl,
+                                    songs: artistSongs,
+                                  );
                             }
-
-                            ref
-                                .read(appNavigationProvider.notifier)
-                                .showCollection(
-                                  title: song.artist!,
-                                  subtitle: l10n.artists,
-                                  art: artist?.artPath ?? song.artPath,
-                                  imageUrl: artist?.artistImageUrl,
-                                  songs: artistSongs,
-                                );
-                          }
-                          if (!enableSlide) {
-                            Navigator.pop(context);
-                          }
-                        },
-                        child: ScrollingText(
-                          text: artistAlbumLabel(song, context.l10n),
-                          lockLineHeight: true,
-                          style: AppFonts.jostStyle(
-                            color: Colors.white.withValues(alpha: 0.6),
-                            fontSize: 18,
-                            letterSpacing: 0.2,
+                            if (!enableSlide) {
+                              Navigator.pop(context);
+                            }
+                          },
+                          child: ScrollingText(
+                            text: artistAlbumLabel(song, context.l10n),
+                            lockLineHeight: true,
+                            style: AppFonts.jostStyle(
+                              color: Colors.white.withValues(alpha: 0.6),
+                              fontSize: 16,
+                              letterSpacing: 0.2,
+                            ),
                           ),
                         ),
                       ),

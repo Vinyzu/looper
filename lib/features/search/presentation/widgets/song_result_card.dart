@@ -121,7 +121,7 @@ class _SongResultCard extends ConsumerWidget {
                             Text(
                               song.artist ?? l10n.unknownArtist,
                               style: AppFonts.jostStyle(
-                                fontSize: 14,
+                                fontSize: 13,
                                 color: Colors.grey,
                               ),
                             ),
@@ -258,7 +258,7 @@ class _SongResultCard extends ConsumerWidget {
                             Text(
                               song.artist ?? l10n.unknownArtist,
                               style: AppFonts.jostStyle(
-                                fontSize: 14,
+                                fontSize: 13,
                                 color: Colors.grey,
                               ),
                             ),

@@ -253,7 +253,7 @@ class _PremiumPlayerBar extends ConsumerWidget {
                       artist,
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.5),
-                        fontSize: (isVeryNarrow ? 10 : 12).ts,
+                        fontSize: (isVeryNarrow ? 10 : 11).ts,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,

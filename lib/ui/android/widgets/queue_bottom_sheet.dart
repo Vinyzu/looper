@@ -73,7 +73,7 @@ class _QueueBottomSheetState extends ConsumerState<QueueBottomSheet> {
                 ),
                 Text(
                   '${queue.length} ${l10n.songs.toLowerCase()}',
-                  style: AppFonts.jostStyle(color: Colors.grey),
+                  style: AppFonts.jostStyle(color: Colors.grey, fontSize: 12),
                 ),
               ],
             ),
@@ -124,7 +124,10 @@ class _QueueBottomSheetState extends ConsumerState<QueueBottomSheet> {
                     ),
                     subtitle: Text(
                       song.artist ?? context.l10n.unknownArtist,
-                      style: AppFonts.jostStyle(color: Colors.grey),
+                      style: AppFonts.jostStyle(
+                        color: Colors.grey,
+                        fontSize: 12,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),

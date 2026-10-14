@@ -147,7 +147,7 @@ class ExpandedPlayer extends ConsumerWidget {
                       artistAlbumLabel(song, l10n),
                       style: AppFonts.jostStyle(
                         color: Colors.white.withValues(alpha: 0.6),
-                        fontSize: 16.ts,
+                        fontSize: 14.ts,
                         fontWeight: FontWeight.normal,
                       ),
                       textAlign: TextAlign.center,

@@ -268,7 +268,7 @@ class _AndroidLyricsScreenState extends ConsumerState<AndroidLyricsScreen>
     final fallbackFrom = isArtist
         ? AppFonts.jostStyle(
             color: Colors.white.withValues(alpha: 0.5),
-            fontSize: 14,
+            fontSize: 16,
           )
         : AppFonts.jostStyle(
             color: Colors.white,
@@ -279,7 +279,7 @@ class _AndroidLyricsScreenState extends ConsumerState<AndroidLyricsScreen>
     final fallbackTo = isArtist
         ? AppFonts.jostStyle(
             color: Colors.white.withValues(alpha: 0.6),
-            fontSize: 18,
+            fontSize: 12,
           )
         : AppFonts.jostStyle(
             color: Colors.white,
@@ -413,7 +413,7 @@ class _AndroidLyricsScreenState extends ConsumerState<AndroidLyricsScreen>
                             text: artistAlbumLabel(song, context.l10n),
                             style: AppFonts.jostStyle(
                               color: Colors.white.withValues(alpha: 0.6),
-                              fontSize: 14,
+                              fontSize: 12,
                               letterSpacing: 0.2,
                             ),
                           ),

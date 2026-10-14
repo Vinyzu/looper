@@ -42,6 +42,13 @@ extension _DesktopCollection on CollectionDetailView {
           controller: controller,
           physics: const BouncingScrollPhysics(),
           slivers: [
+            _buildScrollHeader(
+              context,
+              ref,
+              title: title,
+              art: art,
+              playlist: reactivePlaylist,
+            ),
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(24, 28, 24, 0),
               sliver: SliverToBoxAdapter(
@@ -404,7 +411,7 @@ class _DesktopSongRowState extends ConsumerState<_DesktopSongRow> {
                       artistAlbumLabel(song, l10n),
                       style: AppFonts.jostStyle(
                         color: Colors.white.withValues(alpha: 0.45),
-                        fontSize: 12,
+                        fontSize: 11,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,

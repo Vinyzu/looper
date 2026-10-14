@@ -91,7 +91,7 @@ class AnalyzeHeroCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: AppFonts.jostStyle(
                     color: Colors.white.withValues(alpha: 0.6),
-                    fontSize: 13,
+                    fontSize: 12,
                   ),
                 ),
                 const SizedBox(height: 12),

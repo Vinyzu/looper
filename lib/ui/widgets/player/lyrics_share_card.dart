@@ -82,7 +82,7 @@ class LyricsShareCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: AppFonts.jostStyle(
                         color: Colors.white54,
-                        fontSize: 12.5,
+                        fontSize: 12,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
