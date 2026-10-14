@@ -917,6 +917,16 @@ class AppLocalizationsTr extends AppLocalizations {
       'Şu anda oynatılan ekranda ses kalitesi bilgi rozetini görüntüle';
 
   @override
+  String get showPlaylistsRow => 'Çalma Listeleri Satırını Göster';
+
+  @override
+  String get showPlaylistsRowDesc =>
+      'Ana ekranınızda yatay bir çalma listesi satırı gösterin';
+
+  @override
+  String get playlistsRowDesc => 'Çalma listeleriniz, en son çalınanlar önce';
+
+  @override
   String get showRecentRow => 'Son Oynananlar Satırını Göster';
 
   @override

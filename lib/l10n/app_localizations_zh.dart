@@ -851,6 +851,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get showQualityBadgeDesc => '在正在播放的屏幕上显示音频质量信息徽章';
 
   @override
+  String get showPlaylistsRow => '显示播放列表行';
+
+  @override
+  String get showPlaylistsRowDesc => '在主屏幕上显示横向播放列表';
+
+  @override
+  String get playlistsRowDesc => '最近播放的播放列表排在前面';
+
+  @override
   String get showRecentRow => '显示最近播放行';
 
   @override

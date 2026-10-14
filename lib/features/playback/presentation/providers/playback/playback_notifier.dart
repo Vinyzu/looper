@@ -458,7 +458,11 @@ class Playback extends _$Playback {
     }
   }
 
-  void setPlaylist(List<Song> songs, {int initialIndex = 0}) {
+  void setPlaylist(
+    List<Song> songs, {
+    int initialIndex = 0,
+    int? sourcePlaylistId,
+  }) {
     // Extract manual queue songs before replacing the playlist
     final start = _currentIndex + 1;
     final end = (start + _manualQueueCount).clamp(0, _playlist.length);
@@ -503,7 +507,7 @@ class Playback extends _$Playback {
 
     state = state.copyWith(queue: List.from(_playlist));
     if (_playlist.isNotEmpty && _currentIndex != -1) {
-      play(_playlist[_currentIndex]);
+      play(_playlist[_currentIndex], sourcePlaylistId: sourcePlaylistId);
     }
   }
 
@@ -560,6 +564,7 @@ class Playback extends _$Playback {
     bool play = true,
     Duration? initialPosition,
     bool blockDuringCall = true,
+    int? sourcePlaylistId,
   }) async {
     _silenceTimer?.cancel();
     _songCompletionTimer?.cancel();
@@ -601,6 +606,7 @@ class Playback extends _$Playback {
         crossfadeId,
         play: play,
         initialPosition: initialPosition,
+        sourcePlaylistId: sourcePlaylistId,
       );
     } catch (e) {
       if (crossfadeId == _activeCrossfadeId) {
@@ -610,6 +616,7 @@ class Playback extends _$Playback {
             crossfadeId,
             play: play,
             initialPosition: initialPosition,
+            sourcePlaylistId: sourcePlaylistId,
           );
         } catch (retryError, stack) {
           LoggerHelper.write(
@@ -650,6 +657,7 @@ class Playback extends _$Playback {
     int crossfadeId, {
     bool play = true,
     Duration? initialPosition,
+    int? sourcePlaylistId,
   }) async {
     // A new track is loading - close out whatever real listening-time
     // segment was accruing for the outgoing song before attribution moves
@@ -744,6 +752,13 @@ class Playback extends _$Playback {
       final songToUpdate = dbSong ?? song;
       if (play) {
         songToUpdate.lastPlayed = DateTime.now();
+        if (sourcePlaylistId != null) {
+          final playlist = await DbService.isar.playlists.get(sourcePlaylistId);
+          if (playlist != null) {
+            playlist.lastPlayed = songToUpdate.lastPlayed;
+            await DbService.isar.playlists.put(playlist);
+          }
+        }
         songToUpdate.playCount++;
         _activePlayEventId = await _logPlayEvent(songToUpdate);
       } else {

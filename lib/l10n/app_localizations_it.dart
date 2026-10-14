@@ -921,6 +921,17 @@ class AppLocalizationsIt extends AppLocalizations {
       'Mostra le informazioni sulla qualità audio nella schermata di riproduzione';
 
   @override
+  String get showPlaylistsRow => 'Mostra riga delle playlist';
+
+  @override
+  String get showPlaylistsRowDesc =>
+      'Mostra un elenco orizzontale di playlist nella schermata iniziale';
+
+  @override
+  String get playlistsRowDesc =>
+      'Le tue playlist, prima quelle riprodotte più di recente';
+
+  @override
   String get showRecentRow => 'Mostra riga Riprodotti di recente';
 
   @override

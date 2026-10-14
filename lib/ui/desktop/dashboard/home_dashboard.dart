@@ -10,6 +10,7 @@ import 'package:looper_player/ui/widgets/common/color_maper.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:looper_player/features/library/presentation/providers/library/library_notifier.dart';
 import 'package:looper_player/features/playback/presentation/providers/playback/playback_notifier.dart';
+import 'package:looper_player/features/playlists/presentation/screens/playlist_view.dart';
 import 'package:looper_player/core/providers/navigation_provider.dart';
 import 'package:looper_player/l10n/app_localizations.dart';
 import 'package:looper_player/core/services/storage/db_service.dart';
@@ -30,6 +31,7 @@ class HomeDashboard extends ConsumerWidget {
     final bool isDynamic = settings.enableDynamicTheming;
     final library = ref.watch(libraryProvider);
     final l10n = AppLocalizations.of(context)!;
+    final playlists = ref.watch(dashboardPlaylistsProvider).value ?? [];
 
     final genresMap = <String, List<Song>>{};
     for (var song in library.songs) {
@@ -72,6 +74,7 @@ class HomeDashboard extends ConsumerWidget {
         // Fixed desktop order; a row with nothing to show is skipped whole,
         // so it leaves no gap behind.
         for (final section in desktopHomeSections(
+          showPlaylists: settings.showHomePlaylists ?? true,
           showRecent: settings.showHomeRecent,
           showGenres: settings.showHomeGenres,
           showArtists: settings.showHomeArtists,
@@ -83,6 +86,26 @@ class HomeDashboard extends ConsumerWidget {
               }
               orderedChildren.add(
                 _buildQuickPicks(context, ref, isNarrow, isDynamic, l10n),
+              );
+            case DesktopHomeSection.playlists:
+              if (playlists.isEmpty) continue;
+              orderedChildren.add(
+                _buildDesktopHorizontalSection(
+                  context,
+                  title: l10n.playlists,
+                  l10n: l10n,
+                  onViewAll: () => ref
+                      .read(appNavigationProvider.notifier)
+                      .setItem(NavItem.playlists),
+                  itemCount: playlists.length,
+                  itemBuilder: (context, index) => Padding(
+                    padding: const EdgeInsets.only(right: 16),
+                    child: SizedBox(
+                      width: 140,
+                      child: PlaylistCard(playlist: playlists[index]),
+                    ),
+                  ),
+                ),
               );
             case DesktopHomeSection.recentlyPlayed:
               if ((ref.watch(dashboardRecentlyPlayedProvider).value ?? const [])

@@ -86,6 +86,26 @@ class ShowRecentRowTile extends ConsumerWidget {
   }
 }
 
+class ShowPlaylistsRowTile extends ConsumerWidget {
+  const ShowPlaylistsRowTile({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(settingsProvider);
+    final l10n = AppLocalizations.of(context)!;
+    return SwitchListTile(
+      secondary: const Icon(LucideIcons.listMusic, color: Colors.white70),
+      title: Text(l10n.showPlaylistsRow, style: _tileTitleStyle()),
+      subtitle: Text(l10n.showPlaylistsRowDesc, style: _tileSubtitleStyle()),
+      activeThumbColor: Color(settings.accentColor),
+      value: settings.showHomePlaylists ?? true,
+      onChanged: (value) {
+        ref.read(settingsProvider.notifier).updateShowHomePlaylists(value);
+      },
+    );
+  }
+}
+
 class ReorderDashboardSectionsTile extends ConsumerWidget {
   const ReorderDashboardSectionsTile({super.key});
 

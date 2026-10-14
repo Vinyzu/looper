@@ -78,7 +78,12 @@ extension _CollectionHeader on CollectionDetailView {
               useExpanded: false,
               onTap: () {
                 AppHaptics.medium();
-                ref.read(playbackProvider.notifier).setPlaylist(songsToRender);
+                ref
+                    .read(playbackProvider.notifier)
+                    .setPlaylist(
+                      songsToRender,
+                      sourcePlaylistId: reactivePlaylist?.id,
+                    );
               },
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -109,7 +114,12 @@ extension _CollectionHeader on CollectionDetailView {
               onTap: () {
                 AppHaptics.light();
                 ref.read(playbackProvider.notifier).toggleShuffle();
-                ref.read(playbackProvider.notifier).setPlaylist(songsToRender);
+                ref
+                    .read(playbackProvider.notifier)
+                    .setPlaylist(
+                      songsToRender,
+                      sourcePlaylistId: reactivePlaylist?.id,
+                    );
               },
               child: const Icon(
                 LucideIcons.shuffle,

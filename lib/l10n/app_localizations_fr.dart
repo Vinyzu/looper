@@ -924,6 +924,17 @@ class AppLocalizationsFr extends AppLocalizations {
       'Afficher un badge d\'information sur la qualité audio sur l\'écran de lecture en cours';
 
   @override
+  String get showPlaylistsRow => 'Afficher les playlists';
+
+  @override
+  String get showPlaylistsRowDesc =>
+      'Afficher une liste horizontale de playlists sur votre écran d’accueil';
+
+  @override
+  String get playlistsRowDesc =>
+      'Vos playlists, les plus récemment écoutées en premier';
+
+  @override
   String get showRecentRow => 'Afficher la ligne Écoutés récemment';
 
   @override

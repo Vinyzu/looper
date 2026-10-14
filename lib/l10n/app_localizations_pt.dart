@@ -918,6 +918,17 @@ class AppLocalizationsPt extends AppLocalizations {
       'Exibir selo de informações de qualidade de áudio na tela em reprodução';
 
   @override
+  String get showPlaylistsRow => 'Mostrar linha de playlists';
+
+  @override
+  String get showPlaylistsRowDesc =>
+      'Mostrar uma lista horizontal de playlists na tela inicial';
+
+  @override
+  String get playlistsRowDesc =>
+      'Suas playlists, com as reproduzidas mais recentemente primeiro';
+
+  @override
   String get showRecentRow => 'Mostrar linha de tocadas recentemente';
 
   @override

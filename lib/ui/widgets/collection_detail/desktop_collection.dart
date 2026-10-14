@@ -111,7 +111,10 @@ extension _DesktopCollection on CollectionDetailView {
                                 _DesktopPill(
                                   onTap: () => ref
                                       .read(playbackProvider.notifier)
-                                      .setPlaylist(songs),
+                                      .setPlaylist(
+                                        songs,
+                                        sourcePlaylistId: reactivePlaylist?.id,
+                                      ),
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
@@ -141,7 +144,11 @@ extension _DesktopCollection on CollectionDetailView {
                                         .toggleShuffle();
                                     ref
                                         .read(playbackProvider.notifier)
-                                        .setPlaylist(songs);
+                                        .setPlaylist(
+                                          songs,
+                                          sourcePlaylistId:
+                                              reactivePlaylist?.id,
+                                        );
                                   },
                                 ),
                                 if (reactivePlaylist != null) ...[
@@ -312,9 +319,13 @@ class _DesktopSongRowState extends ConsumerState<_DesktopSongRow> {
     final index = widget.songs.indexWhere((s) => s.path == widget.song.path);
     final playback = ref.read(playbackProvider.notifier);
     if (index != -1) {
-      playback.setPlaylist(widget.songs, initialIndex: index);
+      playback.setPlaylist(
+        widget.songs,
+        initialIndex: index,
+        sourcePlaylistId: widget.playlist?.id,
+      );
     } else {
-      playback.play(widget.song);
+      playback.play(widget.song, sourcePlaylistId: widget.playlist?.id);
     }
   }
 

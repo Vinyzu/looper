@@ -919,6 +919,17 @@ class AppLocalizationsRu extends AppLocalizations {
       'Отображение значка с информацией о качестве звука на экране воспроизведения';
 
   @override
+  String get showPlaylistsRow => 'Показывать ряд плейлистов';
+
+  @override
+  String get showPlaylistsRowDesc =>
+      'Показывать горизонтальный список плейлистов на главном экране';
+
+  @override
+  String get playlistsRowDesc =>
+      'Ваши плейлисты, недавно воспроизведённые первыми';
+
+  @override
   String get showRecentRow => 'Показать строку недавно воспроизведённых';
 
   @override

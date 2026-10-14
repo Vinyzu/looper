@@ -56,6 +56,7 @@ class ImportExportService {
               'songPaths': p.songPaths,
               'dateCreated': p.dateCreated.toIso8601String(),
               'dateModified': p.dateModified.toIso8601String(),
+              'lastPlayed': p.lastPlayed?.toIso8601String(),
             },
           )
           .toList();
@@ -401,6 +402,7 @@ class ImportExportService {
       final songPaths = List<String>.from(entry['songPaths'] ?? []);
       final dateCreatedStr = entry['dateCreated'] as String?;
       final dateModifiedStr = entry['dateModified'] as String?;
+      final lastPlayedStr = entry['lastPlayed'] as String?;
       if (name == null || name.isEmpty) continue;
 
       final dateCreated = dateCreatedStr != null
@@ -424,6 +426,14 @@ class ImportExportService {
           ..addAll(songPaths);
         playlist.songPaths = mergedPaths.toList();
         playlist.dateModified = DateTime.now();
+      }
+      final lastPlayed = lastPlayedStr != null
+          ? DateTime.tryParse(lastPlayedStr)
+          : null;
+      if (lastPlayed != null &&
+          (playlist.lastPlayed == null ||
+              lastPlayed.isAfter(playlist.lastPlayed!))) {
+        playlist.lastPlayed = lastPlayed;
       }
       toPut.add(playlist);
     }

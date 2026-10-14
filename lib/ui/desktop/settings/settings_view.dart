@@ -474,6 +474,8 @@ class SettingsView extends ConsumerWidget {
                   children: const [
                     ShowRecentRowTile(),
                     divider,
+                    ShowPlaylistsRowTile(),
+                    divider,
                     ShowGenresRowTile(),
                     divider,
                     ShowArtistsRowTile(),
