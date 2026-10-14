@@ -968,5 +968,10 @@
   "lyricsServices": "خدمات كلمات الأغاني",
   "lyricsServicesDesc": "اسحب لتحديد ترتيب البحث عن الكلمات. يتم تخطي الخدمات التي توقفها.",
   "creditWordSyncedDesc": "كلمات متزامنة كلمة بكلمة",
-  "creditMorpheDesc": "مرجع لعمليات البحث في NetEase وKuGou وMusixmatch وLyricify · GPL-3.0"
+  "creditMorpheDesc": "مرجع لعمليات البحث في NetEase وKuGou وMusixmatch وLyricify · GPL-3.0",
+  "searchFilterAll": "الكل",
+  "noResultsFor": "لا توجد نتائج لـ «{query}»",
+  "searchTryDifferent": "تحقق من الإملاء أو جرّب كلمة أخرى.",
+  "searchScopeHint": "العناوين والفنانون والألبومات والكلمات وقوائم التشغيل والأنواع",
+  "selectedCount": "تم تحديد {count}"
 }

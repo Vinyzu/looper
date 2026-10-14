@@ -473,9 +473,6 @@ class Settings extends _$Settings {
   Future<void> updateShowQualityBadge(bool value) =>
       _update((s) => s..showQualityBadge = value);
 
-  Future<void> updateShowPerformanceOptimizer(bool value) =>
-      _update((s) => s..showPerformanceOptimizer = value);
-
   Future<void> updateSegmentedUtilityButtons(bool value) =>
       _update((s) => s..segmentedUtilityButtons = value);
 
@@ -539,15 +536,6 @@ class Settings extends _$Settings {
 
   Future<void> updateKeepBackgroundGradient(bool value) =>
       _update((s) => s..keepBackgroundGradient = value);
-
-  Future<void> updateCustomBackgroundImagePath(String? path) =>
-      _update((s) => s..customBackgroundImagePath = path);
-
-  Future<void> updateBgBrightness(double value) =>
-      _update((s) => s..bgBrightness = value);
-
-  Future<void> updateBgOpacity(double value) =>
-      _update((s) => s..bgOpacity = value);
 
   Future<void> updateShowHomeArtists(bool value) =>
       _update((s) => s..showHomeArtists = value);
@@ -670,14 +658,8 @@ class Settings extends _$Settings {
   Future<void> updateDarkTheme(bool enabled) =>
       _update((s) => s..darkTheme = enabled);
 
-  Future<void> updateDynamicLyrics(bool enabled) =>
-      _update((s) => s..dynamicLyrics = enabled);
-
   Future<void> updateAccentColor(int color) =>
       _update((s) => s..accentColor = color);
-
-  Future<void> updateSaveDynamicColor(bool enabled) =>
-      _update((s) => s..saveDynamicColor = enabled);
 
   Future<void> updateLastPlayedSong(int? songId) =>
       _update((s) => s..lastPlayedSongId = songId);
@@ -774,11 +756,6 @@ class Settings extends _$Settings {
     _updateActiveFont();
   }
 
-  Future<void> updateCustomFontWeight(int value) async {
-    await _update((s) => s..customFontWeight = value);
-    _updateActiveFont();
-  }
-
   Future<void> updateCustomFontWeightDelta(int value) async {
     await _update((s) => s..customFontWeightDelta = value);
     _updateActiveFont();
@@ -794,16 +771,6 @@ class Settings extends _$Settings {
     _updateActiveFont();
   }
 
-  Future<void> updateCustomFontWeightLyrics(String value) async {
-    await _update((s) => s..customFontWeightLyrics = value);
-    _updateActiveFont();
-  }
-
-  Future<void> updateCustomFontWeightLyricsDelta(int value) async {
-    await _update((s) => s..customFontWeightLyricsDelta = value);
-    _updateActiveFont();
-  }
-
   Future<void> updateActiveLyricsFontWeightDelta(int value) async {
     await _update((s) => s..activeLyricsFontWeightDelta = value);
     _updateActiveFont();
@@ -814,21 +781,6 @@ class Settings extends _$Settings {
 
   Future<void> updateGlobalEqualizerGains(List<double> value) =>
       _update((s) => s..globalEqualizerGains = value);
-
-  Future<void> updateEnableAudioCache(bool value) =>
-      _update((s) => s..enableAudioCache = value);
-
-  Future<void> updateAudioCacheSizeMB(int value) =>
-      _update((s) => s..audioCacheSizeMB = value);
-
-  Future<void> updateAudioCacheSecs(int value) =>
-      _update((s) => s..audioCacheSecs = value);
-
-  Future<void> updateAudioBackCacheSizeMB(int value) =>
-      _update((s) => s..audioBackCacheSizeMB = value);
-
-  Future<void> updateExclusiveHardwareMode(bool value) =>
-      _update((s) => s..exclusiveHardwareMode = value);
 
   Future<void> updateEqualizerGlobalMode(bool value) =>
       _update((s) => s..equalizerGlobalMode = value);

@@ -968,5 +968,10 @@
   "lyricsServices": "Services de paroles",
   "lyricsServicesDesc": "Faites glisser pour définir l'ordre de recherche des paroles. Les services désactivés sont ignorés.",
   "creditWordSyncedDesc": "Paroles synchronisées mot à mot",
-  "creditMorpheDesc": "Référence pour les recherches NetEase, KuGou, Musixmatch et Lyricify · GPL-3.0"
+  "creditMorpheDesc": "Référence pour les recherches NetEase, KuGou, Musixmatch et Lyricify · GPL-3.0",
+  "searchFilterAll": "Tout",
+  "noResultsFor": "Aucun résultat pour « {query} »",
+  "searchTryDifferent": "Vérifiez l'orthographe ou essayez un autre mot.",
+  "searchScopeHint": "Titres, artistes, albums, paroles, playlists et genres",
+  "selectedCount": "{count} sélectionnés"
 }

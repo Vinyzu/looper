@@ -159,19 +159,9 @@ extension _DashboardDesktopItems on HomeDashboard {
       margin: const EdgeInsets.only(right: 16),
       child: InkWell(
         onTap: () async {
-          final songs = await DbService.isar.songs
-              .filter()
-              .albumEqualTo(album.name)
-              .findAll();
-          ref
+          await ref
               .read(appNavigationProvider.notifier)
-              .showCollection(
-                title: album.name,
-                subtitle: album.artist ?? l10n.unknownArtist,
-                art: album.artPath,
-                songs: songs,
-                album: album,
-              );
+              .showAlbum(album, unknownArtist: l10n.unknownArtist);
         },
         borderRadius: BorderRadius.circular(16),
         child: Column(

@@ -40,8 +40,6 @@ class AudioAnalysis {
   });
 
   String get bitDepth => bitsPerSample > 0 ? '$bitsPerSample-bit' : 'N/A';
-  String get sampleRateKhz => '${(sampleRate / 1000).toStringAsFixed(1)} kHz';
-  String get bitrateKbps => '${(bitrate / 1000).round()} kbps';
 }
 
 class AudioAnalyzer {
@@ -90,10 +88,6 @@ class AudioAnalyzer {
     } catch (_) {
       return null;
     }
-  }
-
-  static Future<Map<String, double>?> getLoudness(String filePath) async {
-    return null;
   }
 
   static Future<_TechnicalAudioInfo> _readTechnicalInfo(

@@ -254,7 +254,8 @@ class SettingsCategoryScreen extends ConsumerWidget {
         AboutMaintainerRow(
           //7
           name: 'Madan Suthar',
-          role: 'Free Rider',
+          role: 'Lead Mechanic & Maintainer',
+          // ' (Free Rider)',
           avatar: AppAssets.freeRiderAvatar,
           github: AppLinks.madanGithub,
           telegram: AppLinks.madanTelegram,
@@ -486,8 +487,12 @@ class SettingsCategoryScreen extends ConsumerWidget {
                           useExpanded: false,
                           padding: const EdgeInsets.symmetric(vertical: 8),
                           child: CollapsibleMaintainers(
-                            first: children[2],
-                            rest: children.sublist(3, 7),
+                            avatars: const [
+                              AppAssets.maintainerAvatar,
+                              AppAssets.designerAvatar,
+                              AppAssets.freeRiderAvatar,
+                            ],
+                            rows: children.sublist(2, 7),
                           ),
                         ),
                         const SizedBox(height: 32),

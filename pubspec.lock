@@ -556,13 +556,13 @@ packages:
     source: hosted
     version: "3.3.1"
   flutter_rust_bridge:
-    dependency: transitive
+    dependency: "direct overridden"
     description:
       name: flutter_rust_bridge
-      sha256: ec69331e2335ab4d456c0a9fc700892c2c85b72b9c0cb39df3ecfe8833d5d5c8
+      sha256: "37ef40bc6f863652e865f0b2563ea07f0d3c58d8efad803cc01933a4b2ee067e"
       url: "https://pub.dev"
     source: hosted
-    version: "2.13.0"
+    version: "2.11.1"
   flutter_svg:
     dependency: "direct main"
     description:
@@ -857,10 +857,10 @@ packages:
     dependency: "direct main"
     description:
       name: lucide_icons_flutter
-      sha256: abfff57c1f4de40204e25a15809d566b17c1a085d2aa58e00203649758c7fed4
+      sha256: ef8cac4548747b5d38da7e08868da32904df4bdc2ee6ad4caf85d30c97ef4cc9
       url: "https://pub.dev"
     source: hosted
-    version: "3.1.22"
+    version: "3.1.24"
   marqueer:
     dependency: "direct main"
     description:

@@ -1,6 +1,7 @@
 import 'package:looper_player/core/theme/app_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:looper_player/ui/widgets/common/highlighted_text.dart';
 import 'package:looper_player/ui/widgets/common/optimized_image.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:looper_player/features/playback/presentation/providers/playback/playback_notifier.dart';
@@ -11,6 +12,9 @@ import 'package:looper_player/l10n/app_localizations.dart';
 import 'package:looper_player/ui/widgets/sheets/song_options_bottom_sheet.dart';
 import 'package:looper_player/core/theme/app_assets.dart';
 import 'package:looper_player/core/services/haptics/app_haptics.dart';
+import 'package:looper_player/features/search/domain/lyric_snippet.dart'
+    as search
+    show lyricSnippet;
 
 class SongTile extends ConsumerWidget {
   final Song song;
@@ -26,6 +30,10 @@ class SongTile extends ConsumerWidget {
   // (a playlist showing its own saved order) - its presence is what decides
   // whether the drag-handle grip icon shows up at all.
   final int? reorderIndex;
+  // Search-only extras: highlight the [searchQuery] match in the title, and
+  // get told when a tap starts playback (not when it toggles a selection).
+  final bool highlightTitle;
+  final VoidCallback? onPlay;
 
   const SongTile({
     required this.song,
@@ -38,60 +46,10 @@ class SongTile extends ConsumerWidget {
     this.onToggleSelect,
     this.onEnterSelection,
     this.reorderIndex,
+    this.highlightTitle = false,
+    this.onPlay,
     super.key,
   });
-
-  Widget _buildHighlightedText({
-    required BuildContext context,
-    required String text,
-    required String query,
-    required TextStyle baseStyle,
-    required TextStyle highlightStyle,
-  }) {
-    if (query.isEmpty) {
-      return Text(text, style: baseStyle);
-    }
-
-    final lowerText = text.toLowerCase();
-    final lowerQuery = query.toLowerCase();
-    final index = lowerText.indexOf(lowerQuery);
-
-    if (index == -1) {
-      return Text(text, style: baseStyle);
-    }
-
-    final List<TextSpan> spans = [];
-    int start = 0;
-    int indexOfMatch;
-
-    while ((indexOfMatch = lowerText.indexOf(lowerQuery, start)) != -1) {
-      // Add text before match
-      if (indexOfMatch > start) {
-        spans.add(
-          TextSpan(text: text.substring(start, indexOfMatch), style: baseStyle),
-        );
-      }
-      // Add matched text
-      spans.add(
-        TextSpan(
-          text: text.substring(indexOfMatch, indexOfMatch + query.length),
-          style: highlightStyle,
-        ),
-      );
-      start = indexOfMatch + query.length;
-    }
-
-    // Add remaining text
-    if (start < text.length) {
-      spans.add(TextSpan(text: text.substring(start), style: baseStyle));
-    }
-
-    return RichText(
-      text: TextSpan(children: spans),
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-    );
-  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -102,8 +60,41 @@ class SongTile extends ConsumerWidget {
 
     String? lyricSnippet;
     if (searchQuery != null && searchQuery!.isNotEmpty && song.lyrics != null) {
-      lyricSnippet = _getLyricSnippet(song.lyrics!, searchQuery!);
+      lyricSnippet = search.lyricSnippet(song.lyrics!, searchQuery!);
     }
+
+    final artistLink = InkWell(
+      onTap: () async {
+        if (song.artist != null) {
+          final artistSongs = await DbService.isar.songs
+              .filter()
+              .artistEqualTo(song.artist!)
+              .findAll();
+          final artist = await DbService.isar.artists
+              .filter()
+              .nameEqualTo(song.artist!)
+              .findFirst();
+          ref
+              .read(appNavigationProvider.notifier)
+              .showCollection(
+                title: song.artist!,
+                subtitle: l10n.artists,
+                art: artist?.artPath ?? song.artPath,
+                imageUrl: artist?.artistImageUrl,
+                songs: artistSongs,
+              );
+        }
+      },
+      child: Text(
+        song.artist ?? l10n.unknownArtist,
+        style: AppFonts.jostStyle(
+          color: Colors.white.withValues(alpha: 0.5),
+          fontSize: 13,
+        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+    );
 
     return Material(
       color: selected
@@ -115,6 +106,7 @@ class SongTile extends ConsumerWidget {
             onToggleSelect?.call();
             return;
           }
+          onPlay?.call();
           final index = songs.indexWhere((s) => s.path == song.path);
           if (index != -1) {
             ref
@@ -208,53 +200,37 @@ class SongTile extends ConsumerWidget {
               ],
             ),
           ),
-          title: Text(
-            song.title,
-            style: AppFonts.jostStyle(
-              color: isCurrent
-                  ? Theme.of(context).colorScheme.primary
-                  : Colors.white,
-              fontWeight: FontWeight.w500,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
+          title: highlightTitle && !isCurrent
+              ? highlightedText(
+                  text: song.title,
+                  query: searchQuery ?? '',
+                  baseStyle: AppFonts.jostStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  highlightStyle: AppFonts.jostStyle(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                )
+              : Text(
+                  song.title,
+                  style: AppFonts.jostStyle(
+                    color: isCurrent
+                        ? Theme.of(context).colorScheme.primary
+                        : Colors.white,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
           subtitle: lyricSnippet != null
               ? Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    InkWell(
-                      onTap: () async {
-                        if (song.artist != null) {
-                          final artistSongs = await DbService.isar.songs
-                              .filter()
-                              .artistEqualTo(song.artist!)
-                              .findAll();
-                          final artist = await DbService.isar.artists
-                              .filter()
-                              .nameEqualTo(song.artist!)
-                              .findFirst();
-                          ref
-                              .read(appNavigationProvider.notifier)
-                              .showCollection(
-                                title: song.artist!,
-                                subtitle: l10n.artists,
-                                art: artist?.artPath ?? song.artPath,
-                                imageUrl: artist?.artistImageUrl,
-                                songs: artistSongs,
-                              );
-                        }
-                      },
-                      child: Text(
-                        song.artist ?? l10n.unknownArtist,
-                        style: AppFonts.jostStyle(
-                          color: Colors.white.withValues(alpha: 0.5),
-                          fontSize: 13,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
+                    artistLink,
                     const SizedBox(height: 6),
                     Container(
                       padding: const EdgeInsets.symmetric(
@@ -282,8 +258,7 @@ class SongTile extends ConsumerWidget {
                           ),
                           const SizedBox(width: 6),
                           Expanded(
-                            child: _buildHighlightedText(
-                              context: context,
+                            child: highlightedText(
                               text: lyricSnippet,
                               query: searchQuery ?? '',
                               baseStyle: AppFonts.jostStyle(
@@ -304,38 +279,7 @@ class SongTile extends ConsumerWidget {
                     ),
                   ],
                 )
-              : InkWell(
-                  onTap: () async {
-                    if (song.artist != null) {
-                      final artistSongs = await DbService.isar.songs
-                          .filter()
-                          .artistEqualTo(song.artist!)
-                          .findAll();
-                      final artist = await DbService.isar.artists
-                          .filter()
-                          .nameEqualTo(song.artist!)
-                          .findFirst();
-                      ref
-                          .read(appNavigationProvider.notifier)
-                          .showCollection(
-                            title: song.artist!,
-                            subtitle: l10n.artists,
-                            art: artist?.artPath ?? song.artPath,
-                            imageUrl: artist?.artistImageUrl,
-                            songs: artistSongs,
-                          );
-                    }
-                  },
-                  child: Text(
-                    song.artist ?? l10n.unknownArtist,
-                    style: AppFonts.jostStyle(
-                      color: Colors.white.withValues(alpha: 0.5),
-                      fontSize: 13,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
+              : artistLink,
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -367,45 +311,6 @@ class SongTile extends ConsumerWidget {
       ),
     );
   }
-
-  String? _getLyricSnippet(String lyrics, String query) {
-    final lowerLyrics = lyrics.toLowerCase();
-    final lowerQuery = query.toLowerCase();
-    final index = lowerLyrics.indexOf(lowerQuery);
-    if (index == -1) return null;
-
-    int start = index;
-    bool truncatedStart = false;
-    while (start > 0 && lyrics[start - 1] != '\n') {
-      start--;
-      if (index - start > 40) {
-        truncatedStart = true;
-        break;
-      }
-    }
-
-    int end = index + query.length;
-    bool truncatedEnd = false;
-    while (end < lyrics.length && lyrics[end] != '\n') {
-      end++;
-      if (end - index > 60) {
-        truncatedEnd = true;
-        break;
-      }
-    }
-
-    String snippet = lyrics.substring(start, end).trim();
-    if (truncatedStart) snippet = '...$snippet';
-    if (truncatedEnd) snippet = '$snippet...';
-    return snippet;
-  }
-}
-
-String _formatDuration(Duration duration) {
-  String twoDigits(int n) => n.toString().padLeft(2, "0");
-  String twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60));
-  String twoDigitSeconds = twoDigits(duration.inSeconds.remainder(60));
-  return "$twoDigitMinutes:$twoDigitSeconds";
 }
 
 class _SongTileBouncyTap extends StatefulWidget {

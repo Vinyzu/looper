@@ -1049,10 +1049,6 @@ class Playback extends _$Playback {
     await _disarmAutoResumeAfterFocusGain();
   }
 
-  Future<void> setSpeed(double speed) async {
-    await player.setRate(speed);
-  }
-
   Future<void> togglePlay() async {
     if (state.isPlaying) {
       await _pauseFromUser();
@@ -1926,7 +1922,7 @@ class Playback extends _$Playback {
           currentPosition,
         );
         if (activeLineIndex != -1) {
-          currentLine = lyricsState.parsedLines[activeLineIndex].text;
+          currentLine = lyricsState.parsedLines[activeLineIndex].fullText;
         }
       }
       if (currentLine != _lastWidgetLyricLine) {
@@ -2195,7 +2191,7 @@ class Playback extends _$Playback {
           currentPosition,
         );
         if (activeLineIndex != -1) {
-          currentLine = lyricsState.parsedLines[activeLineIndex].text;
+          currentLine = lyricsState.parsedLines[activeLineIndex].fullText;
           if (activeLineIndex + 1 < lyricsState.parsedLines.length) {
             nextLine = lyricsState.parsedLines[activeLineIndex + 1].text;
           }

@@ -105,8 +105,9 @@ class LyricsShareCard extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(bottom: 10),
               child: Text(
-                line.text.trim().isEmpty ? '♫' : line.text,
-                style: AppFonts.soraStyle(
+                line.text.trim().isEmpty ? '♫' : line.fullText,
+                style: AppFonts.familyStyle(
+                  AppFonts.sora,
                   color: accentColor,
                   fontSize: 21,
                   fontWeight: FontWeight.w700,

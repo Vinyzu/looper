@@ -14,6 +14,19 @@ class PlaylistService {
     });
   }
 
+  /// Creates a playlist called [name] already holding [songs], in one
+  /// write. Duplicate songs are kept once, in their first position.
+  static Future<Playlist> createWithSongs(String name, List<Song> songs) async {
+    final now = DateTime.now();
+    final playlist = Playlist()
+      ..name = name
+      ..songPaths = {for (final song in songs) song.path}.toList()
+      ..dateCreated = now
+      ..dateModified = now;
+    await DbService.isar.writeTxn(() => DbService.isar.playlists.put(playlist));
+    return playlist;
+  }
+
   /// Bulk form of [addSongToPlaylist] for multi-select: one write for the
   /// whole batch instead of one per song.
   static Future<void> addSongsToPlaylist(
@@ -76,12 +89,5 @@ class PlaylistService {
       playlist.dateModified = DateTime.now();
       await DbService.isar.playlists.put(playlist);
     });
-  }
-
-  static Future<List<Playlist>> getAllPlaylists() async {
-    return await DbService.isar.playlists
-        .where()
-        .sortByDateModifiedDesc()
-        .findAll();
   }
 }

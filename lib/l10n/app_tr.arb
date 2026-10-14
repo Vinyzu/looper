@@ -968,5 +968,10 @@
   "lyricsServices": "Şarkı sözü servisleri",
   "lyricsServicesDesc": "Sözlerin aranma sırasını belirlemek için sürükleyin. Kapattığınız servisler atlanır.",
   "creditWordSyncedDesc": "Kelime kelime senkronize sözler",
-  "creditMorpheDesc": "NetEase, KuGou, Musixmatch ve Lyricify aramaları için referans · GPL-3.0"
+  "creditMorpheDesc": "NetEase, KuGou, Musixmatch ve Lyricify aramaları için referans · GPL-3.0",
+  "searchFilterAll": "Tümü",
+  "noResultsFor": "“{query}” için sonuç yok",
+  "searchTryDifferent": "Yazımı kontrol edin veya başka bir kelime deneyin.",
+  "searchScopeHint": "Başlıklar, sanatçılar, albümler, sözler, çalma listeleri ve türler",
+  "selectedCount": "{count} seçildi"
 }

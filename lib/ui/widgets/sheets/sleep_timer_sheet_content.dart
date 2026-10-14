@@ -127,250 +127,40 @@ class _SleepTimerSheetContentState
               ),
             ),
             const SizedBox(height: 24),
-            Text(
-              l10n.stopByTime,
-              style: AppFonts.jostStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.bold,
-                color: Colors.white38,
-                letterSpacing: 1.5,
-              ),
-            ),
-            const SizedBox(height: 12),
-            PremiumSection(
-              borderRadius: BorderRadius.circular(16),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              useExpanded: false,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      IconButton(
-                        onPressed: () {
-                          AppHaptics.light();
-                          if (_customMinutes > 1) {
-                            setState(() => _customMinutes--);
-                          }
-                        },
-                        icon: const Icon(
-                          LucideIcons.minus,
-                          color: Colors.white70,
-                        ),
-                        style: IconButton.styleFrom(
-                          backgroundColor: Colors.white10,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Text(
-                        l10n.minutesShort(_customMinutes),
-                        style: AppFonts.jostStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      IconButton(
-                        onPressed: () {
-                          AppHaptics.light();
-                          setState(() => _customMinutes++);
-                        },
-                        icon: const Icon(
-                          LucideIcons.plus,
-                          color: Colors.white70,
-                        ),
-                        style: IconButton.styleFrom(
-                          backgroundColor: Colors.white10,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      AppHaptics.medium();
-                      ref
-                          .read(playbackProvider.notifier)
-                          .startSleepTimer(
-                            duration: Duration(minutes: _customMinutes),
-                          );
-                      Navigator.pop(context);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: accentColor,
-                      foregroundColor: Colors.black,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 12,
-                      ),
-                    ),
-                    child: Text(
-                      l10n.start,
-                      style: AppFonts.jostStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              physics: const BouncingScrollPhysics(),
-              child: Row(
-                children: [
+            ..._buildSection(
+              title: l10n.stopByTime,
+              valueLabel: l10n.minutesShort(_customMinutes),
+              accentColor: accentColor,
+              onMinus: () {
+                if (_customMinutes > 1) setState(() => _customMinutes--);
+              },
+              onPlus: () => setState(() => _customMinutes++),
+              startArgs: () => (Duration(minutes: _customMinutes), null),
+              chips: [
+                for (final minutes in const [1, 5, 10, 30, 45])
                   _buildCustomChip(
-                    label: l10n.minuteChip(1),
-                    onTap: () => _startTimer(const Duration(minutes: 1)),
+                    label: l10n.minuteChip(minutes),
+                    onTap: () => _startTimer(Duration(minutes: minutes)),
                   ),
-                  _buildCustomChip(
-                    label: l10n.minuteChip(5),
-                    onTap: () => _startTimer(const Duration(minutes: 5)),
-                  ),
-                  _buildCustomChip(
-                    label: l10n.minuteChip(10),
-                    onTap: () => _startTimer(const Duration(minutes: 10)),
-                  ),
-                  _buildCustomChip(
-                    label: l10n.minuteChip(30),
-                    onTap: () => _startTimer(const Duration(minutes: 30)),
-                  ),
-                  _buildCustomChip(
-                    label: l10n.minuteChip(45),
-                    onTap: () => _startTimer(const Duration(minutes: 45)),
-                  ),
-                ],
-              ),
+              ],
             ),
             const SizedBox(height: 24),
-            Text(
-              l10n.stopBySongCount,
-              style: AppFonts.jostStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.bold,
-                color: Colors.white38,
-                letterSpacing: 1.5,
-              ),
-            ),
-            const SizedBox(height: 12),
-            PremiumSection(
-              borderRadius: BorderRadius.circular(16),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              useExpanded: false,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      IconButton(
-                        onPressed: () {
-                          AppHaptics.light();
-                          if (_customSongs > 1) {
-                            setState(() => _customSongs--);
-                          }
-                        },
-                        icon: const Icon(
-                          LucideIcons.minus,
-                          color: Colors.white70,
-                        ),
-                        style: IconButton.styleFrom(
-                          backgroundColor: Colors.white10,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Text(
-                        l10n.songsCountTitle(_customSongs),
-                        style: AppFonts.jostStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      IconButton(
-                        onPressed: () {
-                          AppHaptics.light();
-                          setState(() => _customSongs++);
-                        },
-                        icon: const Icon(
-                          LucideIcons.plus,
-                          color: Colors.white70,
-                        ),
-                        style: IconButton.styleFrom(
-                          backgroundColor: Colors.white10,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      AppHaptics.medium();
-                      ref
-                          .read(playbackProvider.notifier)
-                          .startSleepTimer(songCount: _customSongs);
-                      Navigator.pop(context);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: accentColor,
-                      foregroundColor: Colors.black,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 12,
-                      ),
-                    ),
-                    child: Text(
-                      l10n.start,
-                      style: AppFonts.jostStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              physics: const BouncingScrollPhysics(),
-              child: Row(
-                children: [
+            ..._buildSection(
+              title: l10n.stopBySongCount,
+              valueLabel: l10n.songsCountTitle(_customSongs),
+              accentColor: accentColor,
+              onMinus: () {
+                if (_customSongs > 1) setState(() => _customSongs--);
+              },
+              onPlus: () => setState(() => _customSongs++),
+              startArgs: () => (null, _customSongs),
+              chips: [
+                for (final count in const [1, 2, 3, 5, 10])
                   _buildCustomChip(
-                    label: l10n.songsCountTitle(1),
-                    onTap: () => _startSongs(1),
+                    label: l10n.songsCountTitle(count),
+                    onTap: () => _startSongs(count),
                   ),
-                  _buildCustomChip(
-                    label: l10n.songsCountTitle(2),
-                    onTap: () => _startSongs(2),
-                  ),
-                  _buildCustomChip(
-                    label: l10n.songsCountTitle(3),
-                    onTap: () => _startSongs(3),
-                  ),
-                  _buildCustomChip(
-                    label: l10n.songsCountTitle(5),
-                    onTap: () => _startSongs(5),
-                  ),
-                  _buildCustomChip(
-                    label: l10n.songsCountTitle(10),
-                    onTap: () => _startSongs(10),
-                  ),
-                ],
-              ),
+              ],
             ),
             const SizedBox(height: 24),
             if (isSleepTimerActive)
@@ -414,6 +204,103 @@ class _SleepTimerSheetContentState
     }
 
     return sheetContent;
+  }
+
+  /// One "stop by ..." block: its caption, a stepper card with a Start
+  /// button for the stepped value, and a row of preset [chips].
+  /// [startArgs] gives the (duration, song count) Start should begin with.
+  List<Widget> _buildSection({
+    required String title,
+    required String valueLabel,
+    required Color accentColor,
+    required VoidCallback onMinus,
+    required VoidCallback onPlus,
+    required (Duration?, int?) Function() startArgs,
+    required List<Widget> chips,
+  }) {
+    final l10n = AppLocalizations.of(context)!;
+
+    Widget stepButton(IconData icon, VoidCallback onStep) => IconButton(
+      onPressed: () {
+        AppHaptics.light();
+        onStep();
+      },
+      icon: Icon(icon, color: Colors.white70),
+      style: IconButton.styleFrom(
+        backgroundColor: Colors.white10,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+
+    return [
+      Text(
+        title,
+        style: AppFonts.jostStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+          color: Colors.white38,
+          letterSpacing: 1.5,
+        ),
+      ),
+      const SizedBox(height: 12),
+      PremiumSection(
+        borderRadius: BorderRadius.circular(16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        useExpanded: false,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                stepButton(LucideIcons.minus, onMinus),
+                const SizedBox(width: 16),
+                Text(
+                  valueLabel,
+                  style: AppFonts.jostStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                stepButton(LucideIcons.plus, onPlus),
+              ],
+            ),
+            ElevatedButton(
+              onPressed: () {
+                AppHaptics.medium();
+                final (duration, songCount) = startArgs();
+                ref
+                    .read(playbackProvider.notifier)
+                    .startSleepTimer(duration: duration, songCount: songCount);
+                Navigator.pop(context);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: accentColor,
+                foregroundColor: Colors.black,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
+              ),
+              child: Text(
+                l10n.start,
+                style: AppFonts.jostStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+      ),
+      const SizedBox(height: 12),
+      SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        child: Row(children: chips),
+      ),
+    ];
   }
 
   void _startTimer(Duration duration) {

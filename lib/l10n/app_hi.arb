@@ -968,5 +968,10 @@
   "lyricsServices": "लिरिक्स सेवाएँ",
   "lyricsServicesDesc": "लिरिक्स किस क्रम में खोजे जाएँ, यह खींचकर तय करें। बंद की गई सेवाएँ छोड़ दी जाती हैं।",
   "creditWordSyncedDesc": "शब्द-सिंक बोल",
-  "creditMorpheDesc": "NetEase, KuGou, Musixmatch और Lyricify खोज के लिए संदर्भ · GPL-3.0"
+  "creditMorpheDesc": "NetEase, KuGou, Musixmatch और Lyricify खोज के लिए संदर्भ · GPL-3.0",
+  "searchFilterAll": "सभी",
+  "noResultsFor": "“{query}” के लिए कोई परिणाम नहीं",
+  "searchTryDifferent": "वर्तनी जाँचें या कोई दूसरा शब्द आज़माएँ।",
+  "searchScopeHint": "शीर्षक, कलाकार, एल्बम, बोल, प्लेलिस्ट और शैलियाँ",
+  "selectedCount": "{count} चुने गए"
 }

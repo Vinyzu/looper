@@ -968,5 +968,10 @@
   "lyricsServices": "Songtext-Dienste",
   "lyricsServicesDesc": "Ziehe, um die Reihenfolge der Songtextsuche festzulegen. Ausgeschaltete Dienste werden übersprungen.",
   "creditWordSyncedDesc": "Wortgenaue Songtexte",
-  "creditMorpheDesc": "Vorlage für die Abfragen bei NetEase, KuGou, Musixmatch und Lyricify · GPL-3.0"
+  "creditMorpheDesc": "Vorlage für die Abfragen bei NetEase, KuGou, Musixmatch und Lyricify · GPL-3.0",
+  "searchFilterAll": "Alle",
+  "noResultsFor": "Keine Ergebnisse für „{query}“",
+  "searchTryDifferent": "Prüfe die Schreibweise oder versuche ein anderes Wort.",
+  "searchScopeHint": "Titel, Künstler, Alben, Songtexte, Playlists und Genres",
+  "selectedCount": "{count} ausgewählt"
 }

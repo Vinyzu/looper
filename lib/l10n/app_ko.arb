@@ -968,5 +968,10 @@
   "lyricsServices": "가사 서비스",
   "lyricsServicesDesc": "드래그하여 가사를 찾는 순서를 정하세요. 끈 서비스는 건너뜁니다.",
   "creditWordSyncedDesc": "단어 단위로 동기화된 가사",
-  "creditMorpheDesc": "NetEase, KuGou, Musixmatch, Lyricify 조회의 참고 자료 · GPL-3.0"
+  "creditMorpheDesc": "NetEase, KuGou, Musixmatch, Lyricify 조회의 참고 자료 · GPL-3.0",
+  "searchFilterAll": "전체",
+  "noResultsFor": "“{query}”에 대한 결과가 없습니다",
+  "searchTryDifferent": "철자를 확인하거나 다른 단어로 검색해 보세요.",
+  "searchScopeHint": "제목, 아티스트, 앨범, 가사, 재생목록, 장르",
+  "selectedCount": "{count}개 선택됨"
 }

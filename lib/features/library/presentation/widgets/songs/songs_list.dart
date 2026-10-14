@@ -349,34 +349,23 @@ class _SongsListState extends ConsumerState<SongsList> {
       // sliver one real instance to measure once instead of
       // re-measuring each row as it scrolls into view - this is
       // the list a fast fling scroll actually has to keep up with.
-      prototypeItem: SongTile(
-        song: widget.songs.first,
-        l10n: l10n,
-        songs: widget.songs,
-        searchQuery: widget.searchQuery,
-        playlist: widget.playlist,
-        selectionMode: false,
-        selected: false,
-        onToggleSelect: () {},
-        onEnterSelection: () {},
-      ),
-      itemBuilder: (context, index) {
-        final song = widget.songs[index];
-        return SongTile(
-          key: ValueKey(song.path),
-          song: song,
-          l10n: l10n,
-          songs: widget.songs,
-          searchQuery: widget.searchQuery,
-          playlist: widget.playlist,
-          selectionMode: _isSelecting,
-          selected: _selectedPaths.contains(song.path),
-          onToggleSelect: () => _toggleSelected(song),
-          onEnterSelection: () => _enterSelection(song),
-        );
-      },
+      prototypeItem: _buildPrototypeRow(l10n),
+      itemBuilder: (context, index) => _buildRow(index, l10n),
     );
   }
+
+  /// One real, inert row for a list's `prototypeItem` to measure.
+  Widget _buildPrototypeRow(AppLocalizations l10n) => SongTile(
+    song: widget.songs.first,
+    l10n: l10n,
+    songs: widget.songs,
+    searchQuery: widget.searchQuery,
+    playlist: widget.playlist,
+    selectionMode: false,
+    selected: false,
+    onToggleSelect: () {},
+    onEnterSelection: () {},
+  );
 
   Widget _buildRow(int index, AppLocalizations l10n) {
     final song = widget.songs[index];
@@ -429,39 +418,15 @@ class _SongsListState extends ConsumerState<SongsList> {
             // Every row is the same fixed-height SongTile, so give the
             // sliver one real instance to measure once instead of
             // re-measuring each row as it scrolls into view.
-            prototypeItem: SongTile(
-              song: widget.songs.first,
-              l10n: l10n,
-              songs: widget.songs,
-              searchQuery: widget.searchQuery,
-              playlist: widget.playlist,
-              selectionMode: false,
-              selected: false,
-              onToggleSelect: () {},
-              onEnterSelection: () {},
-            ),
-            itemBuilder: (context, index) {
-              final song = widget.songs[index];
-              return SongTile(
-                key: ValueKey(song.path),
-                song: song,
-                l10n: l10n,
-                songs: widget.songs,
-                searchQuery: widget.searchQuery,
-                playlist: widget.playlist,
-                selectionMode: _isSelecting,
-                selected: _selectedPaths.contains(song.path),
-                onToggleSelect: () => _toggleSelected(song),
-                onEnterSelection: () => _enterSelection(song),
-              );
-            },
+            prototypeItem: _buildPrototypeRow(l10n),
+            itemBuilder: (context, index) => _buildRow(index, l10n),
           )
         else
           Expanded(
             child: AppRefreshIndicator(
               onRefresh: () => ref
                   .read(libraryProvider.notifier)
-                  .scanSavedFolders(showVisualIndicator: false),
+                  .refreshLibrary(showVisualIndicator: false),
               child: UiUtils.isDesktop
                   ? LayoutBuilder(
                       builder: (context, constraints) =>

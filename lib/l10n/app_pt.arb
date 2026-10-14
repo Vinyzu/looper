@@ -968,5 +968,10 @@
   "lyricsServices": "Serviços de letras",
   "lyricsServicesDesc": "Arraste para definir a ordem em que as letras são procuradas. Os serviços desativados são ignorados.",
   "creditWordSyncedDesc": "Letras sincronizadas por palavra",
-  "creditMorpheDesc": "Referência para as buscas no NetEase, KuGou, Musixmatch e Lyricify · GPL-3.0"
+  "creditMorpheDesc": "Referência para as buscas no NetEase, KuGou, Musixmatch e Lyricify · GPL-3.0",
+  "searchFilterAll": "Tudo",
+  "noResultsFor": "Nenhum resultado para “{query}”",
+  "searchTryDifferent": "Verifique a ortografia ou tente outra palavra.",
+  "searchScopeHint": "Títulos, artistas, álbuns, letras, playlists e gêneros",
+  "selectedCount": "{count} selecionadas"
 }

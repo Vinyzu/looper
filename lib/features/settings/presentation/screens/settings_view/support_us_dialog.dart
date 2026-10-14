@@ -13,7 +13,6 @@ extension _SettingsSupportUsDialog on _SettingsViewState {
       isScrollControlled: true,
       barrierColor: Colors.black54,
       builder: (context) {
-        const coffeeUrl = AppLinks.buyMeACoffee;
         final l10n = AppLocalizations.of(context)!;
 
         return AppBottomSheetContainer(

@@ -29,7 +29,6 @@ class AppLinks {
   // Media & Metadata API Endpoints
   static const String deezerApiBase = 'https://api.deezer.com';
   static const String iTunesSearchUrl = 'https://itunes.apple.com/search';
-  static const String lrclibApiBase = 'https://lrclib.net/api';
   static const String lrcRedApiBase = 'https://lrc.red';
 
   /// Primary first. (The two vercel.app mirrors am-lyrics also lists were

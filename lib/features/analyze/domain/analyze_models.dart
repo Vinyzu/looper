@@ -195,9 +195,6 @@ class AnalyzeSnapshot {
       ? null
       : topGenres.first.name;
 
-  /// Plays inside the trend window ([dailyCounts], the last 30 days).
-  int get recentPlays => dailyCounts.fold<int>(0, (sum, d) => sum + d.plays);
-
   /// The day in the trend window with the most plays (the latest one on a
   /// tie), or null when the window has no plays.
   DailyCount? get busiestDay {

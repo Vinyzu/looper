@@ -406,16 +406,17 @@ class AboutMaintainerRow extends StatelessWidget {
   }
 }
 
-/// The About screen's maintainers card body: shows only the first row until
-/// tapped, then reveals [rest]. The rows' own link buttons keep their taps.
+/// The About screen's maintainers card body: a row of [avatars] with an
+/// arrow until tapped, then the full [rows]. The rows' own link buttons keep
+/// their taps.
 class CollapsibleMaintainers extends StatefulWidget {
-  final Widget first;
-  final List<Widget> rest;
+  final List<String> avatars;
+  final List<Widget> rows;
 
   const CollapsibleMaintainers({
     super.key,
-    required this.first,
-    required this.rest,
+    required this.avatars,
+    required this.rows,
   });
 
   @override
@@ -426,6 +427,38 @@ class _CollapsibleMaintainersState extends State<CollapsibleMaintainers> {
   static const _duration = Duration(milliseconds: 260);
   bool _expanded = false;
 
+  Widget _arrow(IconData icon) =>
+      Icon(icon, size: 22, color: Colors.white.withValues(alpha: 0.4));
+
+  Widget _collapsed() {
+    return Padding(
+      key: const ValueKey('maintainers-collapsed'),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      child: Row(
+        children: [
+          for (final avatar in widget.avatars)
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: CircleAvatar(
+                radius: 24,
+                backgroundColor: Colors.white10,
+                backgroundImage: AssetImage(avatar),
+              ),
+            ),
+          const Spacer(),
+          _arrow(Icons.keyboard_arrow_down_rounded),
+        ],
+      ),
+    );
+  }
+
+  Widget _full() {
+    return Column(
+      key: const ValueKey('maintainers-expanded'),
+      children: [...widget.rows, _arrow(Icons.keyboard_arrow_up_rounded)],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -434,30 +467,25 @@ class _CollapsibleMaintainersState extends State<CollapsibleMaintainers> {
         AppHaptics.light();
         setState(() => _expanded = !_expanded);
       },
-      child: Column(
-        children: [
-          widget.first,
-          ClipRect(
-            child: AnimatedSize(
-              duration: _duration,
-              curve: Curves.easeOutCubic,
-              alignment: Alignment.topCenter,
-              child: _expanded
-                  ? Column(children: widget.rest)
-                  : const SizedBox(width: double.infinity),
-            ),
-          ),
-          AnimatedRotation(
-            turns: _expanded ? 0.5 : 0,
+      child: ClipRect(
+        child: AnimatedSize(
+          duration: _duration,
+          curve: Curves.easeOutCubic,
+          alignment: Alignment.topCenter,
+          child: AnimatedSwitcher(
             duration: _duration,
-            curve: Curves.easeOutCubic,
-            child: Icon(
-              Icons.keyboard_arrow_down_rounded,
-              size: 22,
-              color: Colors.white.withValues(alpha: 0.4),
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeOutCubic,
+            layoutBuilder: (current, previous) => Stack(
+              alignment: Alignment.topCenter,
+              children: [
+                for (final child in previous) IgnorePointer(child: child),
+                ?current,
+              ],
             ),
+            child: _expanded ? _full() : _collapsed(),
           ),
-        ],
+        ),
       ),
     );
   }

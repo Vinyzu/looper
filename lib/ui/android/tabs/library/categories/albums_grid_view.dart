@@ -1,3 +1,4 @@
+import 'package:looper_player/core/providers/collection_navigation.dart';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -84,19 +85,9 @@ class AlbumsGridView extends ConsumerWidget {
                 final album = albums[index];
                 return InkWell(
                   onTap: () async {
-                    final songs = await DbService.isar.songs
-                        .filter()
-                        .albumEqualTo(album.name)
-                        .findAll();
-                    ref
+                    await ref
                         .read(appNavigationProvider.notifier)
-                        .showCollection(
-                          title: album.name,
-                          subtitle: album.artist ?? l10n.unknownArtist,
-                          art: album.artPath,
-                          songs: songs,
-                          album: album,
-                        );
+                        .showAlbum(album, unknownArtist: l10n.unknownArtist);
                   },
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,

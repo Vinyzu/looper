@@ -21,6 +21,12 @@
 </p>
 
 <p align="center">
+  <a href="https://ko-fi.com/L2L124TL7L">
+    <img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="ko-fi">
+  </a>
+</p>
+
+<p align="center">
   <a href="#features">Features</a> •
   <a href="#screenshots">Screenshots</a> •
   <a href="#installation">Install</a> •

@@ -968,5 +968,10 @@
   "lyricsServices": "Сервисы текстов",
   "lyricsServicesDesc": "Перетащите, чтобы задать порядок поиска текстов. Отключённые сервисы пропускаются.",
   "creditWordSyncedDesc": "Тексты с синхронизацией по словам",
-  "creditMorpheDesc": "Образец для запросов к NetEase, KuGou, Musixmatch и Lyricify · GPL-3.0"
+  "creditMorpheDesc": "Образец для запросов к NetEase, KuGou, Musixmatch и Lyricify · GPL-3.0",
+  "searchFilterAll": "Все",
+  "noResultsFor": "Ничего не найдено по запросу «{query}»",
+  "searchTryDifferent": "Проверьте написание или попробуйте другое слово.",
+  "searchScopeHint": "Названия, исполнители, альбомы, тексты, плейлисты и жанры",
+  "selectedCount": "Выбрано: {count}"
 }

@@ -115,15 +115,13 @@ class LibraryScanner {
 
     // 1. Direct Background Isolate Directory Traversal for full disk coverage
     if (Directory(path).existsSync()) {
-      final List<String> filePaths = await compute(
-        _isolatedDirectoryTraversal,
-        {
-          'rootPath': path,
-          'extensions': supportedExtensions,
-          'minSizeBytes': minSizeBytes,
-          'includeSystemAndMessagingAudio': includeSystemAndMessagingAudio,
-        },
-      );
+      final List<String> filePaths =
+          await compute(_isolatedDirectoryTraversal, {
+            'rootPath': path,
+            'extensions': supportedExtensions,
+            'minSizeBytes': minSizeBytes,
+            'includeSystemAndMessagingAudio': includeSystemAndMessagingAudio,
+          });
       discoveredPaths.addAll(filePaths);
     }
 
@@ -708,8 +706,9 @@ class LibraryScanner {
     try {
       Metadata? metadata;
       try {
-        metadata = await MetadataGod.readMetadata(file: file.path)
-            .timeout(tagTimeout);
+        metadata = await MetadataGod.readMetadata(
+          file: file.path,
+        ).timeout(tagTimeout);
       } on TimeoutException {
         transient = true;
       } catch (_) {}

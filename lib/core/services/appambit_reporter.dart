@@ -24,15 +24,24 @@ class AppAmbitReporter {
   static final List<DateTime> _reportedAt = [];
   static final Map<String, DateTime> _lastReportByFingerprint = {};
   static bool _started = false;
+  static Future<void>? _starting;
 
   static bool get isStarted => _started;
+
+  /// Whether the UI must wait for [start]: only when the SDK's navigation
+  /// observer is on, since that has to be attached when the app is built.
+  /// Otherwise startup need not block on it - [reportError] waits for a
+  /// start still in flight, so early errors are not lost.
+  static bool get mustStartBeforeUi => _enabled && _navigationEnabled;
 
   static List<NavigatorObserver> get navigatorObservers =>
       _started && _navigationEnabled
       ? <NavigatorObserver>[AppAmbitSdk()]
       : const [];
 
-  static Future<void> start() async {
+  static Future<void> start() => _starting ??= _start();
+
+  static Future<void> _start() async {
     if (!_enabled ||
         _appKey.trim().isEmpty ||
         !(Platform.isAndroid || Platform.isIOS)) {
@@ -48,6 +57,13 @@ class AppAmbitReporter {
     dynamic exception,
     StackTrace? stackTrace,
   }) async {
+    // An error raised while the SDK is still starting waits for it rather
+    // than being dropped. A failed start is reported by its caller.
+    if (!_started && _starting != null) {
+      try {
+        await _starting;
+      } catch (_) {}
+    }
     if (!_started || _maxErrorsPerHour <= 0) return;
 
     final now = DateTime.now();

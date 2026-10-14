@@ -968,5 +968,10 @@
   "lyricsServices": "Songtekstdiensten",
   "lyricsServicesDesc": "Sleep om de volgorde te bepalen waarin songteksten worden gezocht. Uitgeschakelde diensten worden overgeslagen.",
   "creditWordSyncedDesc": "Woord voor woord gesynchroniseerde songteksten",
-  "creditMorpheDesc": "Referentie voor het opzoeken bij NetEase, KuGou, Musixmatch en Lyricify · GPL-3.0"
+  "creditMorpheDesc": "Referentie voor het opzoeken bij NetEase, KuGou, Musixmatch en Lyricify · GPL-3.0",
+  "searchFilterAll": "Alles",
+  "noResultsFor": "Geen resultaten voor “{query}”",
+  "searchTryDifferent": "Controleer de spelling of probeer een ander woord.",
+  "searchScopeHint": "Titels, artiesten, albums, songteksten, afspeellijsten en genres",
+  "selectedCount": "{count} geselecteerd"
 }

@@ -968,5 +968,10 @@
   "lyricsServices": "歌词服务",
   "lyricsServicesDesc": "拖动以设置查找歌词的顺序。已关闭的服务会被跳过。",
   "creditWordSyncedDesc": "逐字同步歌词",
-  "creditMorpheDesc": "NetEase、KuGou、Musixmatch 和 Lyricify 查询的参考实现 · GPL-3.0"
+  "creditMorpheDesc": "NetEase、KuGou、Musixmatch 和 Lyricify 查询的参考实现 · GPL-3.0",
+  "searchFilterAll": "全部",
+  "noResultsFor": "未找到“{query}”的相关结果",
+  "searchTryDifferent": "请检查拼写或换一个词试试。",
+  "searchScopeHint": "标题、艺人、专辑、歌词、播放列表和流派",
+  "selectedCount": "已选择 {count} 项"
 }

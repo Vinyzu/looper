@@ -1,3 +1,4 @@
+import 'package:looper_player/core/providers/collection_navigation.dart';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -17,6 +18,9 @@ import 'package:looper_player/core/providers/navigation_provider.dart';
 import 'package:looper_player/features/playback/presentation/providers/lyrics/lyrics_search_provider.dart';
 import 'package:looper_player/core/services/storage/local_json_store.dart';
 import 'package:looper_player/core/utils/l10n.dart';
+import 'package:looper_player/features/search/domain/lyric_snippet.dart'
+    as snippets;
+import 'package:looper_player/ui/widgets/common/highlighted_text.dart';
 
 part 'search_view.g.dart';
 part '../widgets/song_result_card.dart';

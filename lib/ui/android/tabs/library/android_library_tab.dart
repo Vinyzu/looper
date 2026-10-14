@@ -1,3 +1,4 @@
+import 'package:looper_player/ui/android/widgets/recent_song_pills.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:looper_player/core/providers/navigation_provider.dart';
@@ -100,7 +101,7 @@ class AndroidLibraryTab extends ConsumerWidget {
             child: AppRefreshIndicator(
               onRefresh: () => ref
                   .read(libraryProvider.notifier)
-                  .scanSavedFolders(showVisualIndicator: true),
+                  .refreshLibrary(showVisualIndicator: true),
               child: CustomScrollView(
                 physics: const AlwaysScrollableScrollPhysics(
                   parent: BouncingScrollPhysics(),
@@ -356,111 +357,7 @@ class AndroidLibraryTab extends ConsumerWidget {
       );
     }
 
-    final row1Songs = <Song>[];
-    final row2Songs = <Song>[];
-    for (int i = 0; i < recentSongs.length; i++) {
-      if (i % 2 == 0) {
-        row1Songs.add(recentSongs[i]);
-      } else {
-        row2Songs.add(recentSongs[i]);
-      }
-    }
-
-    final hasTwoRows = recentSongs.length > 1;
-
-    return SizedBox(
-      height: hasTwoRows ? 100 : 50,
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: row1Songs.map((song) {
-                final globalIndex = recentSongs.indexOf(song);
-                return _buildRecentPill(
-                  context,
-                  ref,
-                  song,
-                  recentSongs,
-                  globalIndex,
-                );
-              }).toList(),
-            ),
-            if (hasTwoRows) ...[
-              const SizedBox(height: 8),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: row2Songs.map((song) {
-                  final globalIndex = recentSongs.indexOf(song);
-                  return _buildRecentPill(
-                    context,
-                    ref,
-                    song,
-                    recentSongs,
-                    globalIndex,
-                  );
-                }).toList(),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRecentPill(
-    BuildContext context,
-    WidgetRef ref,
-    Song song,
-    List<Song> recentSongs,
-    int index,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 8.0),
-      child: PremiumSection(
-        borderRadius: BorderRadius.circular(36),
-        useExpanded: false,
-        onTap: () {
-          AppHaptics.light();
-          ref
-              .read(playbackProvider.notifier)
-              .setPlaylist(recentSongs, initialIndex: index);
-        },
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: SizedBox(
-                width: 24,
-                height: 24,
-                child: OptimizedImage(
-                  imagePath: song.artPath,
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-            const SizedBox(width: 6),
-            Text(
-              song.title,
-              style: AppFonts.jostStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ),
-      ),
-    );
+    return RecentSongPills(songs: recentSongs, horizontalPadding: 18);
   }
 
   Widget _buildCategoryRow({

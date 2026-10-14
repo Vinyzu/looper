@@ -968,5 +968,10 @@
   "lyricsServices": "Servizi per i testi",
   "lyricsServicesDesc": "Trascina per impostare l'ordine di ricerca dei testi. I servizi disattivati vengono saltati.",
   "creditWordSyncedDesc": "Testi sincronizzati parola per parola",
-  "creditMorpheDesc": "Riferimento per le ricerche su NetEase, KuGou, Musixmatch e Lyricify · GPL-3.0"
+  "creditMorpheDesc": "Riferimento per le ricerche su NetEase, KuGou, Musixmatch e Lyricify · GPL-3.0",
+  "searchFilterAll": "Tutti",
+  "noResultsFor": "Nessun risultato per “{query}”",
+  "searchTryDifferent": "Controlla l'ortografia o prova un'altra parola.",
+  "searchScopeHint": "Titoli, artisti, album, testi, playlist e generi",
+  "selectedCount": "{count} selezionati"
 }

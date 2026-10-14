@@ -1,3 +1,4 @@
+import 'package:looper_player/core/providers/collection_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:looper_player/core/utils/ui_utils.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

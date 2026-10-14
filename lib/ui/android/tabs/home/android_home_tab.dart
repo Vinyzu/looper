@@ -1,3 +1,4 @@
+import 'package:looper_player/core/providers/collection_navigation.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -27,6 +28,8 @@ import '../../widgets/library_skeletons.dart';
 import '../../widgets/premium_loading_view.dart';
 import '../../widgets/premium_section.dart';
 import '../library/categories/library_categories_views.dart';
+import '../../widgets/genre_card.dart';
+import '../../widgets/recent_song_pills.dart';
 
 import 'package:looper_player/core/theme/app_assets.dart';
 import 'package:looper_player/core/services/haptics/app_haptics.dart';
@@ -749,7 +752,7 @@ class _AndroidHomeTabState extends ConsumerState<AndroidHomeTab> {
               itemCount: genres.length,
               itemBuilder: (context, index) {
                 final genre = genres[index];
-                return _buildGenreItem(genre, genresMap[genre]!, l10n);
+                return _buildGenreItem(genre, genresMap[genre]!);
               },
             ),
           );
@@ -814,7 +817,9 @@ class _AndroidHomeTabState extends ConsumerState<AndroidHomeTab> {
           );
 
           orderedSlivers.add(
-            SliverToBoxAdapter(child: _buildRecentPlayedRow(recentSongs)),
+            SliverToBoxAdapter(
+              child: RecentSongPills(songs: recentSongs, horizontalPadding: 16),
+            ),
           );
           orderedSlivers.add(
             const SliverToBoxAdapter(child: SizedBox(height: 16)),
@@ -831,7 +836,7 @@ class _AndroidHomeTabState extends ConsumerState<AndroidHomeTab> {
         child: AppRefreshIndicator(
           onRefresh: () => ref
               .read(libraryProvider.notifier)
-              .scanSavedFolders(showVisualIndicator: true),
+              .refreshLibrary(showVisualIndicator: true),
           child: CustomScrollView(
             physics: const AlwaysScrollableScrollPhysics(
               parent: BouncingScrollPhysics(),

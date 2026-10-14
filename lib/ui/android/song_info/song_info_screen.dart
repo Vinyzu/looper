@@ -416,98 +416,120 @@ class _SongInfoScreenState extends ConsumerState<SongInfoScreen> {
 
         return ClipRRect(
           borderRadius: BorderRadius.circular(24),
-          child: Container(
-            width: double.infinity,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.08),
-                width: 1,
+          child: _buildCard(
+            icon: LucideIcons.fileKey,
+            title: l10n.lyrics,
+            children: [
+              Text(
+                displayedLines.join('\n'),
+                style: AppFonts.familyStyle(
+                  AppFonts.plusJakartaSans,
+                  color: Colors.white.withValues(alpha: 0.7),
+                  fontSize: 14,
+                  height: 1.6,
+                ),
               ),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Colors.white.withValues(alpha: 0.04),
-                  Colors.white.withValues(alpha: 0.01),
-                ],
-              ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        LucideIcons.fileKey,
-                        color: Colors.white.withValues(alpha: 0.5),
-                        size: 20,
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        l10n.lyrics,
-                        style: AppFonts.jostStyle(
-                          color: Colors.white.withValues(alpha: 0.9),
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+              if (hasManyLines) ...[
+                const SizedBox(height: 16),
+                Divider(color: Colors.white.withValues(alpha: 0.08)),
+                const SizedBox(height: 8),
+                InkWell(
+                  onTap: () {
+                    setState(() {
+                      _lyricsExpanded = !_lyricsExpanded;
+                    });
+                  },
+                  borderRadius: BorderRadius.circular(12),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          _lyricsExpanded ? l10n.showLess : l10n.showMore,
+                          style: AppFonts.jostStyle(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    displayedLines.join('\n'),
-                    style: AppFonts.plusJakartaSansStyle(
-                      color: Colors.white.withValues(alpha: 0.7),
-                      fontSize: 14,
-                      height: 1.6,
+                        const SizedBox(width: 4),
+                        Icon(
+                          _lyricsExpanded
+                              ? Icons.keyboard_arrow_up
+                              : Icons.keyboard_arrow_down,
+                          color: Theme.of(context).colorScheme.primary,
+                          size: 18,
+                        ),
+                      ],
                     ),
                   ),
-                  if (hasManyLines) ...[
-                    const SizedBox(height: 16),
-                    Divider(color: Colors.white.withValues(alpha: 0.08)),
-                    const SizedBox(height: 8),
-                    InkWell(
-                      onTap: () {
-                        setState(() {
-                          _lyricsExpanded = !_lyricsExpanded;
-                        });
-                      },
-                      borderRadius: BorderRadius.circular(12),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              _lyricsExpanded ? l10n.showLess : l10n.showMore,
-                              style: AppFonts.jostStyle(
-                                color: Theme.of(context).colorScheme.primary,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13,
-                              ),
-                            ),
-                            const SizedBox(width: 4),
-                            Icon(
-                              _lyricsExpanded
-                                  ? Icons.keyboard_arrow_up
-                                  : Icons.keyboard_arrow_down,
-                              color: Theme.of(context).colorScheme.primary,
-                              size: 18,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
+                ),
+              ],
+            ],
           ),
         );
       },
+    );
+  }
+
+  /// The bordered, faintly gradient card both sections sit on: an icon +
+  /// [title] header (with a spinner while [isLoading]) above [children].
+  Widget _buildCard({
+    required IconData icon,
+    required String title,
+    required List<Widget> children,
+    bool isLoading = false,
+  }) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.08),
+          width: 1,
+        ),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.white.withValues(alpha: 0.04),
+            Colors.white.withValues(alpha: 0.01),
+          ],
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  icon,
+                  color: Colors.white.withValues(alpha: 0.5),
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  title,
+                  style: AppFonts.jostStyle(
+                    color: Colors.white.withValues(alpha: 0.9),
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                if (isLoading) ...[
+                  const SizedBox(width: 12),
+                  const AppLoadingIndicator(size: 24),
+                ],
+              ],
+            ),
+            const SizedBox(height: 20),
+            ...children,
+          ],
+        ),
+      ),
     );
   }
 
@@ -522,83 +544,41 @@ class _SongInfoScreenState extends ConsumerState<SongInfoScreen> {
         borderRadius: BorderRadius.circular(24),
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-          child: Container(
-            width: double.infinity,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.08),
-                width: 1,
-              ),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Colors.white.withValues(alpha: 0.04),
-                  Colors.white.withValues(alpha: 0.01),
-                ],
-              ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+          child: _buildCard(
+            icon: icon,
+            title: title,
+            isLoading: isLoading,
+            children: [
+              ...items.map(
+                (item) => Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(
-                        icon,
-                        color: Colors.white.withValues(alpha: 0.5),
-                        size: 20,
-                      ),
-                      const SizedBox(width: 12),
                       Text(
-                        title,
+                        item.label.toUpperCase(),
                         style: AppFonts.jostStyle(
-                          color: Colors.white.withValues(alpha: 0.9),
-                          fontSize: 16,
+                          color: Colors.white.withValues(alpha: 0.4),
+                          fontSize: 10,
                           fontWeight: FontWeight.bold,
+                          letterSpacing: 1.2,
                         ),
                       ),
-                      if (isLoading) ...[
-                        const SizedBox(width: 12),
-                        const AppLoadingIndicator(size: 24),
-                      ],
+                      const SizedBox(height: 4),
+                      Text(
+                        item.value,
+                        style: AppFonts.jostStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                        ),
+                        maxLines: item.isLong ? 5 : 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ],
                   ),
-                  const SizedBox(height: 20),
-                  ...items.map(
-                    (item) => Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            item.label.toUpperCase(),
-                            style: AppFonts.jostStyle(
-                              color: Colors.white.withValues(alpha: 0.4),
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 1.2,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            item.value,
-                            style: AppFonts.jostStyle(
-                              color: Colors.white,
-                              fontSize: 14,
-                            ),
-                            maxLines: item.isLong ? 5 : 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
+            ],
           ),
         ),
       ),

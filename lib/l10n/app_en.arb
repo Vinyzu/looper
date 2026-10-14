@@ -1361,5 +1361,24 @@
   "lyricsServices": "Lyrics services",
   "lyricsServicesDesc": "Drag to set the order lyrics are looked up in. Services you switch off are skipped.",
   "creditWordSyncedDesc": "Word-synced lyrics",
-  "creditMorpheDesc": "Reference for the NetEase, KuGou, Musixmatch and Lyricify lookups · GPL-3.0"
+  "creditMorpheDesc": "Reference for the NetEase, KuGou, Musixmatch and Lyricify lookups · GPL-3.0",
+  "searchFilterAll": "All",
+  "noResultsFor": "No results for “{query}”",
+  "@noResultsFor": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "searchTryDifferent": "Check the spelling or try a different word.",
+  "searchScopeHint": "Titles, artists, albums, lyrics, playlists and genres",
+  "selectedCount": "{count} selected",
+  "@selectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }
