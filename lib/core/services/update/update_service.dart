@@ -174,7 +174,6 @@ class UpdateService {
 
     return state.showSnackBar(
       SnackBar(
-        backgroundColor: const Color(0xFF1E1E1C),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         duration: duration,

@@ -72,6 +72,26 @@ extension _CollectionHeader on CollectionDetailView {
     ),
   );
 
+  /// Songs join a playlist from their own options menu, so the playlist's +
+  /// button explains where that is rather than opening a picker.
+  void _showAddSongsHint(BuildContext context) {
+    AppHaptics.light();
+    final l10n = AppLocalizations.of(context)!;
+    ScaffoldMessenger.of(context)
+      ..clearSnackBars()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            UiUtils.isDesktop
+                ? l10n.addSongsToPlaylistHintDesktop
+                : l10n.addSongsToPlaylistHint,
+          ),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 5),
+        ),
+      );
+  }
+
   Widget _buildArt(
     BuildContext context,
     bool isNarrow,
@@ -118,15 +138,29 @@ extension _CollectionHeader on CollectionDetailView {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          titleToRender,
-          style: AppFonts.jostStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                titleToRender,
+                style: AppFonts.jostStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            if (reactivePlaylist != null) ...[
+              const SizedBox(width: 8),
+              IconButton(
+                tooltip: l10n.addSongsToPlaylistTitle,
+                onPressed: () => _showAddSongsHint(context),
+                icon: const Icon(LucideIcons.plus, size: 20),
+              ),
+            ],
+          ],
         ),
         const SizedBox(height: 4),
         _buildCollectionSubtitle(
@@ -148,7 +182,10 @@ extension _CollectionHeader on CollectionDetailView {
               onTap: () {
                 AppHaptics.medium();
                 final playback = ref.read(playbackProvider.notifier);
-                playback.playCollection(songsToRender);
+                playback.playCollection(
+                  songsToRender,
+                  sourcePlaylistId: reactivePlaylist?.id,
+                );
               },
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -183,7 +220,10 @@ extension _CollectionHeader on CollectionDetailView {
                 AppHaptics.light();
                 ref
                     .read(playbackProvider.notifier)
-                    .toggleCollectionShuffle(songsToRender);
+                    .toggleCollectionShuffle(
+                      songsToRender,
+                      sourcePlaylistId: reactivePlaylist?.id,
+                    );
               },
               child: Semantics(
                 label: l10n.shuffleTitle,

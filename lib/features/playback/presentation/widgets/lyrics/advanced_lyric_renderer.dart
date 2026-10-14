@@ -1,24 +1,28 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
+
 import 'package:looper_player/core/utils/motion.dart';
 import 'package:looper_player/core/utils/ui_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:looper_player/core/theme/app_fonts.dart';
+
 import '../../../domain/lyric_models.dart';
 import '../../screens/lyrics_view.dart';
 import '../../providers/lyrics/lyrics_search_provider.dart';
 import 'advanced_lyric_line/advanced_lyric_line.dart';
 import 'lyrics_follow_motion.dart';
 import 'lyrics_scale.dart';
+
 import 'package:looper_player/features/settings/presentation/providers/settings_notifier.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:looper_player/features/playback/presentation/providers/playback/playback_notifier.dart';
 
 import '../../providers/lyrics/lyrics_notifier.dart';
 import '../../providers/lyrics/lyrics_selection_notifier.dart';
+
 import 'package:looper_player/core/utils/l10n.dart';
 import 'package:looper_player/core/services/haptics/app_haptics.dart';
 
@@ -71,6 +75,15 @@ class _AdvancedLyricRendererState extends ConsumerState<AdvancedLyricRenderer>
   final Map<int, GlobalKey> _lineKeys = {};
   late final LyricsFollowMotion _followMotion = LyricsFollowMotion(this);
   int _currentLineIndex = -1;
+
+  /// The line the list rests on while the line at [index] is current: the
+  /// line itself, or the one before it when the two are sung as one (see
+  /// [LyricLine.pairHeads]). Only word and letter styles pair lines.
+  int _anchorIndexOf(int index) {
+    if (index < 0 || widget.mode == LyricsSyncMode.line) return index;
+    final heads = LyricLine.pairHeads(widget.lines);
+    return index < heads.length ? heads[index] : index;
+  }
 
   /// Where the active line rests, as a fraction of the list's height.
   static const double _anchor = 0.15;
@@ -250,9 +263,13 @@ class _AdvancedLyricRendererState extends ConsumerState<AdvancedLyricRenderer>
         isManual = false;
         _resumeFollow();
       }
+      // The second line of a pair takes over where the list already rests.
+      final anchor = _anchorIndexOf(index);
+      final samePair =
+          !forceScroll && anchor == _anchorIndexOf(_currentLineIndex);
       _currentLineIndex = index;
-      if (!isManual || forceScroll) {
-        _scrollToIndex(index, animate: _transitionFinished);
+      if ((!isManual || forceScroll) && !samePair) {
+        _scrollToIndex(anchor, animate: _transitionFinished);
       }
       if (mounted) setState(() {});
     }
@@ -400,15 +417,15 @@ class _AdvancedLyricRendererState extends ConsumerState<AdvancedLyricRenderer>
       }
     });
     if (nearest == null) return _scrollController.position.pixels;
-    final base = RenderAbstractViewport.of(
-      nearestBox!,
-    ).getOffsetToReveal(nearestBox!, _anchor).offset;
+    final base = RenderAbstractViewport.of(nearestBox!)
+        .getOffsetToReveal(nearestBox!, _anchor)
+        .offset;
     return base + (index - nearest!) * heights / count;
   }
 
   void _follow(int index, {required bool animate, int attempt = 0}) {
     if (!mounted || !_scrollController.hasClients) return;
-    if (index != _currentLineIndex) return;
+    if (index != _anchorIndexOf(_currentLineIndex)) return;
     final position = _scrollController.position;
 
     final target = _restingOffset(index);
@@ -417,9 +434,8 @@ class _AdvancedLyricRendererState extends ConsumerState<AdvancedLyricRenderer>
       // again once it has been laid out.
       if (attempt >= 4) return;
       position.jumpTo(
-        _estimatedOffset(
-          index,
-        ).clamp(position.minScrollExtent, position.maxScrollExtent),
+        _estimatedOffset(index)
+            .clamp(position.minScrollExtent, position.maxScrollExtent),
       );
       WidgetsBinding.instance.addPostFrameCallback(
         (_) => _follow(index, animate: animate, attempt: attempt + 1),
@@ -635,6 +651,7 @@ class _AdvancedLyricRendererState extends ConsumerState<AdvancedLyricRenderer>
 
               final line = widget.lines[index];
               final isActive = index == _currentLineIndex;
+              final pairHead = _anchorIndexOf(_currentLineIndex);
 
               // Assign or retrieve key for this line
               final key = _lineKeys.putIfAbsent(index, () => GlobalKey());
@@ -649,11 +666,15 @@ class _AdvancedLyricRendererState extends ConsumerState<AdvancedLyricRenderer>
                     line: line,
                     mode: widget.mode,
                     isActive: isActive,
+                    held: !isActive && index == pairHead,
                     // While the user scrolls around on their own, every
                     // line stays readable; the fade is for following.
                     distance: browsing || _currentLineIndex < 0
                         ? 1
-                        : (index - _currentLineIndex).abs(),
+                        : math.min(
+                            (index - _currentLineIndex).abs(),
+                            (index - pairHead).abs(),
+                          ),
                     synced: widget.synced,
                     fontScale: _effectiveFontScale,
                     isSelected: selection.contains(index),

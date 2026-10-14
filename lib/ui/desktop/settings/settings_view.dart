@@ -95,7 +95,7 @@ class SettingsView extends ConsumerWidget {
                       onTap: () {
                         AppHaptics.light();
                         launchUrl(
-                          Uri.parse(AppLinks.buyMeACoffee),
+                          Uri.parse(AppLinks.koFi),
                           mode: LaunchMode.externalApplication,
                         );
                       },
@@ -473,6 +473,8 @@ class SettingsView extends ConsumerWidget {
                   icon: LucideIcons.layoutDashboard,
                   children: const [
                     ShowRecentRowTile(),
+                    divider,
+                    ShowPlaylistsRowTile(),
                     divider,
                     ShowGenresRowTile(),
                     divider,

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:looper_player/features/settings/data/github_contributors.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:looper_player/core/theme/app_fonts.dart';
@@ -315,149 +317,56 @@ class InfoSubTile extends StatelessWidget {
   }
 }
 
-class AboutMaintainerRow extends StatelessWidget {
-  final String name;
-  final String role;
-  final String avatar;
-  final String github;
-  final String telegram;
-
-  const AboutMaintainerRow({
-    super.key,
-    required this.name,
-    required this.role,
-    required this.avatar,
-    required this.github,
-    required this.telegram,
-  });
+/// The About screen's maintainers card body: one avatar per contributor from
+/// GitHub (see [githubContributorsProvider]), each opening that person's
+/// GitHub profile.
+class MaintainersRow extends ConsumerWidget {
+  const MaintainersRow({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 24,
-            backgroundColor: Colors.white10,
-            backgroundImage: AssetImage(avatar),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: AppFonts.jostStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  role,
-                  style: AppFonts.jostStyle(
-                    color: Colors.white.withValues(alpha: 0.4),
-                    fontSize: 13,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          GestureDetector(
-            onTap: () async {
-              AppHaptics.light();
-              final Uri uri = Uri.parse(github);
-              try {
-                await launchUrl(uri, mode: LaunchMode.externalApplication);
-              } catch (e) {}
-            },
-            child: Container(
-              width: 24,
-              height: 24,
-              alignment: Alignment.center,
-              child: SvgPicture.asset(AppAssets.github, width: 24, height: 24),
-            ),
-          ),
-          const SizedBox(width: 12),
-          GestureDetector(
-            onTap: () async {
-              AppHaptics.light();
-              final Uri uri = Uri.parse(telegram);
-              try {
-                await launchUrl(uri, mode: LaunchMode.externalApplication);
-              } catch (e) {}
-            },
-            child: SizedBox(
-              width: 24,
-              height: 24,
-              child: SvgPicture.asset(
-                AppAssets.telegram,
-                width: 24,
-                height: 24,
+  Widget build(BuildContext context, WidgetRef ref) {
+    final people = ref.watch(githubContributorsProvider).value ?? const [];
+    return SizedBox(
+      height: 76,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        itemCount: people.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 12),
+        itemBuilder: (context, index) {
+          final person = people[index];
+          final ImageProvider? image = person.avatarUrl != null
+              ? CachedNetworkImageProvider('${person.avatarUrl}&s=144')
+              : person.avatarAsset != null
+              ? AssetImage(person.avatarAsset!)
+              : null;
+          return Tooltip(
+            message: person.login,
+            child: GestureDetector(
+              onTap: () async {
+                AppHaptics.light();
+                try {
+                  await launchUrl(
+                    Uri.parse(person.profileUrl),
+                    mode: LaunchMode.externalApplication,
+                  );
+                } catch (e) {}
+              },
+              child: CircleAvatar(
+                radius: 24,
+                backgroundColor: Colors.white10,
+                backgroundImage: image,
+                child: image == null
+                    ? Text(
+                        person.login.characters.first.toUpperCase(),
+                        style: AppFonts.jostStyle(color: Colors.white),
+                      )
+                    : null,
               ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// The About screen's maintainers card body: shows only the first row until
-/// tapped, then reveals [rest]. The rows' own link buttons keep their taps.
-class CollapsibleMaintainers extends StatefulWidget {
-  final Widget first;
-  final List<Widget> rest;
-
-  const CollapsibleMaintainers({
-    super.key,
-    required this.first,
-    required this.rest,
-  });
-
-  @override
-  State<CollapsibleMaintainers> createState() => _CollapsibleMaintainersState();
-}
-
-class _CollapsibleMaintainersState extends State<CollapsibleMaintainers> {
-  static const _duration = Duration(milliseconds: 260);
-  bool _expanded = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () {
-        AppHaptics.light();
-        setState(() => _expanded = !_expanded);
-      },
-      child: Column(
-        children: [
-          widget.first,
-          ClipRect(
-            child: AnimatedSize(
-              duration: _duration,
-              curve: Curves.easeOutCubic,
-              alignment: Alignment.topCenter,
-              child: _expanded
-                  ? Column(children: widget.rest)
-                  : const SizedBox(width: double.infinity),
-            ),
-          ),
-          AnimatedRotation(
-            turns: _expanded ? 0.5 : 0,
-            duration: _duration,
-            curve: Curves.easeOutCubic,
-            child: Icon(
-              Icons.keyboard_arrow_down_rounded,
-              size: 22,
-              color: Colors.white.withValues(alpha: 0.4),
-            ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }

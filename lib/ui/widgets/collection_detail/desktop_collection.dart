@@ -118,7 +118,10 @@ extension _DesktopCollection on CollectionDetailView {
                                       final playback = ref.read(
                                         playbackProvider.notifier,
                                       );
-                                      playback.playCollection(songs);
+                                      playback.playCollection(
+                                        songs,
+                                        sourcePlaylistId: reactivePlaylist?.id,
+                                      );
                                     },
                                     child: Row(
                                       mainAxisSize: MainAxisSize.min,
@@ -152,10 +155,20 @@ extension _DesktopCollection on CollectionDetailView {
                                     onTap: () {
                                       ref
                                           .read(playbackProvider.notifier)
-                                          .toggleCollectionShuffle(songs);
+                                          .toggleCollectionShuffle(
+                                            songs,
+                                            sourcePlaylistId:
+                                                reactivePlaylist?.id,
+                                          );
                                     },
                                   ),
                                   if (reactivePlaylist != null) ...[
+                                    const SizedBox(width: 10),
+                                    _DesktopPill.icon(
+                                      icon: LucideIcons.plus,
+                                      tooltip: l10n.addSongsToPlaylistTitle,
+                                      onTap: () => _showAddSongsHint(context),
+                                    ),
                                     const SizedBox(width: 10),
                                     _DesktopPill.icon(
                                       icon: LucideIcons.moreHorizontal,
@@ -305,7 +318,11 @@ class _DesktopSongRowState extends ConsumerState<_DesktopSongRow> {
   bool _hovered = false;
   void _play() {
     final playback = ref.read(playbackProvider.notifier);
-    playback.setPlaylist(widget.songs, initialIndex: widget.index);
+    playback.setPlaylist(
+      widget.songs,
+      initialIndex: widget.index,
+      sourcePlaylistId: widget.playlist?.id,
+    );
   }
 
   void _showOptions() => showSongOptionsBottomSheet(

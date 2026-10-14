@@ -52,6 +52,15 @@ class PlaylistList extends _$PlaylistList {
 }
 
 @Riverpod(keepAlive: true)
+Stream<List<Playlist>> dashboardPlaylists(Ref ref) {
+  return DbService.isar.playlists
+      .where()
+      .sortByLastPlayedDesc()
+      .thenByDateModifiedDesc()
+      .watch(fireImmediately: true);
+}
+
+@Riverpod(keepAlive: true)
 Stream<List<Song>> playlistSongs(Ref ref, int playlistId) {
   return DbService.isar.playlists
       .watchObject(playlistId, fireImmediately: true)
@@ -125,7 +134,7 @@ class PlaylistView extends ConsumerWidget {
               ),
               itemCount: playlists.length,
               itemBuilder: (context, index) =>
-                  _PlaylistCard(playlist: playlists[index]),
+                  PlaylistCard(playlist: playlists[index]),
             ),
       floatingActionButton: AnimatedPadding(
         duration: const Duration(milliseconds: 250),
@@ -173,9 +182,9 @@ class PlaylistView extends ConsumerWidget {
   }
 }
 
-class _PlaylistCard extends ConsumerWidget {
+class PlaylistCard extends ConsumerWidget {
   final Playlist playlist;
-  const _PlaylistCard({required this.playlist});
+  const PlaylistCard({super.key, required this.playlist});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

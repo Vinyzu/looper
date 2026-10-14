@@ -4,6 +4,7 @@ import 'package:looper_player/core/services/storage/db_service.dart';
 import 'package:looper_player/features/settings/presentation/providers/settings_notifier.dart';
 import 'package:looper_player/features/playback/presentation/providers/playback/playback_notifier.dart';
 import 'package:looper_player/core/providers/providers.dart';
+import 'package:looper_player/core/services/audio/audio_service.dart';
 import 'package:looper_player/core/services/storage/local_json_store.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'equalizer_state.dart';
@@ -262,11 +263,6 @@ class Equalizer extends _$Equalizer {
       setBandGain(34, val, applyInstant: false);
   Future<void> setTempo(double val) async =>
       setBandGain(35, val, applyInstant: false);
-
-  Future<void> setReplayGainMode(int mode) async =>
-      setBandGain(36, mode.toDouble(), applyInstant: true);
-  Future<void> setReplayGainPreamp(double preamp) async =>
-      setBandGain(37, preamp, applyInstant: false);
 
   Future<void> setSpeechFilterEnabled(bool enabled) async {
     final gains = {38: enabled ? 1.0 : 0.0};

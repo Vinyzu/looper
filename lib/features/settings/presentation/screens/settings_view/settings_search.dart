@@ -347,6 +347,12 @@ extension _SettingsSearch on _SettingsViewState {
         category: l10n.homeDashboardSettings,
         widget: const ReorderDashboardSectionsTile(),
       ),
+      SettingsSearchItem(
+        title: l10n.showPlaylistsRow,
+        subtitle: l10n.showPlaylistsRowDesc,
+        category: l10n.homeDashboardSettings,
+        widget: const ShowPlaylistsRowTile(),
+      ),
 
       // Playback
       SettingsSearchItem(

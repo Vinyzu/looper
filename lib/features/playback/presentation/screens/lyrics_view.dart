@@ -374,7 +374,8 @@ class _LyricsViewState extends ConsumerState<LyricsView> {
             Text(
               l10n.lyricsNotAvailable,
               textAlign: TextAlign.center,
-              style: AppFonts.spaceGroteskStyle(
+              style: AppFonts.familyStyle(
+                AppFonts.spaceGrotesk,
                 color: Colors.white.withValues(alpha: 0.75),
                 fontSize: 18,
                 fontWeight: FontWeight.w600,

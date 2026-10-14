@@ -22,7 +22,7 @@ class FoldersListView extends ConsumerWidget {
     return AppRefreshIndicator(
       onRefresh: () => ref
           .read(libraryProvider.notifier)
-          .scanSavedFolders(showVisualIndicator: true),
+          .refreshLibrary(showVisualIndicator: true),
       child: ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(
           parent: BouncingScrollPhysics(),

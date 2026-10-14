@@ -187,6 +187,22 @@ class Library extends _$Library {
     );
   }
 
+  /// Pull-to-refresh: rescans the saved folders and completes only once the
+  /// library is idle again. If a scan or other library job was already
+  /// running the rescan itself is skipped (see [scanSavedFolders]), but this
+  /// still waits for that job, so the pull spinner stays up while anything
+  /// is processing and lets go when it is done.
+  Future<void> refreshLibrary({bool showVisualIndicator = true}) async {
+    await scanSavedFolders(showVisualIndicator: showVisualIndicator);
+    // A cap, so a busy flag that somehow never clears cannot pin the
+    // spinner for good.
+    final giveUpAt = DateTime.now().add(const Duration(minutes: 10));
+    while ((_isScanRunning || state.isScanning) &&
+        DateTime.now().isBefore(giveUpAt)) {
+      await Future<void>.delayed(const Duration(milliseconds: 200));
+    }
+  }
+
   bool _isEnriching = false;
 
   Future<void> _enrichPendingSongs() async {
@@ -213,17 +229,6 @@ class Library extends _$Library {
       return;
     }
     await scanSavedFolders(showVisualIndicator: false);
-  }
-
-  Future<void> clearAllData() async {
-    await DbService.isar.writeTxn(() async {
-      await DbService.isar.songs.clear();
-      await DbService.isar.albums.clear();
-      await DbService.isar.artists.clear();
-      await DbService.isar.playlists.clear();
-    });
-    await ref.read(settingsProvider.notifier).updateLibraryFolders([]);
-    await ref.read(settingsProvider.notifier).updateLastPlayedSong(null);
   }
 
   Future<void> resetAndRescan() async {

@@ -8248,9 +8248,14 @@ const PlaylistSchema = CollectionSchema(
       name: r'dateModified',
       type: IsarType.dateTime,
     ),
-    r'name': PropertySchema(id: 2, name: r'name', type: IsarType.string),
+    r'lastPlayed': PropertySchema(
+      id: 2,
+      name: r'lastPlayed',
+      type: IsarType.dateTime,
+    ),
+    r'name': PropertySchema(id: 3, name: r'name', type: IsarType.string),
     r'songPaths': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'songPaths',
       type: IsarType.stringList,
     ),
@@ -8310,8 +8315,9 @@ void _playlistSerialize(
 ) {
   writer.writeDateTime(offsets[0], object.dateCreated);
   writer.writeDateTime(offsets[1], object.dateModified);
-  writer.writeString(offsets[2], object.name);
-  writer.writeStringList(offsets[3], object.songPaths);
+  writer.writeDateTime(offsets[2], object.lastPlayed);
+  writer.writeString(offsets[3], object.name);
+  writer.writeStringList(offsets[4], object.songPaths);
 }
 
 Playlist _playlistDeserialize(
@@ -8324,8 +8330,9 @@ Playlist _playlistDeserialize(
   object.dateCreated = reader.readDateTime(offsets[0]);
   object.dateModified = reader.readDateTime(offsets[1]);
   object.id = id;
-  object.name = reader.readString(offsets[2]);
-  object.songPaths = reader.readStringList(offsets[3]) ?? [];
+  object.lastPlayed = reader.readDateTimeOrNull(offsets[2]);
+  object.name = reader.readString(offsets[3]);
+  object.songPaths = reader.readStringList(offsets[4]) ?? [];
   return object;
 }
 
@@ -8341,8 +8348,10 @@ P _playlistDeserializeProp<P>(
     case 1:
       return (reader.readDateTime(offset)) as P;
     case 2:
-      return (reader.readString(offset)) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 3:
+      return (reader.readString(offset)) as P;
+    case 4:
       return (reader.readStringList(offset) ?? []) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -8709,6 +8718,82 @@ extension PlaylistQueryFilter
       return query.addFilterCondition(
         FilterCondition.between(
           property: r'id',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Playlist, Playlist, QAfterFilterCondition> lastPlayedIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'lastPlayed'),
+      );
+    });
+  }
+
+  QueryBuilder<Playlist, Playlist, QAfterFilterCondition>
+  lastPlayedIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'lastPlayed'),
+      );
+    });
+  }
+
+  QueryBuilder<Playlist, Playlist, QAfterFilterCondition> lastPlayedEqualTo(
+    DateTime? value,
+  ) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'lastPlayed', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<Playlist, Playlist, QAfterFilterCondition> lastPlayedGreaterThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'lastPlayed',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Playlist, Playlist, QAfterFilterCondition> lastPlayedLessThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'lastPlayed',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Playlist, Playlist, QAfterFilterCondition> lastPlayedBetween(
+    DateTime? lower,
+    DateTime? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'lastPlayed',
           lower: lower,
           includeLower: includeLower,
           upper: upper,
@@ -9089,6 +9174,18 @@ extension PlaylistQuerySortBy on QueryBuilder<Playlist, Playlist, QSortBy> {
     });
   }
 
+  QueryBuilder<Playlist, Playlist, QAfterSortBy> sortByLastPlayed() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastPlayed', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Playlist, Playlist, QAfterSortBy> sortByLastPlayedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastPlayed', Sort.desc);
+    });
+  }
+
   QueryBuilder<Playlist, Playlist, QAfterSortBy> sortByName() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'name', Sort.asc);
@@ -9140,6 +9237,18 @@ extension PlaylistQuerySortThenBy
     });
   }
 
+  QueryBuilder<Playlist, Playlist, QAfterSortBy> thenByLastPlayed() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastPlayed', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Playlist, Playlist, QAfterSortBy> thenByLastPlayedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastPlayed', Sort.desc);
+    });
+  }
+
   QueryBuilder<Playlist, Playlist, QAfterSortBy> thenByName() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'name', Sort.asc);
@@ -9164,6 +9273,12 @@ extension PlaylistQueryWhereDistinct
   QueryBuilder<Playlist, Playlist, QDistinct> distinctByDateModified() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'dateModified');
+    });
+  }
+
+  QueryBuilder<Playlist, Playlist, QDistinct> distinctByLastPlayed() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'lastPlayed');
     });
   }
 
@@ -9199,6 +9314,12 @@ extension PlaylistQueryProperty
   QueryBuilder<Playlist, DateTime, QQueryOperations> dateModifiedProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'dateModified');
+    });
+  }
+
+  QueryBuilder<Playlist, DateTime?, QQueryOperations> lastPlayedProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'lastPlayed');
     });
   }
 
@@ -9816,58 +9937,63 @@ const AppSettingsSchema = CollectionSchema(
       name: r'showHomeGenres',
       type: IsarType.bool,
     ),
-    r'showHomeRecent': PropertySchema(
+    r'showHomePlaylists': PropertySchema(
       id: 118,
+      name: r'showHomePlaylists',
+      type: IsarType.bool,
+    ),
+    r'showHomeRecent': PropertySchema(
+      id: 119,
       name: r'showHomeRecent',
       type: IsarType.bool,
     ),
     r'showPerformanceOptimizer': PropertySchema(
-      id: 119,
+      id: 120,
       name: r'showPerformanceOptimizer',
       type: IsarType.bool,
     ),
     r'showQualityBadge': PropertySchema(
-      id: 120,
+      id: 121,
       name: r'showQualityBadge',
       type: IsarType.bool,
     ),
-    r'shuffle': PropertySchema(id: 121, name: r'shuffle', type: IsarType.bool),
+    r'shuffle': PropertySchema(id: 122, name: r'shuffle', type: IsarType.bool),
     r'songsDarkness': PropertySchema(
-      id: 122,
+      id: 123,
       name: r'songsDarkness',
       type: IsarType.double,
     ),
     r'sortAscending': PropertySchema(
-      id: 123,
+      id: 124,
       name: r'sortAscending',
       type: IsarType.bool,
     ),
     r'sortStrategyIndex': PropertySchema(
-      id: 124,
+      id: 125,
       name: r'sortStrategyIndex',
       type: IsarType.long,
     ),
     r'stackSansDefaultMigrated': PropertySchema(
-      id: 125,
+      id: 126,
       name: r'stackSansDefaultMigrated',
       type: IsarType.bool,
     ),
     r'stopOnTaskRemoved': PropertySchema(
-      id: 126,
+      id: 127,
       name: r'stopOnTaskRemoved',
       type: IsarType.bool,
     ),
     r'useNewFont': PropertySchema(
-      id: 127,
+      id: 128,
       name: r'useNewFont',
       type: IsarType.bool,
     ),
     r'useNewFontLyrics': PropertySchema(
-      id: 128,
+      id: 129,
       name: r'useNewFontLyrics',
       type: IsarType.bool,
     ),
-    r'volume': PropertySchema(id: 129, name: r'volume', type: IsarType.double),
+    r'volume': PropertySchema(id: 130, name: r'volume', type: IsarType.double),
   },
 
   estimateSize: _appSettingsEstimateSize,
@@ -10062,18 +10188,19 @@ void _appSettingsSerialize(
   writer.writeBool(offsets[115], object.showHomeAlbums);
   writer.writeBool(offsets[116], object.showHomeArtists);
   writer.writeBool(offsets[117], object.showHomeGenres);
-  writer.writeBool(offsets[118], object.showHomeRecent);
-  writer.writeBool(offsets[119], object.showPerformanceOptimizer);
-  writer.writeBool(offsets[120], object.showQualityBadge);
-  writer.writeBool(offsets[121], object.shuffle);
-  writer.writeDouble(offsets[122], object.songsDarkness);
-  writer.writeBool(offsets[123], object.sortAscending);
-  writer.writeLong(offsets[124], object.sortStrategyIndex);
-  writer.writeBool(offsets[125], object.stackSansDefaultMigrated);
-  writer.writeBool(offsets[126], object.stopOnTaskRemoved);
-  writer.writeBool(offsets[127], object.useNewFont);
-  writer.writeBool(offsets[128], object.useNewFontLyrics);
-  writer.writeDouble(offsets[129], object.volume);
+  writer.writeBool(offsets[118], object.showHomePlaylists);
+  writer.writeBool(offsets[119], object.showHomeRecent);
+  writer.writeBool(offsets[120], object.showPerformanceOptimizer);
+  writer.writeBool(offsets[121], object.showQualityBadge);
+  writer.writeBool(offsets[122], object.shuffle);
+  writer.writeDouble(offsets[123], object.songsDarkness);
+  writer.writeBool(offsets[124], object.sortAscending);
+  writer.writeLong(offsets[125], object.sortStrategyIndex);
+  writer.writeBool(offsets[126], object.stackSansDefaultMigrated);
+  writer.writeBool(offsets[127], object.stopOnTaskRemoved);
+  writer.writeBool(offsets[128], object.useNewFont);
+  writer.writeBool(offsets[129], object.useNewFontLyrics);
+  writer.writeDouble(offsets[130], object.volume);
 }
 
 AppSettings _appSettingsDeserialize(
@@ -10202,18 +10329,19 @@ AppSettings _appSettingsDeserialize(
   object.showHomeAlbums = reader.readBool(offsets[115]);
   object.showHomeArtists = reader.readBool(offsets[116]);
   object.showHomeGenres = reader.readBool(offsets[117]);
-  object.showHomeRecent = reader.readBool(offsets[118]);
-  object.showPerformanceOptimizer = reader.readBool(offsets[119]);
-  object.showQualityBadge = reader.readBool(offsets[120]);
-  object.shuffle = reader.readBool(offsets[121]);
-  object.songsDarkness = reader.readDouble(offsets[122]);
-  object.sortAscending = reader.readBool(offsets[123]);
-  object.sortStrategyIndex = reader.readLong(offsets[124]);
-  object.stackSansDefaultMigrated = reader.readBool(offsets[125]);
-  object.stopOnTaskRemoved = reader.readBool(offsets[126]);
-  object.useNewFont = reader.readBool(offsets[127]);
-  object.useNewFontLyrics = reader.readBool(offsets[128]);
-  object.volume = reader.readDouble(offsets[129]);
+  object.showHomePlaylists = reader.readBoolOrNull(offsets[118]);
+  object.showHomeRecent = reader.readBool(offsets[119]);
+  object.showPerformanceOptimizer = reader.readBool(offsets[120]);
+  object.showQualityBadge = reader.readBool(offsets[121]);
+  object.shuffle = reader.readBool(offsets[122]);
+  object.songsDarkness = reader.readDouble(offsets[123]);
+  object.sortAscending = reader.readBool(offsets[124]);
+  object.sortStrategyIndex = reader.readLong(offsets[125]);
+  object.stackSansDefaultMigrated = reader.readBool(offsets[126]);
+  object.stopOnTaskRemoved = reader.readBool(offsets[127]);
+  object.useNewFont = reader.readBool(offsets[128]);
+  object.useNewFontLyrics = reader.readBool(offsets[129]);
+  object.volume = reader.readDouble(offsets[130]);
   return object;
 }
 
@@ -10461,7 +10589,7 @@ P _appSettingsDeserializeProp<P>(
     case 117:
       return (reader.readBool(offset)) as P;
     case 118:
-      return (reader.readBool(offset)) as P;
+      return (reader.readBoolOrNull(offset)) as P;
     case 119:
       return (reader.readBool(offset)) as P;
     case 120:
@@ -10469,13 +10597,13 @@ P _appSettingsDeserializeProp<P>(
     case 121:
       return (reader.readBool(offset)) as P;
     case 122:
-      return (reader.readDouble(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 123:
-      return (reader.readBool(offset)) as P;
+      return (reader.readDouble(offset)) as P;
     case 124:
-      return (reader.readLong(offset)) as P;
-    case 125:
       return (reader.readBool(offset)) as P;
+    case 125:
+      return (reader.readLong(offset)) as P;
     case 126:
       return (reader.readBool(offset)) as P;
     case 127:
@@ -10483,6 +10611,8 @@ P _appSettingsDeserializeProp<P>(
     case 128:
       return (reader.readBool(offset)) as P;
     case 129:
+      return (reader.readBool(offset)) as P;
+    case 130:
       return (reader.readDouble(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -17048,6 +17178,33 @@ extension AppSettingsQueryFilter
   }
 
   QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+  showHomePlaylistsIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'showHomePlaylists'),
+      );
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+  showHomePlaylistsIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'showHomePlaylists'),
+      );
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+  showHomePlaylistsEqualTo(bool? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'showHomePlaylists', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
   showHomeRecentEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
@@ -18872,6 +19029,20 @@ extension AppSettingsQuerySortBy
     });
   }
 
+  QueryBuilder<AppSettings, AppSettings, QAfterSortBy>
+  sortByShowHomePlaylists() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'showHomePlaylists', Sort.asc);
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterSortBy>
+  sortByShowHomePlaylistsDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'showHomePlaylists', Sort.desc);
+    });
+  }
+
   QueryBuilder<AppSettings, AppSettings, QAfterSortBy> sortByShowHomeRecent() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'showHomeRecent', Sort.asc);
@@ -20569,6 +20740,20 @@ extension AppSettingsQuerySortThenBy
     });
   }
 
+  QueryBuilder<AppSettings, AppSettings, QAfterSortBy>
+  thenByShowHomePlaylists() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'showHomePlaylists', Sort.asc);
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterSortBy>
+  thenByShowHomePlaylistsDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'showHomePlaylists', Sort.desc);
+    });
+  }
+
   QueryBuilder<AppSettings, AppSettings, QAfterSortBy> thenByShowHomeRecent() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'showHomeRecent', Sort.asc);
@@ -21560,6 +21745,13 @@ extension AppSettingsQueryWhereDistinct
     });
   }
 
+  QueryBuilder<AppSettings, AppSettings, QDistinct>
+  distinctByShowHomePlaylists() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'showHomePlaylists');
+    });
+  }
+
   QueryBuilder<AppSettings, AppSettings, QDistinct> distinctByShowHomeRecent() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'showHomeRecent');
@@ -22429,6 +22621,13 @@ extension AppSettingsQueryProperty
   QueryBuilder<AppSettings, bool, QQueryOperations> showHomeGenresProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'showHomeGenres');
+    });
+  }
+
+  QueryBuilder<AppSettings, bool?, QQueryOperations>
+  showHomePlaylistsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'showHomePlaylists');
     });
   }
 

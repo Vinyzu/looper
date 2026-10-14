@@ -1,3 +1,4 @@
+import 'package:looper_player/core/providers/collection_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:looper_player/core/services/storage/db_service.dart';
@@ -41,25 +42,9 @@ class ArtistsGridView extends ConsumerWidget {
         final artist = sortedArtists[index];
         return InkWell(
           onTap: () async {
-            final songs = await DbService.isar.songs
-                .filter()
-                .artistEqualTo(artist.name)
-                .findAll();
-            // Correctly distinguish between a local downloaded image and a remote URL
-            final imageUrl = artist.artistImageUrl;
-            final bool isLocalImage =
-                imageUrl != null && !imageUrl.startsWith('http');
-            final bool isNetworkImage =
-                imageUrl != null && imageUrl.startsWith('http');
-            ref
+            await ref
                 .read(appNavigationProvider.notifier)
-                .showCollection(
-                  title: artist.name,
-                  subtitle: l10n.artist,
-                  art: isLocalImage ? imageUrl : artist.artPath,
-                  imageUrl: isNetworkImage ? imageUrl : null,
-                  songs: songs,
-                );
+                .showArtist(artist, subtitle: l10n.artist);
           },
           child: Column(
             children: [

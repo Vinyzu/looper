@@ -30,6 +30,11 @@ class LyricLine {
   /// Sung by the duet partner ("[opp]" in the LRC).
   final bool isOppositeSide;
 
+  /// Other lines that share this line's timestamp in the LRC - the
+  /// translation or romanization of a multilingual file. Shown under
+  /// [text] as one block that is current, scrolls and seeks together.
+  final List<String> extraLines;
+
   LyricLine({
     required this.startTime,
     required this.endTime,
@@ -37,12 +42,55 @@ class LyricLine {
     this.words = const [],
     this.backgroundWords = const [],
     this.isOppositeSide = false,
+    this.extraLines = const [],
     String backgroundText = '',
   }) : backgroundText = backgroundText.isNotEmpty
            ? backgroundText
            : backgroundWords.map((w) => w.text).join().trim();
 
   bool get hasWordTiming => words.isNotEmpty;
+
+  /// [text] and its [extraLines], one per line - for places that show or
+  /// share the whole block as plain text.
+  String get fullText =>
+      extraLines.isEmpty ? text : [text, ...extraLines].join('\n');
+
+  /// A word-timed line whose first word starts this soon after the previous
+  /// line's last word ends is sung in the same breath: see [pairHeads].
+  static const Duration continuedLineGap = Duration(milliseconds: 100);
+
+  /// For every line, the index of the line it is shown with: its own, or
+  /// the previous line's when it carries straight on from it (both
+  /// word-timed, same singer, less than [continuedLineGap] apart). Such a
+  /// pair is current together - the first line stays lit and the list
+  /// doesn't move while the second is sung.
+  ///
+  /// Never more than two lines, and the two lines after a pair stay on
+  /// their own, so a song sung without pauses doesn't turn into pairs
+  /// throughout.
+  static List<int> pairHeads(List<LyricLine> lines) =>
+      _pairCache[lines] ??= _pairHeads(lines);
+
+  static final Expando<List<int>> _pairCache = Expando();
+
+  static List<int> _pairHeads(List<LyricLine> lines) {
+    final heads = List<int>.generate(lines.length, (i) => i);
+    for (var i = 1; i < lines.length; i++) {
+      final first = lines[i - 1];
+      final second = lines[i];
+      if (!first.hasWordTiming ||
+          !second.hasWordTiming ||
+          first.isOppositeSide != second.isOppositeSide) {
+        continue;
+      }
+      final gap = second.words.first.startTime - first.words.last.endTime;
+      if (gap >= continuedLineGap) continue;
+      heads[i] = i - 1;
+      // The next two lines are single; the one after may start a pair.
+      i += 3;
+    }
+    return heads;
+  }
 
   /// A word: letters up to (and including) any trailing punctuation and
   /// whitespace - so a comma ends a word even with no space after it.
@@ -105,15 +153,6 @@ class LyricLine {
   /// `[w:]`), in which case it's shown but not animated.
   final String backgroundText;
 
-  double getProgress(Duration currentPosition) {
-    if (currentPosition < startTime) return 0.0;
-    if (currentPosition > endTime) return 1.0;
-    final duration = endTime - startTime;
-    if (duration.inMilliseconds == 0) return 1.0;
-    return (currentPosition - startTime).inMilliseconds /
-        duration.inMilliseconds;
-  }
-
   /// How much of [words]' text has been sung at [position], from 0 to 1,
   /// weighted by characters - so a gradient wipe driven by it moves at the
   /// singer's pace through each syllable, and holds still in the pauses
@@ -148,6 +187,17 @@ class _RawLine {
   bool opposite = false;
   String backgroundText = '';
   List<_RawWord> background = const [];
+
+  /// Plain lines at the same timestamp, folded into this one.
+  final List<String> extras = [];
+
+  /// Whether this line is only text: nothing that needs a line of its own
+  /// (word timing, background vocals, the duet partner's side).
+  bool get isPlain =>
+      words.isEmpty &&
+      background.isEmpty &&
+      backgroundText.isEmpty &&
+      !opposite;
 
   /// Where the next `[w:]` line's timing goes: this line's own text, or
   /// its background vocals once a `[bg:]` line has been seen.
@@ -321,13 +371,30 @@ class LrcParser {
       ..clear()
       ..addAll(indexed.map((e) => e.value));
 
-    // Give every line a real, catchable active window. Two lines sharing
-    // (or nearly sharing) a timestamp is common in dual-language/karaoke
-    // LRC exports; without a floor here, endTime below (the next line's
-    // start) collapses to the same instant as this line's own start, so
-    // `position >= start && position < end` can never be true for it and
-    // it silently never highlights as active during playback even though
-    // it's still shown on screen.
+    // Lines sharing a timestamp are one lyric in several languages
+    // (original, translation, romanization): fold them into the first, so
+    // the block is current together instead of each line handing over to
+    // the next in the same instant. A later line that is sung on its own
+    // (word-timed, duet side) stays a line.
+    for (var i = 1; i < rawLines.length;) {
+      final first = rawLines[i - 1];
+      final line = rawLines[i];
+      if (line.start != first.start || !line.isPlain) {
+        i++;
+        continue;
+      }
+      if (first.text.isEmpty && first.isPlain) {
+        rawLines.removeAt(i - 1);
+        continue;
+      }
+      if (line.text.isNotEmpty) first.extras.add(line.text);
+      rawLines.removeAt(i);
+    }
+
+    // Give every remaining line a real, catchable active window: without
+    // a floor, a line starting at (or within a hair of) the previous one
+    // would end the instant it starts - `position >= start && position <
+    // end` could never be true for it, so it would never be current.
     const minLineGap = Duration(milliseconds: 10);
     for (var i = 1; i < rawLines.length; i++) {
       final prevStart = rawLines[i - 1].start;
@@ -359,6 +426,7 @@ class LrcParser {
         words: _finishWords(raw.words, end),
         backgroundWords: _finishWords(raw.background, end),
         isOppositeSide: raw.opposite,
+        extraLines: raw.extras,
         backgroundText: raw.backgroundText,
       );
 

@@ -23,6 +23,7 @@ import 'package:looper_player/ui/android/player/equalizer/android_equalizer_scre
 // Extracted modular components
 import 'package:looper_player/ui/widgets/common/menu_option_tile.dart';
 import 'package:looper_player/ui/widgets/sheets/edit_song_sheet.dart';
+import 'package:looper_player/ui/widgets/sheets/add_to_playlist_sheet.dart';
 import 'package:looper_player/ui/widgets/sheets/sleep_timer_sheet_content.dart';
 import 'package:looper_player/core/services/haptics/app_haptics.dart';
 import 'package:looper_player/core/utils/ui_utils.dart';
@@ -177,59 +178,17 @@ class _SongOptionsSheetContent extends ConsumerWidget {
     );
   }
 
-  void _showPlaylistSelector(
+  Future<void> _showPlaylistSelector(
     BuildContext context,
-    WidgetRef ref,
     AppLocalizations l10n,
-  ) {
-    final playlists = ref.watch(playlistProvider);
-
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: Theme.of(dialogContext).colorScheme.surfaceContainer,
-        title: Text(l10n.addToPlaylists),
-        content: playlists.isEmpty
-            ? Text(l10n.noPlaylistsCreated)
-            : SizedBox(
-                width: double.maxFinite,
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: playlists.length,
-                  itemBuilder: (dialogContext, index) {
-                    final p = playlists[index];
-                    return ListTile(
-                      leading: const Icon(LucideIcons.listMusic),
-                      title: Text(p.name),
-                      onTap: () async {
-                        if (!p.songPaths.contains(song.path)) {
-                          p.songPaths = [...p.songPaths, song.path];
-                          p.dateModified = DateTime.now();
-                          await DbService.isar.writeTxn(
-                            () => DbService.isar.playlists.put(p),
-                          );
-                        }
-                        if (dialogContext.mounted) {
-                          Navigator.pop(dialogContext);
-                          scaffoldMessengerKey.currentState?.clearSnackBars();
-                          scaffoldMessengerKey.currentState?.showSnackBar(
-                            SnackBar(
-                              content: Text(l10n.addedTo(p.name)),
-                              behavior: SnackBarBehavior.floating,
-                            ),
-                          );
-                        }
-                      },
-                    );
-                  },
-                ),
-              ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(l10n.cancel),
-          ),
-        ],
+  ) async {
+    final name = await showAddToPlaylistSheet(context, [song]);
+    if (name == null) return;
+    scaffoldMessengerKey.currentState?.clearSnackBars();
+    scaffoldMessengerKey.currentState?.showSnackBar(
+      SnackBar(
+        content: Text(l10n.addedTo(name)),
+        behavior: SnackBarBehavior.floating,
       ),
     );
   }
@@ -380,7 +339,7 @@ class _SongOptionsSheetContent extends ConsumerWidget {
                         onTap: () {
                           AppHaptics.light();
                           Navigator.pop(context);
-                          _showPlaylistSelector(parentContext, ref, l10n);
+                          _showPlaylistSelector(parentContext, l10n);
                         },
                       ),
                       MenuOptionTile(

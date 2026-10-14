@@ -49,6 +49,9 @@ one-player.spec/
 dist/
 
 
+# Generated from lib/l10n/*.arb by `flutter pub get` (pubspec `generate: true`).
+lib/l10n/app_localizations*.dart
+
 # Symbolication related
 app.*.symbols
 
@@ -80,5 +83,5 @@ graphify-out/
 # Internal agent config/notes - not for the public repo.
 .agents/
 AGENTS.md
-docs/ADS_ANALYTICS_SETUP.md
+docs/
 

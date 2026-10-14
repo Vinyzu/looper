@@ -40,6 +40,9 @@ import 'package:looper_player/ui/widgets/player/player_gradient/animated_player_
 import 'blurred_background_art.dart';
 
 import 'package:looper_player/core/utils/l10n.dart';
+import 'package:looper_player/core/services/support_prompt.dart';
+import 'package:looper_player/core/utils/app_links.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 export 'blurred_background_art.dart';
 
@@ -175,7 +178,57 @@ class _AndroidMainScreenState extends ConsumerState<AndroidMainScreen>
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await ref.read(settingsProvider.notifier).initialization;
+      _maybeShowSupportPrompt();
     });
+  }
+
+  bool _supportPromptPending = false;
+
+  /// Counts today as a day of use and, once a month after 10+ days of use
+  /// that month, asks for support on Ko-fi in a snackbar above the navbar and
+  /// mini player.
+  Future<void> _maybeShowSupportPrompt() async {
+    if (_supportPromptPending) return;
+    _supportPromptPending = true;
+    try {
+      if (!await SupportPrompt.recordUseAndCheck()) return;
+      // Let startup (permissions, library refresh) settle first.
+      await Future<void>.delayed(const Duration(seconds: 8));
+      if (!mounted ||
+          !ref.read(welcomeBypassedProvider) ||
+          ref.read(playerExpandProgressProvider).value > 0.01 ||
+          WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) {
+        return; // Try again on the next resume.
+      }
+      final l10n = AppLocalizations.of(context)!;
+      final hasSong = ref.read(playbackProvider).currentSong != null;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            l10n.supportPromptMessage,
+            style: AppFonts.jostStyle(color: Colors.white),
+          ),
+          duration: const Duration(seconds: 10),
+          behavior: SnackBarBehavior.floating,
+          margin: EdgeInsets.only(
+            bottom: hasSong ? 180 : 100, // Above the navbar
+            left: 20,
+            right: 20,
+          ),
+          action: SnackBarAction(
+            label: l10n.supportPromptAction,
+            textColor: const Color(0xFFFFDD00),
+            onPressed: () => launchUrl(
+              Uri.parse(AppLinks.koFi),
+              mode: LaunchMode.externalApplication,
+            ),
+          ),
+        ),
+      );
+      await SupportPrompt.markShown();
+    } finally {
+      _supportPromptPending = false;
+    }
   }
 
   @override
@@ -238,6 +291,7 @@ class _AndroidMainScreenState extends ConsumerState<AndroidMainScreen>
     if (state == AppLifecycleState.resumed) {
       _checkAndroidPermissions();
       ref.read(libraryProvider.notifier).refreshIfStale();
+      _maybeShowSupportPrompt();
     }
   }
 
@@ -490,12 +544,8 @@ class _AndroidMainScreenState extends ConsumerState<AndroidMainScreen>
                 l10n.pressBackExit,
                 style: AppFonts.jostStyle(color: Colors.white),
               ),
-              backgroundColor: Colors.black87,
               duration: const Duration(seconds: 2),
               behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
               margin: EdgeInsets.only(
                 bottom: song != null ? 180 : 100, // Above the navbar
                 left: 20,

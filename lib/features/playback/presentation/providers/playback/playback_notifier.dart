@@ -459,7 +459,11 @@ class Playback extends _$Playback {
   }
 
   /// Starts a collection, or continues its current track without seeking.
-  Future<void> playCollection(List<Song> songs, {bool shuffle = false}) async {
+  Future<void> playCollection(
+    List<Song> songs, {
+    bool shuffle = false,
+    int? sourcePlaylistId,
+  }) async {
     if (songs.isEmpty) return;
     // Enabling shuffle rearranges the old queue. Preserve its manual entries
     // before that rearrangement changes which songs follow the current one.
@@ -476,15 +480,23 @@ class Playback extends _$Playback {
           ? math.Random().nextInt(songs.length)
           : math.max(0, currentIndex),
       continueCurrent: !shuffle && currentIndex != -1,
+      sourcePlaylistId: sourcePlaylistId,
     );
   }
 
-  Future<void> toggleCollectionShuffle(List<Song> songs) async {
+  Future<void> toggleCollectionShuffle(
+    List<Song> songs, {
+    int? sourcePlaylistId,
+  }) async {
     if (songs.isEmpty) return;
     if (state.isShuffle) {
       await toggleShuffle();
     } else {
-      await playCollection(songs, shuffle: true);
+      await playCollection(
+        songs,
+        shuffle: true,
+        sourcePlaylistId: sourcePlaylistId,
+      );
     }
   }
 
@@ -492,12 +504,14 @@ class Playback extends _$Playback {
     List<Song> songs, {
     int initialIndex = 0,
     bool continueCurrent = false,
+    int? sourcePlaylistId,
   }) {
     _setPlaylist(
       songs,
       manualSongs: _manualQueueSongs,
       initialIndex: initialIndex,
       continueCurrent: continueCurrent,
+      sourcePlaylistId: sourcePlaylistId,
     );
   }
 
@@ -514,6 +528,7 @@ class Playback extends _$Playback {
     required List<Song> manualSongs,
     int initialIndex = 0,
     bool continueCurrent = false,
+    int? sourcePlaylistId,
   }) {
     _originalPlaylist = List.from(songs);
 
@@ -555,11 +570,22 @@ class Playback extends _$Playback {
       if (continueCurrent &&
           _playlist[_currentIndex].path == state.currentSong?.path) {
         unawaited(_saveQueueState());
-        if (!state.isPlaying) unawaited(togglePlay());
+        unawaited(_continueCollection(sourcePlaylistId));
       } else {
-        play(_playlist[_currentIndex]);
+        play(_playlist[_currentIndex], sourcePlaylistId: sourcePlaylistId);
       }
     }
+  }
+
+  Future<void> _continueCollection(int? sourcePlaylistId) async {
+    if (!state.isPlaying) await togglePlay();
+    if (!state.isPlaying || sourcePlaylistId == null) return;
+    await DbService.isar.writeTxn(() async {
+      final playlist = await DbService.isar.playlists.get(sourcePlaylistId);
+      if (playlist == null) return;
+      playlist.lastPlayed = DateTime.now();
+      await DbService.isar.playlists.put(playlist);
+    });
   }
 
   /// [immediate] skips the wait for the UI position to catch up with the
@@ -615,6 +641,7 @@ class Playback extends _$Playback {
     bool play = true,
     Duration? initialPosition,
     bool blockDuringCall = true,
+    int? sourcePlaylistId,
   }) async {
     _silenceTimer?.cancel();
     _songCompletionTimer?.cancel();
@@ -656,6 +683,7 @@ class Playback extends _$Playback {
         crossfadeId,
         play: play,
         initialPosition: initialPosition,
+        sourcePlaylistId: sourcePlaylistId,
       );
     } catch (e) {
       if (crossfadeId == _activeCrossfadeId) {
@@ -665,6 +693,7 @@ class Playback extends _$Playback {
             crossfadeId,
             play: play,
             initialPosition: initialPosition,
+            sourcePlaylistId: sourcePlaylistId,
           );
         } catch (retryError, stack) {
           LoggerHelper.write(
@@ -705,6 +734,7 @@ class Playback extends _$Playback {
     int crossfadeId, {
     bool play = true,
     Duration? initialPosition,
+    int? sourcePlaylistId,
   }) async {
     // A new track is loading - close out whatever real listening-time
     // segment was accruing for the outgoing song before attribution moves
@@ -799,6 +829,13 @@ class Playback extends _$Playback {
       final songToUpdate = dbSong ?? song;
       if (play) {
         songToUpdate.lastPlayed = DateTime.now();
+        if (sourcePlaylistId != null) {
+          final playlist = await DbService.isar.playlists.get(sourcePlaylistId);
+          if (playlist != null) {
+            playlist.lastPlayed = songToUpdate.lastPlayed;
+            await DbService.isar.playlists.put(playlist);
+          }
+        }
         songToUpdate.playCount++;
         _activePlayEventId = await _logPlayEvent(songToUpdate);
       } else {
@@ -1087,10 +1124,6 @@ class Playback extends _$Playback {
     // auto-resume-on-focus-gain latch so an unrelated transient focus
     // loss/gain cycle (e.g. a notification sound) can't resurrect the song.
     await _disarmAutoResumeAfterFocusGain();
-  }
-
-  Future<void> setSpeed(double speed) async {
-    await player.setRate(speed);
   }
 
   Future<void> togglePlay() async {
@@ -1966,7 +1999,7 @@ class Playback extends _$Playback {
           currentPosition,
         );
         if (activeLineIndex != -1) {
-          currentLine = lyricsState.parsedLines[activeLineIndex].text;
+          currentLine = lyricsState.parsedLines[activeLineIndex].fullText;
         }
       }
       if (currentLine != _lastWidgetLyricLine) {
@@ -2235,7 +2268,7 @@ class Playback extends _$Playback {
           currentPosition,
         );
         if (activeLineIndex != -1) {
-          currentLine = lyricsState.parsedLines[activeLineIndex].text;
+          currentLine = lyricsState.parsedLines[activeLineIndex].fullText;
           if (activeLineIndex + 1 < lyricsState.parsedLines.length) {
             nextLine = lyricsState.parsedLines[activeLineIndex + 1].text;
           }

@@ -1,4 +1,5 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:looper_player/core/utils/motion.dart';
 import 'package:looper_player/core/theme/app_fonts.dart';
@@ -6,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:looper_player/core/utils/artwork_colors.dart';
 import 'package:looper_player/features/library/domain/models/models.dart'
     show AppSettings;
+
 import '../../../providers/playback/playback_notifier.dart';
 import '../../../providers/lyrics/lyrics_search_provider.dart';
 import '../../../../domain/lyric_models.dart';
@@ -62,6 +64,10 @@ class AdvancedLyricLine extends ConsumerWidget {
   final LyricLine line;
   final LyricsSyncMode mode;
   final bool isActive;
+
+  /// The first line of a pair sung in one breath, while the second is
+  /// current: it keeps the active look, fully sung, instead of dimming.
+  final bool held;
   final VoidCallback onTap;
   final double fontScale;
 
@@ -94,6 +100,7 @@ class AdvancedLyricLine extends ConsumerWidget {
     required this.isActive,
     required this.onTap,
     required this.onLongPress,
+    this.held = false,
     this.isSelected = false,
     this.selectionActive = false,
     this.fontScale = 1.0,
@@ -108,17 +115,25 @@ class AdvancedLyricLine extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Only watch position if this line is active and in word/char sync modes, avoiding rebuilds of all other lines
-    final needsPosition = isActive && usesWordTiming;
+    final lit = isActive || held;
+    final needsPosition = lit && usesWordTiming;
     final reportedPosition = needsPosition
         ? ref.watch(playbackProvider.select((s) => s.position))
         : Duration.zero;
     // Right after tapping a line it's active before the seek lands, so the
     // position can still be from elsewhere in the song - show it unsung
     // rather than flashing it fully sung.
-    final currentPosition =
-        needsPosition &&
-            (reportedPosition < line.startTime ||
-                reportedPosition > line.endTime + const Duration(seconds: 1))
+    // A held line is past its own time by design: it follows the real
+    // position (its last word may still be finishing) and is otherwise
+    // fully sung.
+    final currentPosition = !needsPosition
+        ? reportedPosition
+        : held
+        ? (reportedPosition < line.startTime
+              ? const Duration(days: 1)
+              : reportedPosition)
+        : (reportedPosition < line.startTime ||
+              reportedPosition > line.endTime + const Duration(seconds: 1))
         ? line.startTime
         : reportedPosition;
     // Word-timed lines also need it while inactive: a line that just
@@ -134,14 +149,13 @@ class AdvancedLyricLine extends ConsumerWidget {
     // Calculate dynamic opacity based on distance from active line for a smoother transition
     double lineOpacity = 1.0;
     if (isSelected) {
-      lineOpacity =
-          1.0; // selected lines should read clearly regardless of playback position
+      lineOpacity = 1.0; // selected lines should read clearly regardless of playback position
     } else if (selectionActive) {
       lineOpacity =
           0.18; // dim everything else while the user is picking lines to share
     } else if (!synced) {
       lineOpacity = 0.8; // text to read: no current line to stand out from
-    } else if (!isActive) {
+    } else if (!lit) {
       lineOpacity = inactiveOpacity(distance);
     }
 
@@ -182,13 +196,11 @@ class AdvancedLyricLine extends ConsumerWidget {
       family: settings.customFontFamilyLyrics,
       weightDelta: settings.customFontWeightLyricsDelta,
       activeWeightDelta: settings.activeLyricsFontWeightDelta,
-      isActive: isActive,
+      isActive: lit,
       fontSize: 30 * fontScale, //(isActive ? 30.5 : 30) * fontScale,
       height: 1.15,
-      color: isActive
-          ? activeColor
-          : Colors.white.withValues(alpha: lineOpacity),
-      shadows: isActive && useDynamicColor ? [_glow(activeColor, 1)] : null,
+      color: lit ? activeColor : Colors.white.withValues(alpha: lineOpacity),
+      shadows: lit && useDynamicColor ? [_glow(activeColor, 1)] : null,
     );
 
     // Unified animation duration and easeInOutCubic curve for a buttery-smooth transition
@@ -198,16 +210,19 @@ class AdvancedLyricLine extends ConsumerWidget {
     // Watch the search query for highlighting
     final searchQuery = ref.watch(lyricsSearchQueryProvider).toLowerCase();
 
-    final childWidget = _buildModeContent(
-      context,
-      isPast,
-      baseStyle,
-      activeColor,
-      searchQuery,
+    final childWidget = _withExtraLines(
+      _buildModeContent(
+        context,
+        isPast,
+        baseStyle,
+        activeColor,
+        searchQuery,
+        textAlign,
+        iconAlignment,
+        currentPosition,
+        isPlaying,
+      ),
       textAlign,
-      iconAlignment,
-      currentPosition,
-      isPlaying,
     );
 
     return MouseRegion(
@@ -232,7 +247,7 @@ class AdvancedLyricLine extends ConsumerWidget {
               softWrap: true,
               textAlign: textAlign,
               child: TweenAnimationBuilder<double>(
-                tween: Tween(end: isActive && useDynamicColor ? 1.0 : 0.0),
+                tween: Tween(end: lit && useDynamicColor ? 1.0 : 0.0),
                 duration: animDuration,
                 curve: curve,
                 child: childWidget,
@@ -297,7 +312,8 @@ class AdvancedLyricLine extends ConsumerWidget {
 
     // If there is a search match, always highlight it
     final bool isSearchMatch =
-        searchQuery.isNotEmpty && text.toLowerCase().contains(searchQuery);
+        searchQuery.isNotEmpty &&
+        line.fullText.toLowerCase().contains(searchQuery);
 
     // Word/char styles follow the singer's real word timing (lrc.red,
     // LyricsPlus, enhanced LRC). The word-synced text stays up across the
@@ -307,11 +323,12 @@ class AdvancedLyricLine extends ConsumerWidget {
     // settle together, and plain text takes over only once it looks the
     // same.
     if (!isInstrumental && usesWordTiming) {
+      final lit = isActive || held;
       return TweenAnimationBuilder<double>(
-        tween: Tween(end: isActive ? 1.0 : 0.0),
+        tween: Tween(end: lit ? 1.0 : 0.0),
         duration: const Duration(milliseconds: 400),
         curve: Curves.easeInOutCubic,
-        builder: (context, emphasis, _) => !isActive && emphasis <= 0
+        builder: (context, emphasis, _) => !lit && emphasis <= 0
             ? _inactiveText(
                 isPast,
                 baseStyle,
@@ -328,12 +345,12 @@ class AdvancedLyricLine extends ConsumerWidget {
                 activeColor: activeColor,
                 // Upcoming words wear the plain inactive-line color (and a
                 // settling line ends on exactly that color).
-                unsungColor: isActive
+                unsungColor: lit
                     ? Colors.white.withValues(alpha: 0.35)
                     : (baseStyle.color ?? Colors.white.withValues(alpha: 0.85)),
                 textAlign: textAlign,
                 fontScale: fontScale,
-                active: isActive,
+                active: lit,
                 emphasis: emphasis,
               ),
       );
@@ -421,6 +438,44 @@ class AdvancedLyricLine extends ConsumerWidget {
       ),
       baseStyle,
       textAlign,
+    );
+  }
+
+  /// The lines sharing this line's timestamp (translation, romanization)
+  /// as smaller, dimmer lines under [main]. They wear the line's animated
+  /// style, so the whole block eases in and out of being current together.
+  Widget _withExtraLines(Widget main, TextAlign textAlign) {
+    if (line.extraLines.isEmpty) return main;
+    return Column(
+      crossAxisAlignment: switch (textAlign) {
+        TextAlign.left => CrossAxisAlignment.start,
+        TextAlign.right => CrossAxisAlignment.end,
+        _ => CrossAxisAlignment.center,
+      },
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        main,
+        for (final extra in line.extraLines) ...[
+          SizedBox(height: 4 * fontScale),
+          Builder(
+            builder: (context) {
+              final style = DefaultTextStyle.of(context).style;
+              return Text(
+                extra,
+                textAlign: textAlign,
+                softWrap: true,
+                style: style.copyWith(
+                  fontSize: (style.fontSize ?? 30) * 0.62,
+                  height: 1.2,
+                  color: (style.color ?? Colors.white).withValues(
+                    alpha: (style.color?.a ?? 1) * 0.7,
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ],
     );
   }
 

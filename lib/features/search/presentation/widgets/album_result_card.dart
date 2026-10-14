@@ -9,19 +9,9 @@ class _AlbumResultCard extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     return InkWell(
       onTap: () async {
-        final songs = await DbService.isar.songs
-            .filter()
-            .albumEqualTo(album.name)
-            .findAll();
-        ref
+        await ref
             .read(appNavigationProvider.notifier)
-            .showCollection(
-              title: album.name,
-              subtitle: album.artist ?? l10n.unknownArtist,
-              songs: songs,
-              art: album.artPath,
-              album: album,
-            );
+            .showAlbum(album, unknownArtist: l10n.unknownArtist);
       },
       child: Container(
         width: 120,

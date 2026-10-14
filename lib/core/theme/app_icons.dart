@@ -33,11 +33,7 @@ class AppIcons {
   // Icon Sizes (Raw values, will be scaled using .s extension in UI)
   static const double sizeTiny = 14.0;
   static const double sizeSmall = 18.0;
-  static const double sizeMedium = 24.0;
   static const double sizeLarge = 28.0;
-  static const double sizeExtraLarge = 32.0;
-  static const double sizeHuge = 48.0;
-
   // Specific UI component sizes
   static const double navbarIcon = 19.0;
   static const double miniPlayerIcon = 20.0;

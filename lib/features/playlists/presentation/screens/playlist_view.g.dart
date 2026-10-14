@@ -61,6 +61,46 @@ abstract class _$PlaylistList extends $Notifier<List<Playlist>> {
   }
 }
 
+@ProviderFor(dashboardPlaylists)
+final dashboardPlaylistsProvider = DashboardPlaylistsProvider._();
+
+final class DashboardPlaylistsProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<Playlist>>,
+          List<Playlist>,
+          Stream<List<Playlist>>
+        >
+    with $FutureModifier<List<Playlist>>, $StreamProvider<List<Playlist>> {
+  DashboardPlaylistsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'dashboardPlaylistsProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$dashboardPlaylistsHash();
+
+  @$internal
+  @override
+  $StreamProviderElement<List<Playlist>> $createElement(
+    $ProviderPointer pointer,
+  ) => $StreamProviderElement(pointer);
+
+  @override
+  Stream<List<Playlist>> create(Ref ref) {
+    return dashboardPlaylists(ref);
+  }
+}
+
+String _$dashboardPlaylistsHash() =>
+    r'3d698d767bf388411a6bed4876347f467ad63bbc';
+
 @ProviderFor(playlistSongs)
 final playlistSongsProvider = PlaylistSongsFamily._();
 

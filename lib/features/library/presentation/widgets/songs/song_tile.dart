@@ -2,6 +2,7 @@ import 'package:looper_player/core/theme/app_fonts.dart';
 import 'package:looper_player/core/utils/song_metadata.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:looper_player/ui/widgets/common/highlighted_text.dart';
 import 'package:looper_player/ui/widgets/common/optimized_image.dart';
 import 'package:looper_player/ui/widgets/common/song_favorite_button.dart';
 import 'package:looper_player/ui/widgets/common/playlist_reorderable_listener.dart';
@@ -14,6 +15,9 @@ import 'package:isar_community/isar.dart';
 import 'package:looper_player/l10n/app_localizations.dart';
 import 'package:looper_player/ui/widgets/sheets/song_options_bottom_sheet.dart';
 import 'package:looper_player/core/services/haptics/app_haptics.dart';
+import 'package:looper_player/features/search/domain/lyric_snippet.dart'
+    as search
+    show lyricSnippet;
 
 class SongTile extends ConsumerWidget {
   final Song song;
@@ -29,6 +33,10 @@ class SongTile extends ConsumerWidget {
   // A displayed position is independent of whether sorting permits reordering.
   final int? collectionIndex;
   final int? reorderIndex;
+  // Search-only extras: highlight the [searchQuery] match in the title, and
+  // get told when a tap starts playback (not when it toggles a selection).
+  final bool highlightTitle;
+  final VoidCallback? onPlay;
 
   const SongTile({
     required this.song,
@@ -43,6 +51,8 @@ class SongTile extends ConsumerWidget {
     this.onEnterSelection,
     this.collectionIndex,
     this.reorderIndex,
+    this.highlightTitle = false,
+    this.onPlay,
     super.key,
   });
 
@@ -67,58 +77,6 @@ class SongTile extends ConsumerWidget {
           imageUrl: artist?.artistImageUrl,
           songs: artistSongs,
         );
-  }
-
-  Widget _buildHighlightedText({
-    required BuildContext context,
-    required String text,
-    required String query,
-    required TextStyle baseStyle,
-    required TextStyle highlightStyle,
-  }) {
-    if (query.isEmpty) {
-      return Text(text, style: baseStyle);
-    }
-
-    final lowerText = text.toLowerCase();
-    final lowerQuery = query.toLowerCase();
-    final index = lowerText.indexOf(lowerQuery);
-
-    if (index == -1) {
-      return Text(text, style: baseStyle);
-    }
-
-    final List<TextSpan> spans = [];
-    int start = 0;
-    int indexOfMatch;
-
-    while ((indexOfMatch = lowerText.indexOf(lowerQuery, start)) != -1) {
-      // Add text before match
-      if (indexOfMatch > start) {
-        spans.add(
-          TextSpan(text: text.substring(start, indexOfMatch), style: baseStyle),
-        );
-      }
-      // Add matched text
-      spans.add(
-        TextSpan(
-          text: text.substring(indexOfMatch, indexOfMatch + query.length),
-          style: highlightStyle,
-        ),
-      );
-      start = indexOfMatch + query.length;
-    }
-
-    // Add remaining text
-    if (start < text.length) {
-      spans.add(TextSpan(text: text.substring(start), style: baseStyle));
-    }
-
-    return RichText(
-      text: TextSpan(children: spans),
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-    );
   }
 
   @override
@@ -157,7 +115,7 @@ class SongTile extends ConsumerWidget {
 
     String? lyricSnippet;
     if (searchQuery != null && searchQuery!.isNotEmpty && song.lyrics != null) {
-      lyricSnippet = _getLyricSnippet(song.lyrics!, searchQuery!);
+      lyricSnippet = search.lyricSnippet(song.lyrics!, searchQuery!);
     }
 
     final tile = Material(
@@ -171,14 +129,21 @@ class SongTile extends ConsumerWidget {
             onToggleSelect?.call();
             return;
           }
+          onPlay?.call();
           final index =
               collectionIndex ?? songs.indexWhere((s) => s.path == song.path);
           if (index != -1) {
             ref
                 .read(playbackProvider.notifier)
-                .setPlaylist(songs, initialIndex: index);
+                .setPlaylist(
+                  songs,
+                  initialIndex: index,
+                  sourcePlaylistId: playlist?.id,
+                );
           } else {
-            ref.read(playbackProvider.notifier).play(song);
+            ref
+                .read(playbackProvider.notifier)
+                .play(song, sourcePlaylistId: playlist?.id);
           }
         },
         // A long-press on any row starts a selection (with that row already
@@ -249,17 +214,32 @@ class SongTile extends ConsumerWidget {
               ),
             ],
           ),
-          title: Text(
-            song.title,
-            style: AppFonts.jostStyle(
-              color: isCurrent
-                  ? Theme.of(context).colorScheme.primary
-                  : Colors.white,
-              fontWeight: FontWeight.w500,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
+          title: highlightTitle && !isCurrent
+              ? highlightedText(
+                  text: song.title,
+                  query: searchQuery ?? '',
+                  baseStyle: AppFonts.jostStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  highlightStyle: AppFonts.jostStyle(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                )
+              : Text(
+                  song.title,
+                  style: AppFonts.jostStyle(
+                    color: isCurrent
+                        ? Theme.of(context).colorScheme.primary
+                        : Colors.white,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
           subtitle: lyricSnippet != null
               ? Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -292,8 +272,7 @@ class SongTile extends ConsumerWidget {
                           ),
                           const SizedBox(width: 6),
                           Expanded(
-                            child: _buildHighlightedText(
-                              context: context,
+                            child: highlightedText(
                               text: lyricSnippet,
                               query: searchQuery ?? '',
                               baseStyle: AppFonts.jostStyle(
@@ -355,45 +334,6 @@ class SongTile extends ConsumerWidget {
             child: tile,
           );
   }
-
-  String? _getLyricSnippet(String lyrics, String query) {
-    final lowerLyrics = lyrics.toLowerCase();
-    final lowerQuery = query.toLowerCase();
-    final index = lowerLyrics.indexOf(lowerQuery);
-    if (index == -1) return null;
-
-    int start = index;
-    bool truncatedStart = false;
-    while (start > 0 && lyrics[start - 1] != '\n') {
-      start--;
-      if (index - start > 40) {
-        truncatedStart = true;
-        break;
-      }
-    }
-
-    int end = index + query.length;
-    bool truncatedEnd = false;
-    while (end < lyrics.length && lyrics[end] != '\n') {
-      end++;
-      if (end - index > 60) {
-        truncatedEnd = true;
-        break;
-      }
-    }
-
-    String snippet = lyrics.substring(start, end).trim();
-    if (truncatedStart) snippet = '...$snippet';
-    if (truncatedEnd) snippet = '$snippet...';
-    return snippet;
-  }
-}
-
-String _formatDuration(Duration duration) {
-  String twoDigits(int n) => n.toString().padLeft(2, "0");
-  String twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60));
-  String twoDigitSeconds = twoDigits(duration.inSeconds.remainder(60));
-  return "$twoDigitMinutes:$twoDigitSeconds";
 }
 
 class _SongTileBouncyTap extends StatefulWidget {

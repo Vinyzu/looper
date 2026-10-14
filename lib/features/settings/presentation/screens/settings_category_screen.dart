@@ -144,6 +144,8 @@ class SettingsCategoryScreen extends ConsumerWidget {
         const Divider(height: 1, indent: 72, color: Colors.white10),
         const ShowRecentRowTile(),
         const Divider(height: 1, indent: 72, color: Colors.white10),
+        const ShowPlaylistsRowTile(),
+        const Divider(height: 1, indent: 72, color: Colors.white10),
         const ReorderDashboardSectionsTile(),
       ];
     } else if (categoryId == 'playback') {
@@ -231,35 +233,8 @@ class SettingsCategoryScreen extends ConsumerWidget {
       children = [
         const LooperVersionTile(), //1
         const Divider(height: 1, indent: 72, color: Colors.white10), //2
-        AboutMaintainerRow(
-          //3
-          name: 'Nilesh Suthar',
-          role: l10n.creatorAndMaintainer,
-          avatar: AppAssets.maintainerAvatar,
-          github: AppLinks.nileshGithub,
-          telegram: AppLinks.nileshTelegram,
-        ),
-        const Divider(height: 1, indent: 72, color: Colors.white10), //4
-        AboutMaintainerRow(
-          //5
-          name: 'Krn.',
-          role: l10n.designerAndMaintainer,
-          avatar: AppAssets.designerAvatar,
-          github: AppLinks.karanGithub,
-          telegram: AppLinks.karanTelegram,
-        ),
-        const Divider(height: 1, indent: 72, color: Colors.white10), //6
-        AboutMaintainerRow(
-          //7
-          name: 'Madan Suthar',
-          role: 'Free Rider',
-          avatar: AppAssets.freeRiderAvatar,
-          github: AppLinks.madanGithub,
-          telegram: AppLinks.madanTelegram,
-        ),
-        const Divider(height: 1, indent: 72, color: Colors.white10), //8
         Padding(
-          //9
+          //3
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -300,8 +275,8 @@ class SettingsCategoryScreen extends ConsumerWidget {
             ],
           ),
         ),
-        const Divider(height: 1, indent: 72, color: Colors.white10), //10
-        LyricsCreditsSection(accentColor: Color(settings.accentColor)), //11
+        const Divider(height: 1, indent: 72, color: Colors.white10), //4
+        LyricsCreditsSection(accentColor: Color(settings.accentColor)), //5
       ];
     }
 
@@ -483,10 +458,7 @@ class SettingsCategoryScreen extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(14),
                           useExpanded: false,
                           padding: const EdgeInsets.symmetric(vertical: 8),
-                          child: CollapsibleMaintainers(
-                            first: children[2],
-                            rest: children.sublist(3, 7),
-                          ),
+                          child: const MaintainersRow(),
                         ),
                         const SizedBox(height: 32),
                         // App Info & Privacy Card
@@ -499,9 +471,7 @@ class SettingsCategoryScreen extends ConsumerWidget {
                             horizontal: 20,
                             vertical: 20,
                           ),
-                          child: Column(
-                            children: children.sublist(8, 11), //.sublist(5, 10)
-                          ),
+                          child: Column(children: children.sublist(2, 5)),
                         ),
                         const SizedBox(height: 120),
                         const OpenSourceLicensesTile(),

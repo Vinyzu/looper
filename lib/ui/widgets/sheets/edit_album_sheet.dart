@@ -1,6 +1,3 @@
-import 'dart:io';
-import 'dart:ui';
-
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,7 +8,7 @@ import 'package:looper_player/features/library/data/scanner/scanner.dart';
 import 'package:looper_player/features/library/presentation/providers/library/library_notifier.dart';
 import 'package:looper_player/features/settings/presentation/providers/settings_notifier.dart';
 import 'package:looper_player/l10n/app_localizations.dart';
-import 'package:looper_player/ui/widgets/common/app_loading_indicator.dart';
+import 'package:looper_player/ui/widgets/sheets/edit_sheet_common.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:metadata_god/metadata_god.dart';
 
@@ -159,347 +156,80 @@ class _EditAlbumSheetState extends ConsumerState<EditAlbumSheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final settings = ref.watch(settingsProvider);
-    final accentColor = Color(settings.accentColor);
+    final accentColor = Color(ref.watch(settingsProvider).accentColor);
 
-    Widget content = Container(
-      decoration: const BoxDecoration(
-        color: Color(0xFF121212),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-      ),
-      child: DraggableScrollableSheet(
-        initialChildSize: 0.68,
-        minChildSize: 0.4,
-        maxChildSize: 0.9,
-        expand: false,
-        builder: (ctx, scrollController) => Column(
-          children: [
-            // Header bar
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 40,
-                    height: 4,
-                    margin: const EdgeInsets.only(bottom: 16),
-                    decoration: BoxDecoration(
-                      color: Colors.white24,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: accentColor.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Icon(LucideIcons.disc, color: accentColor, size: 22),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          l10n.editAlbumInfo,
-                          style: AppFonts.jostStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          l10n.tapFieldToEdit,
-                          style: AppFonts.jostStyle(
-                            color: Colors.white38,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-            Expanded(
-              child: ListView(
-                controller: scrollController,
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
-                children: [
-                  // ── Artwork picker ────────────────────────────────────────
-                  Center(
-                    child: GestureDetector(
-                      onTap: _pickArtwork,
-                      child: Stack(
-                        children: [
-                          Container(
-                            width: 160,
-                            height: 160,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(24),
-                              border: Border.all(
-                                color: accentColor.withValues(alpha: 0.4),
-                                width: 2,
-                              ),
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(22),
-                              child: _currentArtPath.isNotEmpty
-                                  ? Image.file(
-                                      File(_currentArtPath),
-                                      width: 160,
-                                      height: 160,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (_, _, _) =>
-                                          _artPlaceholder(accentColor),
-                                    )
-                                  : _artPlaceholder(accentColor),
-                            ),
-                          ),
-                          // Camera badge
-                          Positioned(
-                            right: 8,
-                            bottom: 8,
-                            child: Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: accentColor,
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: accentColor.withValues(alpha: 0.5),
-                                    blurRadius: 10,
-                                  ),
-                                ],
-                              ),
-                              child: const Icon(
-                                LucideIcons.camera,
-                                color: Colors.black,
-                                size: 18,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Center(
-                    child: Wrap(
-                      alignment: WrapAlignment.center,
-                      children: [
-                        TextButton.icon(
-                          onPressed: _isResettingArt
-                              ? null
-                              : _resetArtworkToDefault,
-                          icon: _isResettingArt
-                              ? SizedBox(
-                                  width: 14,
-                                  height: 14,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: accentColor,
-                                  ),
-                                )
-                              : Icon(
-                                  LucideIcons.refreshCcw,
-                                  size: 14,
-                                  color: accentColor,
-                                ),
-                          label: Text(
-                            l10n.resetArtworkToDefault,
-                            style: AppFonts.jostStyle(
-                              color: accentColor,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                        if (_currentArtPath.isNotEmpty)
-                          TextButton.icon(
-                            onPressed: _clearArtwork,
-                            icon: const Icon(
-                              LucideIcons.x,
-                              size: 14,
-                              color: Colors.redAccent,
-                            ),
-                            label: Text(
-                              l10n.removeArtwork,
-                              style: AppFonts.jostStyle(
-                                color: Colors.redAccent,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // ── Fields ────────────────────────────────────────────────
-                  _EditField(
-                    controller: _nameCtrl,
-                    label: l10n.album,
-                    icon: LucideIcons.disc,
-                    accentColor: accentColor,
-                    required: true,
-                  ),
-                  const SizedBox(height: 12),
-                  _EditField(
-                    controller: _artistCtrl,
-                    label: l10n.artist,
-                    icon: LucideIcons.mic2,
-                    accentColor: accentColor,
-                  ),
-                  const SizedBox(height: 12),
-                  _EditField(
-                    controller: _yearCtrl,
-                    label: l10n.year,
-                    icon: LucideIcons.calendar,
-                    accentColor: accentColor,
-                    keyboardType: TextInputType.number,
-                    maxLength: 4,
-                  ),
-
-                  const SizedBox(height: 32),
-
-                  // ── Save button ────────────────────────────────────────
-                  SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: ElevatedButton(
-                      onPressed: _isSaving ? null : _save,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: accentColor,
-                        foregroundColor: Colors.black,
-                        disabledBackgroundColor: accentColor.withValues(
-                          alpha: 0.4,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(18),
-                        ),
-                        elevation: 4,
-                        shadowColor: accentColor.withValues(alpha: 0.4),
-                      ),
-                      child: _isSaving
-                          ? const AppLoadingIndicator(size: 44)
-                          : Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(LucideIcons.check, size: 20),
-                                const SizedBox(width: 8),
-                                Text(
-                                  l10n.saveChangesBtn,
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+    return EditSheetScaffold(
+      icon: LucideIcons.disc,
+      title: l10n.editAlbumInfo,
+      initialChildSize: 0.68,
+      minChildSize: 0.4,
+      maxChildSize: 0.9,
+      isSaving: _isSaving,
+      onSave: _save,
+      children: [
+        EditSheetArtwork(
+          artPath: _currentArtPath,
+          size: 160,
+          placeholderIconSize: 48,
+          accentColor: accentColor,
+          onTap: _pickArtwork,
         ),
-      ),
-    );
-
-    // Blur wrapper when dynamic theming is on
-    if (settings.enableDynamicTheming && !settings.disableBlur) {
-      content = ClipRRect(
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-          child: content,
+        const SizedBox(height: 10),
+        Center(
+          child: Wrap(
+            alignment: WrapAlignment.center,
+            children: [
+              TextButton.icon(
+                onPressed: _isResettingArt ? null : _resetArtworkToDefault,
+                icon: _isResettingArt
+                    ? SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: accentColor,
+                        ),
+                      )
+                    : Icon(
+                        LucideIcons.refreshCcw,
+                        size: 14,
+                        color: accentColor,
+                      ),
+                label: Text(
+                  l10n.resetArtworkToDefault,
+                  style: AppFonts.jostStyle(color: accentColor, fontSize: 12),
+                ),
+              ),
+              if (_currentArtPath.isNotEmpty)
+                EditSheetRemoveArtworkButton(onPressed: _clearArtwork),
+            ],
+          ),
         ),
-      );
-    }
-
-    // The DraggableScrollableSheet above sizes itself as a fraction of
-    // whatever height it's given, which by default is the full screen --
-    // the keyboard just overlaps the bottom of it instead of the sheet
-    // shrinking to sit above it. Padding the whole sheet by the live
-    // keyboard inset shrinks that available height instead, so the sheet
-    // (and whichever field is focused) stays above the keyboard.
-    return AnimatedPadding(
-      duration: const Duration(milliseconds: 100),
-      curve: Curves.easeOut,
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
-      child: content,
+        const SizedBox(height: 16),
+        EditSheetField(
+          controller: _nameCtrl,
+          label: l10n.album,
+          icon: LucideIcons.disc,
+          accentColor: accentColor,
+          required: true,
+        ),
+        const SizedBox(height: 12),
+        EditSheetField(
+          controller: _artistCtrl,
+          label: l10n.artist,
+          icon: LucideIcons.mic2,
+          accentColor: accentColor,
+        ),
+        const SizedBox(height: 12),
+        EditSheetField(
+          controller: _yearCtrl,
+          label: l10n.year,
+          icon: LucideIcons.calendar,
+          accentColor: accentColor,
+          keyboardType: TextInputType.number,
+          maxLength: 4,
+        ),
+      ],
     );
   }
-
-  Widget _artPlaceholder(Color accentColor) => Container(
-    color: Colors.white.withValues(alpha: 0.05),
-    child: Icon(
-      LucideIcons.imageOff,
-      color: accentColor.withValues(alpha: 0.5),
-      size: 48,
-    ),
-  );
-}
-
-class _EditField extends StatelessWidget {
-  final TextEditingController controller;
-  final String label;
-  final IconData icon;
-  final Color accentColor;
-  final bool required;
-  final TextInputType keyboardType;
-  final int? maxLength;
-
-  const _EditField({
-    required this.controller,
-    required this.label,
-    required this.icon,
-    required this.accentColor,
-    this.required = false,
-    this.keyboardType = TextInputType.text,
-    this.maxLength,
-  });
-
-  @override
-  Widget build(BuildContext context) => TextField(
-    controller: controller,
-    style: AppFonts.jostStyle(color: Colors.white, fontSize: 15),
-    keyboardType: keyboardType,
-    maxLength: maxLength,
-    buildCounter: maxLength != null
-        ? (ctx, {required currentLength, required isFocused, maxLength}) => null
-        : null,
-    decoration: InputDecoration(
-      labelText: '$label${required ? ' *' : ''}',
-      labelStyle: AppFonts.jostStyle(
-        color: Colors.white.withValues(alpha: 0.45),
-        fontSize: 13,
-      ),
-      prefixIcon: Icon(icon, color: accentColor, size: 20),
-      filled: true,
-      fillColor: Colors.white.withValues(alpha: 0.05),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: accentColor, width: 1.5),
-      ),
-    ),
-  );
 }

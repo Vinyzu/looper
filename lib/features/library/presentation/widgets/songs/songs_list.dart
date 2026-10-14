@@ -32,6 +32,7 @@ import 'package:looper_player/core/utils/ui_utils.dart';
 import 'song_columns.dart';
 
 import 'package:looper_player/core/utils/l10n.dart';
+import 'package:looper_player/ui/widgets/sheets/add_to_playlist_sheet.dart';
 import 'package:looper_player/core/services/haptics/app_haptics.dart';
 
 export 'song_tile.dart';
@@ -117,44 +118,13 @@ class _SongsListState extends ConsumerState<SongsList> {
 
   Future<void> _bulkAddToPlaylist(AppLocalizations l10n) async {
     final selected = _selectedSongs;
-    final playlists = ref.read(playlistProvider);
-    final chosen = await showDialog<Playlist>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: Theme.of(dialogContext).colorScheme.surfaceContainer,
-        title: Text(l10n.addToPlaylists),
-        content: playlists.isEmpty
-            ? Text(l10n.noPlaylistsCreated)
-            : SizedBox(
-                width: double.maxFinite,
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: playlists.length,
-                  itemBuilder: (context, index) {
-                    final p = playlists[index];
-                    return ListTile(
-                      leading: const Icon(LucideIcons.listMusic),
-                      title: Text(p.name),
-                      onTap: () => Navigator.pop(dialogContext, p),
-                    );
-                  },
-                ),
-              ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(l10n.cancel),
-          ),
-        ],
-      ),
-    );
+    final chosen = await showAddToPlaylistSheet(context, selected);
     if (chosen == null) return;
-    await PlaylistService.addSongsToPlaylist(chosen, selected);
     if (!mounted) return;
     _clearSelection();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(l10n.addedTo(chosen.name)),
+        content: Text(l10n.addedTo(chosen)),
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -350,36 +320,24 @@ class _SongsListState extends ConsumerState<SongsList> {
       // sliver one real instance to measure once instead of
       // re-measuring each row as it scrolls into view - this is
       // the list a fast fling scroll actually has to keep up with.
-      prototypeItem: SongTile(
-        showAlbum: true,
-        song: widget.songs.first,
-        l10n: l10n,
-        songs: widget.songs,
-        searchQuery: widget.searchQuery,
-        playlist: widget.playlist,
-        selectionMode: false,
-        selected: false,
-        onToggleSelect: () {},
-        onEnterSelection: () {},
-      ),
-      itemBuilder: (context, index) {
-        final song = widget.songs[index];
-        return SongTile(
-          showAlbum: true,
-          key: ValueKey(song.path),
-          song: song,
-          l10n: l10n,
-          songs: widget.songs,
-          searchQuery: widget.searchQuery,
-          playlist: widget.playlist,
-          selectionMode: _isSelecting,
-          selected: _selectedPaths.contains(song.path),
-          onToggleSelect: () => _toggleSelected(song),
-          onEnterSelection: () => _enterSelection(song),
-        );
-      },
+      prototypeItem: _buildPrototypeRow(l10n),
+      itemBuilder: (context, index) => _buildRow(index, l10n),
     );
   }
+
+  /// One real, inert row for a list's `prototypeItem` to measure.
+  Widget _buildPrototypeRow(AppLocalizations l10n) => SongTile(
+    showAlbum: true,
+    song: widget.songs.first,
+    l10n: l10n,
+    songs: widget.songs,
+    searchQuery: widget.searchQuery,
+    playlist: widget.playlist,
+    selectionMode: false,
+    selected: false,
+    onToggleSelect: () {},
+    onEnterSelection: () {},
+  );
 
   Widget _buildRow(int index, AppLocalizations l10n) {
     final song = widget.songs[index];
@@ -433,41 +391,15 @@ class _SongsListState extends ConsumerState<SongsList> {
             // Every row is the same fixed-height SongTile, so give the
             // sliver one real instance to measure once instead of
             // re-measuring each row as it scrolls into view.
-            prototypeItem: SongTile(
-              showAlbum: true,
-              song: widget.songs.first,
-              l10n: l10n,
-              songs: widget.songs,
-              searchQuery: widget.searchQuery,
-              playlist: widget.playlist,
-              selectionMode: false,
-              selected: false,
-              onToggleSelect: () {},
-              onEnterSelection: () {},
-            ),
-            itemBuilder: (context, index) {
-              final song = widget.songs[index];
-              return SongTile(
-                showAlbum: true,
-                key: ValueKey(song.path),
-                song: song,
-                l10n: l10n,
-                songs: widget.songs,
-                searchQuery: widget.searchQuery,
-                playlist: widget.playlist,
-                selectionMode: _isSelecting,
-                selected: _selectedPaths.contains(song.path),
-                onToggleSelect: () => _toggleSelected(song),
-                onEnterSelection: () => _enterSelection(song),
-              );
-            },
+            prototypeItem: _buildPrototypeRow(l10n),
+            itemBuilder: (context, index) => _buildRow(index, l10n),
           )
         else
           Expanded(
             child: AppRefreshIndicator(
               onRefresh: () => ref
                   .read(libraryProvider.notifier)
-                  .scanSavedFolders(showVisualIndicator: false),
+                  .refreshLibrary(showVisualIndicator: false),
               child: UiUtils.isDesktop
                   ? LayoutBuilder(
                       builder: (context, constraints) =>

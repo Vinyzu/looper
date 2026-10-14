@@ -115,6 +115,7 @@ void showReorderBottomSheet(
             currentSettings.homeSectionOrder.isEmpty
                 ? [
                     'quick_picks',
+                    'playlists',
                     'songs',
                     'albums',
                     'artists',
@@ -125,6 +126,11 @@ void showReorderBottomSheet(
           );
 
           final itemMeta = {
+            'playlists': {
+              'title': l10n.playlists,
+              'description': l10n.playlistsRowDesc,
+              'icon': LucideIcons.listMusic,
+            },
             'quick_picks': {
               'title': l10n.quickPicks,
               'description': l10n.quickPicksRowDesc,

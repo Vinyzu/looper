@@ -36,6 +36,20 @@ final dbInitializerProvider = FutureProvider<void>((ref) async {
 });
 
 void main(List<String> args) async {
+  // Startup timing: how long each boot stage takes, and the time to the
+  // first frame, written to the log once it is ready (Settings > Export
+  // logs). Measurement only - it changes no ordering.
+  final startup = Stopwatch()..start();
+  final stageMs = <String, int>{};
+  Future<void> timed(String stage, Future<void> work) async {
+    final began = startup.elapsedMilliseconds;
+    try {
+      await work;
+    } finally {
+      stageMs[stage] = startup.elapsedMilliseconds - began;
+    }
+  }
+
   WidgetsFlutterBinding.ensureInitialized();
   // Touch events arrive on the input clock, not on vsync; on a 90/120Hz panel
   // that makes drag deltas land unevenly across frames, so dragged surfaces
@@ -62,11 +76,15 @@ void main(List<String> args) async {
     return true;
   };
 
-  try {
-    await AppAmbitReporter.start();
-  } catch (e, stack) {
-    LoggerHelper.writeLocal('AppAmbitSdk start error: $e', e, stack);
-  }
+  // Crash reporting starts alongside the other boot stages instead of ahead
+  // of them: on device it took ~150 ms of a ~180 ms launch on its own.
+  // Nothing below needs it, so the first frame no longer waits for it.
+  final Future<void> reporterInit = timed(
+    'reporter',
+    AppAmbitReporter.start().catchError((Object e, StackTrace stack) {
+      LoggerHelper.writeLocal('AppAmbitSdk start error: $e', e, stack);
+    }),
+  );
 
   // Initialize rolling file logging helper in parallel
   final Future<void> logsInit = LoggerHelper.init()
@@ -162,12 +180,14 @@ void main(List<String> args) async {
 
   // Wait for all boot-up stages concurrently
   await Future.wait([
-    logsInit,
-    desktopInit,
-    dbInit,
-    nativePluginsInit,
-    permissionCheck,
+    timed('logs', logsInit),
+    timed('window', desktopInit),
+    timed('db', dbInit),
+    timed('plugins', nativePluginsInit),
+    timed('permissions', permissionCheck),
+    if (AppAmbitReporter.mustStartBeforeUi) reporterInit,
   ]);
+  final beforeRunApp = startup.elapsedMilliseconds;
 
   runApp(
     ProviderScope(
@@ -178,6 +198,18 @@ void main(List<String> args) async {
       child: const MyApp(),
     ),
   );
+
+  WidgetsBinding.instance.addPostFrameCallback((_) async {
+    final firstFrame = startup.elapsedMilliseconds;
+    // Wait for the reporter so its own time is in the line too.
+    await reporterInit;
+    LoggerHelper.write(
+      'Startup timing (ms): '
+      '${stageMs.entries.map((e) => '${e.key}=${e.value}').join(', ')}, '
+      'runApp at $beforeRunApp, '
+      'first frame at $firstFrame',
+    );
+  });
 }
 
 class MyApp extends ConsumerWidget {
@@ -251,6 +283,31 @@ class MyApp extends ConsumerWidget {
           fontFamily: fontFamily,
           fontFamilyFallback: fontFallback,
           textTheme: textTheme,
+          // Material 3 defaults snackbars to inverseSurface, a near-white
+          // block on this dark theme. Match the app's dark sheets instead,
+          // tinted with the accent.
+          snackBarTheme: SnackBarThemeData(
+            backgroundColor: Color.alphaBlend(
+              colorScheme.primary.withValues(alpha: 0.16),
+              const Color(0xFF1E1E1E),
+            ),
+            contentTextStyle: TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontFamily: fontFamily,
+              fontFamilyFallback: fontFallback,
+            ),
+            actionTextColor: colorScheme.primary,
+            closeIconColor: Colors.white70,
+            behavior: SnackBarBehavior.floating,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(
+                color: colorScheme.primary.withValues(alpha: 0.25),
+              ),
+            ),
+          ),
         ),
         themeAnimationDuration: const Duration(milliseconds: 1000),
         themeAnimationCurve: Curves.easeInOut,

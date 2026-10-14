@@ -68,7 +68,7 @@ class _OverlayLyricsWidgetState extends ConsumerState<OverlayLyricsWidget> {
                   String nextLine = "";
 
                   if (lineIndex != -1) {
-                    currentLine = lines[lineIndex].text;
+                    currentLine = lines[lineIndex].fullText;
                     if (lineIndex + 1 < lines.length) {
                       nextLine = lines[lineIndex + 1].text;
                     }
@@ -80,12 +80,13 @@ class _OverlayLyricsWidgetState extends ConsumerState<OverlayLyricsWidget> {
                       Text(
                         currentLine,
                         textAlign: TextAlign.center,
-                        style: AppFonts.spaceGroteskStyle(
+                        style: AppFonts.familyStyle(
+                          AppFonts.spaceGrotesk,
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                           color: Theme.of(context).colorScheme.primary,
                         ),
-                        maxLines: 2,
+                        maxLines: 3,
                         overflow: TextOverflow.ellipsis,
                       ),
                       if (nextLine.isNotEmpty) ...[
@@ -93,7 +94,8 @@ class _OverlayLyricsWidgetState extends ConsumerState<OverlayLyricsWidget> {
                         Text(
                           nextLine,
                           textAlign: TextAlign.center,
-                          style: AppFonts.spaceGroteskStyle(
+                          style: AppFonts.familyStyle(
+                            AppFonts.spaceGrotesk,
                             fontSize: 14,
                             color: Colors.white70,
                           ),

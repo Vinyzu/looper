@@ -86,80 +86,70 @@ class PremiumNavbar extends ConsumerWidget {
               fontSize: navFontSize,
             );
 
+            const leftEnd = BorderRadius.only(
+              topLeft: Radius.circular(36),
+              bottomLeft: Radius.circular(36),
+              topRight: Radius.circular(12),
+              bottomRight: Radius.circular(12),
+            );
+            const rightEnd = BorderRadius.only(
+              topLeft: Radius.circular(12),
+              bottomLeft: Radius.circular(12),
+              topRight: Radius.circular(36),
+              bottomRight: Radius.circular(36),
+            );
+
+            VoidCallback tap(int index) => () {
+              AppHaptics.tick();
+              onTap(index);
+            };
+
+            Widget gap() => AnimatedContainer(
+              duration: const Duration(milliseconds: 400),
+              curve: Curves.easeOutCubic,
+              width: gapSize,
+            );
+
+            // One of the two tabs sharing the wide, unselected section.
+            Widget half(int index, Widget item) => Expanded(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: tap(index),
+                child: Container(
+                  height: double.infinity,
+                  alignment: Alignment.center,
+                  child: item,
+                ),
+              ),
+            );
+
+            // The selected tab gets a section of its own; the other two
+            // share one, except with Songs selected, where all three stand
+            // alone.
             List<Widget> children;
             if (currentIndex == 0) {
               children = [
                 PremiumSection(
                   flex: 3,
                   heroTag: 'nav_morph_1',
-                  //  useblur true,
                   isSelected: true,
                   useBlur: useBlur,
                   keepSurfaceOnDisableBlur: true,
-                  onTap: () {
-                    AppHaptics.tick();
-                    onTap(0);
-                  },
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(36),
-                    bottomLeft: Radius.circular(36),
-                    topRight: Radius.circular(12),
-                    bottomRight: Radius.circular(12),
-                  ),
+                  onTap: tap(0),
+                  borderRadius: leftEnd,
                   child: home,
                 ),
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 400),
-                  curve: Curves.easeOutCubic,
-                  width: gapSize,
-                ),
+                gap(),
                 PremiumSection(
                   flex: 6,
                   heroTag: 'nav_morph_2',
-                  // useblur true,
                   isSelected: false,
                   showLeftBorder: true,
                   showShadow: false,
                   useBlur: useBlur,
                   keepSurfaceOnDisableBlur: true,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(12),
-                    bottomLeft: Radius.circular(12),
-                    topRight: Radius.circular(36),
-                    bottomRight: Radius.circular(36),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: GestureDetector(
-                          behavior: HitTestBehavior.opaque,
-                          onTap: () {
-                            AppHaptics.tick();
-                            onTap(1);
-                          },
-                          child: Container(
-                            height: double.infinity,
-                            alignment: Alignment.center,
-                            child: songs,
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: GestureDetector(
-                          behavior: HitTestBehavior.opaque,
-                          onTap: () {
-                            AppHaptics.tick();
-                            onTap(2);
-                          },
-                          child: Container(
-                            height: double.infinity,
-                            alignment: Alignment.center,
-                            child: library,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                  borderRadius: rightEnd,
+                  child: Row(children: [half(1, songs), half(2, library)]),
                 ),
               ];
             } else if (currentIndex == 1) {
@@ -167,63 +157,33 @@ class PremiumNavbar extends ConsumerWidget {
                 PremiumSection(
                   flex: 3,
                   heroTag: 'nav_morph_1',
-                  //  useblur true,
                   isSelected: false,
                   useBlur: useBlur,
                   keepSurfaceOnDisableBlur: true,
-                  onTap: () {
-                    AppHaptics.tick();
-                    onTap(0);
-                  },
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(36),
-                    bottomLeft: Radius.circular(36),
-                    topRight: Radius.circular(12),
-                    bottomRight: Radius.circular(12),
-                  ),
+                  onTap: tap(0),
+                  borderRadius: leftEnd,
                   child: home,
                 ),
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 400),
-                  curve: Curves.easeOutCubic,
-                  width: gapSize,
-                ),
+                gap(),
                 PremiumSection(
                   flex: 3,
                   heroTag: 'nav_morph_2',
-                  // use/////blur true,
                   isSelected: true,
                   useBlur: useBlur,
                   keepSurfaceOnDisableBlur: true,
-                  onTap: () {
-                    AppHaptics.tick();
-                    onTap(1);
-                  },
+                  onTap: tap(1),
                   borderRadius: BorderRadius.circular(12),
                   child: songs,
                 ),
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 400),
-                  curve: Curves.easeOutCubic,
-                  width: gapSize,
-                ),
+                gap(),
                 PremiumSection(
                   flex: 3,
                   heroTag: 'nav_morph_3',
-                  //useblur true,
                   isSelected: false,
                   useBlur: useBlur,
                   keepSurfaceOnDisableBlur: true,
-                  onTap: () {
-                    AppHaptics.tick();
-                    onTap(2);
-                  },
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(12),
-                    bottomLeft: Radius.circular(12),
-                    topRight: Radius.circular(36),
-                    bottomRight: Radius.circular(36),
-                  ),
+                  onTap: tap(2),
+                  borderRadius: rightEnd,
                   child: library,
                 ),
               ];
@@ -232,75 +192,23 @@ class PremiumNavbar extends ConsumerWidget {
                 PremiumSection(
                   flex: 6,
                   heroTag: 'nav_morph_1',
-                  //useblur true,
                   isSelected: false,
-
                   showRightBorder: true,
                   showShadow: false,
                   useBlur: useBlur,
                   keepSurfaceOnDisableBlur: true,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(36),
-                    bottomLeft: Radius.circular(36),
-                    topRight: Radius.circular(12),
-                    bottomRight: Radius.circular(12),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: GestureDetector(
-                          behavior: HitTestBehavior.opaque,
-                          onTap: () {
-                            AppHaptics.tick();
-                            onTap(0);
-                          },
-                          child: Container(
-                            height: double.infinity,
-                            alignment: Alignment.center,
-                            child: home,
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: GestureDetector(
-                          behavior: HitTestBehavior.opaque,
-                          onTap: () {
-                            AppHaptics.tick();
-                            onTap(1);
-                          },
-                          child: Container(
-                            height: double.infinity,
-                            alignment: Alignment.center,
-                            child: songs,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                  borderRadius: leftEnd,
+                  child: Row(children: [half(0, home), half(1, songs)]),
                 ),
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 400),
-                  curve: Curves.easeOutCubic,
-                  width: gapSize,
-                ),
+                gap(),
                 PremiumSection(
                   flex: 3,
-
-                  // useBlur: true,
                   heroTag: 'nav_morph_2',
                   isSelected: true,
                   useBlur: useBlur,
                   keepSurfaceOnDisableBlur: true,
-                  onTap: () {
-                    AppHaptics.tick();
-                    onTap(2);
-                  },
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(12),
-                    bottomLeft: Radius.circular(12),
-                    topRight: Radius.circular(36),
-                    bottomRight: Radius.circular(36),
-                  ),
+                  onTap: tap(2),
+                  borderRadius: rightEnd,
                   child: library,
                 ),
               ];
