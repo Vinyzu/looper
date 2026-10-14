@@ -29,8 +29,10 @@
 <p align="center">
   <a href="#features">Features</a> •
   <a href="#screenshots">Screenshots</a> •
+  <a href="#videos">Videos</a> •
   <a href="#installation">Install</a> •
   <a href="#tech-stack">Built with</a> •
+  <a href="#contributing">Contributing</a> •
   <a href="#contributors">Credits</a> •
   <a href="#contact">Contact</a>
 </p>
@@ -110,6 +112,36 @@ There is no account, no ads and no subscription. Your music stays on your device
 
 ---
 
+<a id="videos"></a>
+## Videos
+
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <a href="https://youtu.be/KnoETY34sgk">
+        <img src="https://i.ytimg.com/vi/KnoETY34sgk/hqdefault.jpg" width="100%" alt="10 Mejores APLICACIONES Android 2026 by YouTutosJeff" />
+      </a>
+      <br />
+      <b><a href="https://youtu.be/KnoETY34sgk">10 Mejores APLICACIONES Android 2026</a></b>
+      <br />
+      by <a href="https://www.youtube.com/@YouTutosJeff">YouTutosJeff</a>
+    </td>
+    <td align="center" width="50%">
+      <a href="https://youtu.be/t8LsCkGY9-4">
+        <img src="https://i.ytimg.com/vi/t8LsCkGY9-4/hqdefault.jpg" width="100%" alt="Introducing Looper Player" />
+      </a>
+      <br />
+      <b><a href="https://youtu.be/t8LsCkGY9-4">Introducing Looper Player</a></b>
+      <br />
+      the official intro, by <a href="https://www.youtube.com/@TechWithNeelshy">Neelesh Suthar</a>
+    </td>
+  </tr>
+</table>
+
+Thank you to everyone who has made a video about Looper. Made one too? Open an [issue](https://github.com/SthrNilshaaa/looper/issues) or message us on [Telegram](https://t.me/looperPlayer) and we'll add it here.
+
+---
+
 <a id="installation"></a>
 ## Installation
 
@@ -165,12 +197,54 @@ cd universal
 
 ---
 
+<a id="contributing"></a>
+## Contributing
+
+Contributions are welcome, whether it's a bug fix, a new feature, a translation or a better screenshot. For anything big, open an [issue](https://github.com/SthrNilshaaa/looper/issues) first so we can talk it through.
+
+### Getting started
+1. Fork the repo and create a branch from `main`.
+2. Install [Flutter](https://docs.flutter.dev/get-started/install) (Dart 3.11 or newer).
+3. Get the packages. This also generates the translation files:
+   ```bash
+   flutter pub get
+   ```
+4. Run it:
+   ```bash
+   # Android (use the github flavor for local builds)
+   flutter run --flavor github
+   # Linux. Needs: clang cmake ninja-build pkg-config libgtk-3-dev libmpv-dev
+   flutter run -d linux
+   ```
+5. If you change a Riverpod provider or an Isar model, regenerate the code:
+   ```bash
+   dart run build_runner build
+   ```
+6. Run `flutter analyze` before you open a pull request, and describe what you changed and how you tested it.
+
+### Translations
+All app text lives in `lib/l10n/app_<language>.arb`. To fix a translation, edit that file. To add a new language, copy `app_en.arb` to your language's code and translate the values. Leave the keys and the `{placeholders}` as they are.
+
+---
+
 <a id="contributors"></a>
 ## Credits
 
 ### Team
 * **Nilesh Suthar** — development
 * **Karan Suthar** — design
+
+### Contributors
+Everyone who has helped build Looper:
+
+<a href="https://github.com/SthrNilshaaa/looper/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=SthrNilshaaa/looper" alt="Contributors" />
+</a>
+
+### Thanks
+* **[Vinyzu](https://github.com/Vinyzu)** for the dashboard playlists row, the playlist cover collages and the German translations
+* **[YouTutosJeff](https://www.youtube.com/@YouTutosJeff)** for featuring Looper in [10 Mejores APLICACIONES Android 2026](https://youtu.be/KnoETY34sgk)
+* Everyone who reports bugs, suggests features and shares Looper with friends
 
 ### Lyrics Sources
 Online lyrics come from these services and projects. Lyrics belong to their artists and rights holders and are fetched for personal display only.
@@ -181,6 +255,16 @@ Online lyrics come from these services and projects. Lyrics belong to their arti
 * **[MusicBrainz](https://musicbrainz.org)**: finds each song's ISRC so lrc.red can match it (open music database, CC0 data)
 * **[am-lyrics](https://github.com/binimum/am-lyrics)** by binimum (MPL-2.0): inspired Looper's word-synced lyrics support. No code was copied; Looper's Dart implementation was written from the lyrics formats.
 * **[Morphe Patches](https://github.com/MorpheApp/morphe-patches)** (GPL-3.0): reference for the NetEase, KuGou, Musixmatch and Lyricify lookups and their lyrics formats.
+
+---
+
+## Support
+
+Looper is free and open source. If you enjoy it, you can help by starring the repo, sharing it, or supporting us on Ko-fi:
+
+<a href="https://ko-fi.com/L2L124TL7L">
+  <img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="Support Looper on Ko-fi" />
+</a>
 
 ---
 
