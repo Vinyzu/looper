@@ -7,58 +7,68 @@ extension _CollectionHeader on CollectionDetailView {
     required String title,
     required String? art,
     Playlist? playlist,
-  }) => SliverAppBar(
-    primary: false,
-    floating: true,
-    snap: true,
-    toolbarHeight: 48,
-    leadingWidth: 48,
-    titleSpacing: 0,
-    elevation: 0,
-    scrolledUnderElevation: 0,
-    backgroundColor: Theme.of(context).colorScheme.surface,
-    surfaceTintColor: Colors.transparent,
-    leading: IconButton(
-      tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-      icon: const Icon(LucideIcons.chevronLeft, size: 20, color: Colors.white),
-      onPressed: () => ref.read(appNavigationProvider.notifier).goBack(),
-    ),
-    title: Row(
-      children: [
-        if (playlist != null && playlist.songPaths.isNotEmpty)
-          PlaylistArtwork(
-            songPaths: playlist.songPaths,
-            size: 28,
-            borderRadius: BorderRadius.circular(4),
-          )
-        else
-          OptimizedImage(
-            imagePath: art,
-            imageUrl: imageUrl,
-            width: 28,
-            height: 28,
-            borderRadius: BorderRadius.circular(4),
-            placeholder: Icon(
-              playlist != null ? LucideIcons.listMusic : LucideIcons.music,
-              size: 16,
-              color: Colors.white.withValues(alpha: 0.5),
-            ),
-          ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: AppFonts.jostStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-            ),
-          ),
+  }) => SliverLayoutBuilder(
+    builder: (context, constraints) => SliverAppBar(
+      primary: false,
+      floating: true,
+      snap: true,
+      toolbarHeight: 48,
+      leadingWidth: 48,
+      titleSpacing: 0,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      surfaceTintColor: Colors.transparent,
+      leading: IconButton(
+        tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+        icon: const Icon(
+          LucideIcons.chevronLeft,
+          size: 20,
+          color: Colors.white,
         ),
-        const SizedBox(width: 16),
-      ],
+        onPressed: () => ref.read(appNavigationProvider.notifier).goBack(),
+      ),
+      title: constraints.scrollOffset > 0
+          ? Row(
+              children: [
+                if (playlist != null && playlist.songPaths.isNotEmpty)
+                  PlaylistArtwork(
+                    songPaths: playlist.songPaths,
+                    size: 28,
+                    borderRadius: BorderRadius.circular(4),
+                  )
+                else
+                  OptimizedImage(
+                    imagePath: art,
+                    imageUrl: imageUrl,
+                    width: 28,
+                    height: 28,
+                    borderRadius: BorderRadius.circular(4),
+                    placeholder: Icon(
+                      playlist != null
+                          ? LucideIcons.listMusic
+                          : LucideIcons.music,
+                      size: 16,
+                      color: Colors.white.withValues(alpha: 0.5),
+                    ),
+                  ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppFonts.jostStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+              ],
+            )
+          : null,
     ),
   );
 
