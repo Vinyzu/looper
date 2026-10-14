@@ -85,22 +85,11 @@ class CollectionDetailView extends ConsumerWidget {
   }) {
     final hasLabel = label?.trim().isNotEmpty == true;
     final style = AppFonts.jostStyle(fontSize: fontSize, color: color);
-    return Row(
-      children: [
-        if (hasLabel)
-          Flexible(
-            child: Text(
-              label!,
-              style: style,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        Text(
-          '${hasLabel ? ' • ' : ''}${l10n.songsCount(songs.length)} • ${_durationLabel(songs, l10n)}',
-          style: style,
-        ),
-      ],
+    // Keep all of the metadata readable when the header is narrow or text is
+    // enlarged. A single Text wraps within the column's available width.
+    return Text(
+      '${hasLabel ? '$label • ' : ''}${l10n.songsCount(songs.length)} • ${_durationLabel(songs, l10n)}',
+      style: style,
     );
   }
 
