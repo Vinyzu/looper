@@ -57,7 +57,7 @@ class LyricLine {
 
   /// A word-timed line whose first word starts this soon after the previous
   /// line's last word ends is sung in the same breath: see [pairHeads].
-  static const Duration continuedLineGap = Duration(milliseconds: 100);
+  static const Duration continuedLineGap = Duration(milliseconds: 70);
 
   /// For every line, the index of the line it is shown with: its own, or
   /// the previous line's when it carries straight on from it (both
