@@ -85,6 +85,7 @@ jobs:
           test "$(git -C "$RUNNER_TEMP/flutter" rev-parse HEAD)" = "$FLUTTER_COMMIT"
           echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
           "$RUNNER_TEMP/flutter/bin/flutter" config --no-analytics
+          "$RUNNER_TEMP/flutter/bin/flutter" precache --universal --no-android --no-ios
           "$RUNNER_TEMP/flutter/bin/flutter" --version
 
       - name: Decode Keystore
@@ -227,6 +228,7 @@ jobs:
           test "$(git -C "$RUNNER_TEMP/flutter" rev-parse HEAD)" = "$FLUTTER_COMMIT"
           echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
           "$RUNNER_TEMP/flutter/bin/flutter" config --no-analytics
+          "$RUNNER_TEMP/flutter/bin/flutter" precache --universal --no-android --no-ios
           "$RUNNER_TEMP/flutter/bin/flutter" --version
 
       # Same appambit file-name fix as the Android job.
