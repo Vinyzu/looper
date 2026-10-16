@@ -725,9 +725,13 @@ class MainActivity : FlutterActivity() {
         return io.flutter.embedding.engine.FlutterEngineCache.getInstance().get("looper_cached_engine")
     }
 
-    override fun shouldDestroyEngineWithHost(): Boolean {
-        return stopOnTaskRemoved
-    }
+    // Never tie the engine to this Activity. Destroying it here (back-to-exit,
+    // or Android reclaiming the Activity in the background) killed the Dart
+    // side but not mpv's native core - Dart finalizers don't run on isolate
+    // shutdown - so the song kept playing with no notification, and the next
+    // launch got a fresh engine with no music bar. "Stop on task removed" is
+    // handled by LooperTaskService.onTaskRemoved, which ends the process.
+    override fun shouldDestroyEngineWithHost(): Boolean = false
 
     override fun onResume() {
         super.onResume()
@@ -753,14 +757,8 @@ class MainActivity : FlutterActivity() {
         releaseWakeLock()
         inAppUpdater?.onDestroy()
         activeEngine = null
-        if (stopOnTaskRemoved) {
-            // The engine is destroyed with this Activity (see
-            // shouldDestroyEngineWithHost), so its route receivers go too.
-            audioRouteEvents?.unregisterReceivers()
-            audioRouteEvents = null
-            audioRouteEventsEngine = null
-            io.flutter.embedding.engine.FlutterEngineCache.getInstance().remove("looper_cached_engine")
-        }
+        // The cached engine (and its route receivers) outlives this Activity;
+        // the next one reattaches to it via provideFlutterEngine.
         super.onDestroy()
     }
 
