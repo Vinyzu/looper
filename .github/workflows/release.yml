@@ -170,8 +170,9 @@ jobs:
           apksigner=$(ls -d "$ANDROID_HOME"/build-tools/*/apksigner | grep -v -- '-rc' | sort -V | tail -1)
           echo "Using $apksigner with $JAVA_HOME"
           for apk in build/release-assets/*.apk; do
+            # Older apksigner prints "Signer #1 certificate ...", 37+ "V2 Signer: certificate ...".
             cert=$("$apksigner" verify --print-certs "$apk" |
-              sed -n 's/^Signer #1 certificate SHA-256 digest: //p')
+              sed -nE 's/^(Signer #[0-9]+|V[0-9.]+ Signer:?) certificate SHA-256 digest: //p' | sort -u)
             if [ "$cert" != "$SIGNING_CERT_SHA256" ]; then
               echo "::error::$apk is signed with '$cert', expected $SIGNING_CERT_SHA256"
               exit 1
