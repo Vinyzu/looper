@@ -301,6 +301,19 @@ class _WordWrap extends StatelessWidget {
 
   static final Expando<List<List<LyricWord>>> _groupCache = Expando();
 
+  /// How long a finished word's glow takes to come in.
+  static const _glowFade = Duration(milliseconds: 450);
+
+  /// 0..1 glow of a word, eased in over [_glowFade] after its last syllable
+  /// ends. On the playback clock, so it pauses with the song and a word
+  /// that was already sung shows its glow straight away.
+  static double _glowIn(List<LyricWord> group, Duration position) {
+    final since = position - group.last.endTime;
+    if (since <= Duration.zero) return 0;
+    final t = since.inMicroseconds / _glowFade.inMicroseconds;
+    return Curves.easeInOutCubic.transform(t.clamp(0.0, 1.0));
+  }
+
   @override
   Widget build(BuildContext context) {
     final groups = _groups(words);
@@ -324,6 +337,7 @@ class _WordWrap extends StatelessWidget {
                   child: _SungWord(
                     text: groups[i].map((w) => w.text).join(),
                     fraction: LyricLine.sungFraction(groups[i], position),
+                    glowIn: _glowIn(groups[i], position),
                     style: style,
                     activeColor: activeColor,
                     unsungColor: unsungColor,
@@ -347,6 +361,7 @@ class _WordWrap extends StatelessWidget {
 class _SungWord extends StatelessWidget {
   final String text;
   final double fraction;
+  final double glowIn;
   final TextStyle style;
   final Color activeColor;
   final Color unsungColor;
@@ -358,6 +373,7 @@ class _SungWord extends StatelessWidget {
   const _SungWord({
     required this.text,
     required this.fraction,
+    required this.glowIn,
     required this.style,
     required this.activeColor,
     required this.unsungColor,
@@ -389,7 +405,7 @@ class _SungWord extends StatelessWidget {
     // Desktop lyrics are much larger, where the phone-sized glow reads as a
     // heavy halo, so it is toned down there.
     final desktop = UiUtils.isDesktop;
-    final glowAlpha = desktop ? 0.3 : 0.6;
+    final glowAlpha = desktop ? 0.24 : 0.45;
     final glowBlur = fontSize * (desktop ? 0.2 : 0.4);
     List<Shadow> glowAt(double strength) => strength <= 0
         ? const <Shadow>[]
@@ -399,7 +415,6 @@ class _SungWord extends StatelessWidget {
               blurRadius: glowBlur,
             ),
           ];
-    final glow = glowAt(emphasis);
     const noGlow = <Shadow>[];
 
     if (!wipe) {
@@ -425,11 +440,14 @@ class _SungWord extends StatelessWidget {
         ),
       );
     } else if (!singing || width <= 0) {
+      // The glow eases in after the wipe has filled the word (glowIn)
+      // instead of switching on in the frame it completes, a visible flash.
+      final sung = fraction >= 1;
       word = Text(
         text,
         style: style.copyWith(
-          color: fraction >= 1 ? activeColor : unsungColor,
-          shadows: fraction >= 1 ? glow : noGlow,
+          color: sung ? activeColor : unsungColor,
+          shadows: sung ? glowAt(emphasis * glowIn) : noGlow,
         ),
         textDirection: direction,
       );
