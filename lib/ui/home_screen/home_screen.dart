@@ -527,6 +527,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           songs: nav.collectionSongs,
           playlist: nav.activePlaylist,
           album: nav.activeAlbum,
+          artist: nav.activeArtist,
         );
       case NavItem.queue:
         return const QueueView();

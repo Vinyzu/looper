@@ -590,6 +590,57 @@ class Library extends _$Library {
     }
   }
 
+  /// The user's own picture for [artist] ([sourcePath], copied into the
+  /// app), or none at all when it is null. Either way the background fetch
+  /// leaves the artist alone from now on.
+  Future<bool> setCustomArtistImage(Artist artist, String? sourcePath) async {
+    String? newPath;
+    if (sourcePath != null) {
+      newPath = await ArtistImageService().saveCustomImage(
+        artist.name,
+        sourcePath,
+      );
+      if (newPath == null) return false;
+    }
+    await _replaceArtistImage(artist, newPath, locked: true);
+    return true;
+  }
+
+  /// Looks [artist]'s picture up online again (exact name matches only) and
+  /// unlocks it for future background fetches. False when nothing matched;
+  /// the current picture is kept then.
+  Future<bool> refetchArtistImage(Artist artist) async {
+    final path = await ArtistImageService().getArtistImage(artist.name);
+    if (path == null) return false;
+    await _replaceArtistImage(artist, path, locked: false);
+    return true;
+  }
+
+  Future<void> _replaceArtistImage(
+    Artist artist,
+    String? path, {
+    required bool locked,
+  }) async {
+    final old = artist.artistImageUrl;
+    await DbService.isar.writeTxn(() async {
+      final target = await DbService.isar.artists.get(artist.id) ?? artist;
+      target.artistImageUrl = path;
+      target.artistImageLocked = locked;
+      await DbService.isar.artists.put(target);
+    });
+    // Drop the replaced file if it was one of ours.
+    if (old != null &&
+        old != path &&
+        !old.startsWith('http') &&
+        old.contains(
+          '${Platform.pathSeparator}artist_images${Platform.pathSeparator}',
+        )) {
+      try {
+        await File(old).delete();
+      } catch (_) {}
+    }
+  }
+
   Future<void> _fetchMissingArtistImages() async {
     if (_isFetchingArtistImages) return;
     if (state.isScanning) return;
@@ -598,7 +649,7 @@ class Library extends _$Library {
     try {
       final allArtists = await DbService.isar.artists.where().findAll();
       final artists = allArtists
-          .where((a) => a.artistImageUrl == null)
+          .where((a) => a.artistImageUrl == null && !a.artistImageLocked)
           .toList();
       final service = ArtistImageService();
 

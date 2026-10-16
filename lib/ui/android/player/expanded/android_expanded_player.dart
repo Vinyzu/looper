@@ -640,6 +640,7 @@ class _AndroidExpandedPlayerState extends ConsumerState<AndroidExpandedPlayer>
                                     art: artist?.artPath ?? song.artPath,
                                     imageUrl: artist?.artistImageUrl,
                                     songs: artistSongs,
+                                    artist: artist,
                                   );
                             }
                             if (!enableSlide) {

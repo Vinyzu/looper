@@ -23,6 +23,7 @@ import 'package:looper_player/l10n/app_localizations.dart';
 import 'package:looper_player/core/theme/app_fonts.dart';
 import 'package:looper_player/features/library/presentation/widgets/library_grids.dart';
 import 'package:looper_player/ui/widgets/sheets/edit_album_sheet.dart';
+import 'package:looper_player/ui/widgets/sheets/edit_artist_sheet.dart';
 import 'package:looper_player/core/services/haptics/app_haptics.dart';
 import 'package:looper_player/core/utils/song_metadata.dart';
 import 'package:looper_player/core/utils/ui_utils.dart';
@@ -58,6 +59,7 @@ class CollectionDetailView extends ConsumerWidget {
   final List<Song> songs;
   final Playlist? playlist;
   final Album? album;
+  final Artist? artist;
 
   const CollectionDetailView({
     super.key,
@@ -68,6 +70,7 @@ class CollectionDetailView extends ConsumerWidget {
     required this.songs,
     this.playlist,
     this.album,
+    this.artist,
   });
 
   String _durationLabel(List<Song> songs, AppLocalizations l10n) {
@@ -129,13 +132,37 @@ class CollectionDetailView extends ConsumerWidget {
               album)
         : null;
 
+    // Same for an artist, so a picture changed in the edit sheet shows here
+    // straight away.
+    final reactiveArtist = artist != null && album == null
+        ? (ref
+                  .watch(artistsProvider)
+                  .value
+                  ?.firstWhere(
+                    (a) => a.id == artist!.id,
+                    orElse: () => artist!,
+                  ) ??
+              artist)
+        : null;
+    final artistImage = reactiveArtist?.artistImageUrl;
+    final artistImageIsUrl = artistImage?.startsWith('http') ?? false;
+
     final titleToRender =
         reactivePlaylist?.name ?? reactiveAlbum?.name ?? title;
     // Fall back to the static nav-args only when there is no reactive album at
     // all - once one is present its own (possibly now-null) fields are the
     // source of truth, so clearing the artwork/artist in the edit sheet is
     // reflected instead of being masked by the stale value passed at nav time.
-    final artToRender = reactiveAlbum != null ? reactiveAlbum.artPath : artPath;
+    final artToRender = reactiveAlbum != null
+        ? reactiveAlbum.artPath
+        : reactiveArtist != null
+        ? (artistImage != null && !artistImageIsUrl
+              ? artistImage
+              : reactiveArtist.artPath)
+        : artPath;
+    final imageUrlToRender = reactiveArtist != null
+        ? (artistImageIsUrl ? artistImage : null)
+        : imageUrl;
     final subtitleToRender = reactiveAlbum != null
         ? reactiveAlbum.artist
         : subtitle;
@@ -214,9 +241,11 @@ class CollectionDetailView extends ConsumerWidget {
         title: titleToRender,
         subtitle: subtitleToRender,
         art: artToRender,
+        imageUrl: imageUrlToRender,
         songs: sortedSongs,
         reactivePlaylist: reactivePlaylist,
         reactiveAlbum: reactiveAlbum,
+        reactiveArtist: reactiveArtist,
         canReorder: canReorderPlaylist && sortedSongs.isNotEmpty,
         activePath: activeSong?.path,
       );
@@ -263,7 +292,7 @@ class CollectionDetailView extends ConsumerWidget {
                     titleKey: titleKey(controller),
                     title: titleToRender,
                     art: artToRender,
-                    imageUrl: imageUrl,
+                    imageUrl: imageUrlToRender,
                     playlist: reactivePlaylist,
                     onBack: () =>
                         ref.read(appNavigationProvider.notifier).goBack(),
@@ -289,6 +318,7 @@ class CollectionDetailView extends ConsumerWidget {
                                       true,
                                       artToRender,
                                       playlist: reactivePlaylist,
+                                      imageUrl: imageUrlToRender,
                                     ),
                                   ),
                                   const SizedBox(height: 20),
@@ -306,6 +336,7 @@ class CollectionDetailView extends ConsumerWidget {
                                         canReorderPlaylist &&
                                         sortedSongs.length > 1,
                                     titleKey: titleKey(controller),
+                                    reactiveArtist: reactiveArtist,
                                   ),
                                 ],
                               )
@@ -317,6 +348,7 @@ class CollectionDetailView extends ConsumerWidget {
                                     true,
                                     artToRender,
                                     playlist: reactivePlaylist,
+                                    imageUrl: imageUrlToRender,
                                   ),
                                   const SizedBox(width: 20),
                                   Expanded(
@@ -334,6 +366,7 @@ class CollectionDetailView extends ConsumerWidget {
                                           canReorderPlaylist &&
                                           sortedSongs.length > 1,
                                       titleKey: titleKey(controller),
+                                      reactiveArtist: reactiveArtist,
                                     ),
                                   ),
                                 ],

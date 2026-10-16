@@ -41,6 +41,7 @@ extension _CollectionHeader on CollectionDetailView {
     bool isNarrow,
     String? artOverride, {
     Playlist? playlist,
+    String? imageUrl,
   }) {
     final double size = 140; // Unified size for a cleaner Row look
     if (playlist != null) {
@@ -78,6 +79,7 @@ extension _CollectionHeader on CollectionDetailView {
     List<Song> songsToRender, {
     bool canReorder = false,
     Key? titleKey,
+    Artist? reactiveArtist,
   }) {
     final l10n = AppLocalizations.of(context)!;
     // Lit only while this collection is the one playing shuffled.
@@ -239,6 +241,23 @@ extension _CollectionHeader on CollectionDetailView {
                 onTap: () {
                   AppHaptics.light();
                   _showEditAlbumSheet(context, ref, reactiveAlbum);
+                },
+                child: const Icon(
+                  LucideIcons.edit2,
+                  size: 18,
+                  color: Colors.white,
+                ),
+              ),
+            ] else if (reactiveArtist != null) ...[
+              const SizedBox(width: 8),
+              PremiumSection(
+                borderRadius: BorderRadius.circular(12),
+                width: 44,
+                height: 44,
+                useExpanded: false,
+                onTap: () {
+                  AppHaptics.light();
+                  _showEditArtistSheet(context, reactiveArtist);
                 },
                 child: const Icon(
                   LucideIcons.edit2,

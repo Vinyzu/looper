@@ -370,6 +370,7 @@ class _AndroidMainScreenState extends ConsumerState<AndroidMainScreen>
               songs: next.collectionSongs,
               playlist: next.activePlaylist,
               album: next.activeAlbum,
+              artist: next.activeArtist,
             ),
           ),
         );

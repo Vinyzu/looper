@@ -253,6 +253,7 @@ class _ArtistCard extends ConsumerWidget {
               art: isLocalImage ? artist.artistImageUrl : artist.artPath,
               imageUrl: isNetworkImage ? artist.artistImageUrl : null,
               songs: songs,
+              artist: artist,
             );
       },
       selected: isSelected,

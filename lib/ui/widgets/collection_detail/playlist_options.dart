@@ -210,6 +210,16 @@ extension _CollectionPlaylistOptions on CollectionDetailView {
     );
   }
 
+  void _showEditArtistSheet(BuildContext context, Artist artist) {
+    showModalBottomSheet(
+      context: context,
+      useRootNavigator: true,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => EditArtistSheet(artist: artist),
+    );
+  }
+
   void _showRenameDialog(
     BuildContext context,
     WidgetRef ref,

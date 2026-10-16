@@ -38,6 +38,7 @@ extension CollectionNavigation on AppNavigation {
       art: isLocalImage ? imageUrl : artist.artPath,
       imageUrl: isNetworkImage ? imageUrl : null,
       songs: songs,
+      artist: artist,
     );
   }
 }

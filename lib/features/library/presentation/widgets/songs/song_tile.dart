@@ -76,6 +76,7 @@ class SongTile extends ConsumerWidget {
           art: artist?.artPath ?? song.artPath,
           imageUrl: artist?.artistImageUrl,
           songs: artistSongs,
+          artist: artist,
         );
   }
 

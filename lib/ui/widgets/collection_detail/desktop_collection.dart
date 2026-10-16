@@ -12,9 +12,11 @@ extension _DesktopCollection on CollectionDetailView {
     required String title,
     required String? subtitle,
     required String? art,
+    required String? imageUrl,
     required List<Song> songs,
     required Playlist? reactivePlaylist,
     required Album? reactiveAlbum,
+    required Artist? reactiveArtist,
     required bool canReorder,
     required String? activePath,
   }) {
@@ -183,6 +185,16 @@ extension _DesktopCollection on CollectionDetailView {
                                         context,
                                         ref,
                                         reactiveAlbum,
+                                      ),
+                                    ),
+                                  ] else if (reactiveArtist != null) ...[
+                                    const SizedBox(width: 10),
+                                    _DesktopPill.icon(
+                                      icon: LucideIcons.edit2,
+                                      tooltip: l10n.editArtistPicture,
+                                      onTap: () => _showEditArtistSheet(
+                                        context,
+                                        reactiveArtist,
                                       ),
                                     ),
                                   ],

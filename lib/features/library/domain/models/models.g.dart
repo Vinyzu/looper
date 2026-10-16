@@ -5404,12 +5404,17 @@ const ArtistSchema = CollectionSchema(
   id: 3750894727498641923,
   properties: {
     r'artPath': PropertySchema(id: 0, name: r'artPath', type: IsarType.string),
-    r'artistImageUrl': PropertySchema(
+    r'artistImageLocked': PropertySchema(
       id: 1,
+      name: r'artistImageLocked',
+      type: IsarType.bool,
+    ),
+    r'artistImageUrl': PropertySchema(
+      id: 2,
       name: r'artistImageUrl',
       type: IsarType.string,
     ),
-    r'name': PropertySchema(id: 2, name: r'name', type: IsarType.string),
+    r'name': PropertySchema(id: 3, name: r'name', type: IsarType.string),
   },
 
   estimateSize: _artistEstimateSize,
@@ -5470,8 +5475,9 @@ void _artistSerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeString(offsets[0], object.artPath);
-  writer.writeString(offsets[1], object.artistImageUrl);
-  writer.writeString(offsets[2], object.name);
+  writer.writeBool(offsets[1], object.artistImageLocked);
+  writer.writeString(offsets[2], object.artistImageUrl);
+  writer.writeString(offsets[3], object.name);
 }
 
 Artist _artistDeserialize(
@@ -5482,9 +5488,10 @@ Artist _artistDeserialize(
 ) {
   final object = Artist();
   object.artPath = reader.readStringOrNull(offsets[0]);
-  object.artistImageUrl = reader.readStringOrNull(offsets[1]);
+  object.artistImageLocked = reader.readBool(offsets[1]);
+  object.artistImageUrl = reader.readStringOrNull(offsets[2]);
   object.id = id;
-  object.name = reader.readString(offsets[2]);
+  object.name = reader.readString(offsets[3]);
   return object;
 }
 
@@ -5498,8 +5505,10 @@ P _artistDeserializeProp<P>(
     case 0:
       return (reader.readStringOrNull(offset)) as P;
     case 1:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 2:
+      return (reader.readStringOrNull(offset)) as P;
+    case 3:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -5859,6 +5868,16 @@ extension ArtistQueryFilter on QueryBuilder<Artist, Artist, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         FilterCondition.greaterThan(property: r'artPath', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<Artist, Artist, QAfterFilterCondition> artistImageLockedEqualTo(
+    bool value,
+  ) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'artistImageLocked', value: value),
       );
     });
   }
@@ -6248,6 +6267,18 @@ extension ArtistQuerySortBy on QueryBuilder<Artist, Artist, QSortBy> {
     });
   }
 
+  QueryBuilder<Artist, Artist, QAfterSortBy> sortByArtistImageLocked() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'artistImageLocked', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Artist, Artist, QAfterSortBy> sortByArtistImageLockedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'artistImageLocked', Sort.desc);
+    });
+  }
+
   QueryBuilder<Artist, Artist, QAfterSortBy> sortByArtistImageUrl() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'artistImageUrl', Sort.asc);
@@ -6283,6 +6314,18 @@ extension ArtistQuerySortThenBy on QueryBuilder<Artist, Artist, QSortThenBy> {
   QueryBuilder<Artist, Artist, QAfterSortBy> thenByArtPathDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'artPath', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Artist, Artist, QAfterSortBy> thenByArtistImageLocked() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'artistImageLocked', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Artist, Artist, QAfterSortBy> thenByArtistImageLockedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'artistImageLocked', Sort.desc);
     });
   }
 
@@ -6332,6 +6375,12 @@ extension ArtistQueryWhereDistinct on QueryBuilder<Artist, Artist, QDistinct> {
     });
   }
 
+  QueryBuilder<Artist, Artist, QDistinct> distinctByArtistImageLocked() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'artistImageLocked');
+    });
+  }
+
   QueryBuilder<Artist, Artist, QDistinct> distinctByArtistImageUrl({
     bool caseSensitive = true,
   }) {
@@ -6362,6 +6411,12 @@ extension ArtistQueryProperty on QueryBuilder<Artist, Artist, QQueryProperty> {
   QueryBuilder<Artist, String?, QQueryOperations> artPathProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'artPath');
+    });
+  }
+
+  QueryBuilder<Artist, bool, QQueryOperations> artistImageLockedProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'artistImageLocked');
     });
   }
 

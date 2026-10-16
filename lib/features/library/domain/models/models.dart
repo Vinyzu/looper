@@ -94,6 +94,9 @@ class Artist {
 
   String? artPath;
   String? artistImageUrl;
+  // Set when the user picked or removed the picture: the background fetch
+  // then leaves it alone. "Fetch from internet" clears it again.
+  bool artistImageLocked = false;
 }
 
 /// A single timestamped "song started playing" event, logged alongside the

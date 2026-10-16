@@ -36,6 +36,7 @@ class NavigationState {
   final List<Song> collectionSongs;
   final Playlist? activePlaylist;
   final Album? activeAlbum;
+  final Artist? activeArtist;
   final String? settingsCategoryId;
   final String? settingsCategoryTitle;
   final List<NavigationState> history;
@@ -50,6 +51,7 @@ class NavigationState {
     this.collectionSongs = const [],
     this.activePlaylist,
     this.activeAlbum,
+    this.activeArtist,
     this.settingsCategoryId,
     this.settingsCategoryTitle,
     this.history = const [],
@@ -65,6 +67,7 @@ class NavigationState {
     List<Song>? collectionSongs,
     Playlist? activePlaylist,
     Album? activeAlbum,
+    Artist? activeArtist,
     String? settingsCategoryId,
     String? settingsCategoryTitle,
     List<NavigationState>? history,
@@ -79,6 +82,7 @@ class NavigationState {
       collectionSongs: collectionSongs ?? this.collectionSongs,
       activePlaylist: activePlaylist ?? this.activePlaylist,
       activeAlbum: activeAlbum ?? this.activeAlbum,
+      activeArtist: activeArtist ?? this.activeArtist,
       settingsCategoryId: settingsCategoryId ?? this.settingsCategoryId,
       settingsCategoryTitle:
           settingsCategoryTitle ?? this.settingsCategoryTitle,
@@ -128,6 +132,7 @@ class AppNavigation extends _$AppNavigation {
     required List<Song> songs,
     Playlist? playlist,
     Album? album,
+    Artist? artist,
   }) {
     if (state.activeItem == NavItem.collectionDetail &&
         state.collectionTitle == title) {
@@ -147,6 +152,7 @@ class AppNavigation extends _$AppNavigation {
       collectionSongs: songs,
       activePlaylist: playlist,
       activeAlbum: album,
+      activeArtist: artist,
       history: newHistory,
       isPlayerExpanded: state.isPlayerExpanded,
     );
@@ -193,6 +199,7 @@ class AppNavigation extends _$AppNavigation {
       collectionSongs: state.collectionSongs,
       activePlaylist: state.activePlaylist,
       activeAlbum: state.activeAlbum,
+      activeArtist: state.activeArtist,
       settingsCategoryId: state.settingsCategoryId,
       settingsCategoryTitle: state.settingsCategoryTitle,
       isPlayerExpanded: state.isPlayerExpanded,
