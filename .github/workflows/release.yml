@@ -163,9 +163,11 @@ jobs:
 
       - name: Verify APK Signatures
         run: |
-          apksigner=$(ls -d "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+          export JAVA_HOME="${JAVA_HOME_21_X64:-$JAVA_HOME}"
+          apksigner=$(ls -d "$ANDROID_HOME"/build-tools/*/apksigner | grep -v -- '-rc' | sort -V | tail -1)
+          echo "Using $apksigner with $JAVA_HOME"
           for apk in build/release-assets/*.apk; do
-            cert=$("$apksigner" verify --print-certs "$apk" 2>/dev/null |
+            cert=$("$apksigner" verify --print-certs "$apk" |
               sed -n 's/^Signer #1 certificate SHA-256 digest: //p')
             if [ "$cert" != "$SIGNING_CERT_SHA256" ]; then
               echo "::error::$apk is signed with '$cert', expected $SIGNING_CERT_SHA256"
