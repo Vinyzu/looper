@@ -1,12 +1,6 @@
 name: Build and Release
 
-# Runs only when started by hand: Actions tab -> "Build and Release" -> Run
-# workflow (or `gh workflow run release.yml`). Nothing triggers it on push,
-# tag or pull request.
-#
-# Leave "release_tag" empty to only build: the APKs and Linux packages are
-# downloadable from the run page. Fill it in (e.g. 2.8) to also publish them
-# as that GitHub release; the tag is created on the commit the run built.
+# Manual only. Empty release_tag = build only, no release.
 on:
   workflow_dispatch:
     inputs:
@@ -21,29 +15,18 @@ on:
         required: false
         default: ''
 
-# Read-only by default; only the publish job can write (create the release).
 permissions:
   contents: read
 
-# Never two release runs at once.
 concurrency:
   group: release
   cancel-in-progress: false
 
 env:
-  # Same Flutter as local release builds, so CI output matches package.sh.
   FLUTTER_VERSION: '3.47.7'
-  # SHA-256 of the release signing certificate every published APK carries
-  # (2.5-2.7 included). The build fails if CI signs with anything else, since
-  # Android refuses to update an install signed by a different key.
   SIGNING_CERT_SHA256: '3bd6ad7d7a9ebefadfec703800b40d76e397b10a305d1e0213c0c9c9f9d74976'
 
-# Every action is pinned to a commit so a moved tag cannot swap in code that
-# runs next to the keystore or the write token.
 jobs:
-  # Checks the release tag before anything is built. Inputs are only ever
-  # read through env vars, never pasted into a script, so a crafted tag
-  # cannot inject shell commands.
   prepare:
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -68,10 +51,7 @@ jobs:
             echo "::error::release_tag must look like 2.8, 2.8.1 or v2.8"
             exit 1
           fi
-          # The in-app updater offers an update whenever the release tag is
-          # newer than the installed app's version. A tag ahead of pubspec's
-          # version would make every updated install offer the same update
-          # again, forever.
+          # A tag newer than the app version would make the updater offer it forever.
           tag_version=${RELEASE_TAG#v}
           newest=$(printf '%s\n%s\n' "$tag_version" "$version" | sort -V | tail -1)
           if [ "$newest" != "$version" ]; then
@@ -79,9 +59,7 @@ jobs:
             exit 1
           fi
 
-  # The signing secrets live in the `release` environment, not the repo: this
-  # job only gets them after the repo owner approves the run, so a workflow
-  # pushed or started by anyone else cannot read the keystore.
+  # Secrets live in the `release` environment, which needs owner approval.
   build-android:
     needs: prepare
     if: inputs.platforms == 'all' || inputs.platforms == 'android'
@@ -107,10 +85,6 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
 
-      # Secrets (environment `release`) come from the local
-      # android/key.properties + keystore (see key.properties.example).
-      # Without them Gradle would silently fall back to the debug key, so stop
-      # here instead.
       - name: Decode Keystore
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
@@ -133,8 +107,6 @@ jobs:
             echo "storeFile=app/release.keystore"
           } > android/key.properties
 
-      # Optional: the local env.json (AppAmbit key etc.), base64-encoded.
-      # Builds without it simply have AppAmbit reporting off.
       - name: Create env.json
         env:
           ENV_JSON_BASE64: ${{ secrets.ENV_JSON_BASE64 }}
@@ -147,25 +119,23 @@ jobs:
             echo "::warning::ENV_JSON_BASE64 not set; building without env.json"
           fi
 
+      # appambit_sdk_flutter 1.2.x ships AppambitSdkFlutterPlugin.kt (wrong case); flutter pub get rejects it on Linux.
       - name: Install dependencies
-        run: flutter pub get --enforce-lockfile
+        run: |
+          dart pub get --enforce-lockfile
+          find "${PUB_CACHE:-$HOME/.pub-cache}/hosted" \
+            -path '*/appambit_sdk_flutter-*/android/src/main/kotlin/*/AppambitSdkFlutterPlugin.kt' |
+          while read -r f; do
+            mv -v "$f" "$(dirname "$f")/AppAmbitSdkFlutterPlugin.kt"
+          done
+          flutter pub get --enforce-lockfile
 
-      # The GitHub-release APKs use the `github` flavor: it checks GitHub for
-      # updates and contains no Google Play code. The Play Store AAB (`play`
-      # flavor) is built separately with `./package.sh android --build`.
       - name: Build Android Release APKs
         run: |
           flutter build apk --release --flavor github --split-per-abi $DART_DEFINES
           flutter build apk --release --flavor github $DART_DEFINES
 
-      # Same names as package.sh. The in-app updater picks its APK by the
-      # `-<abi>-` part of the name (falling back to `universal`), so the
-      # dashes around the ABI matter.
-      #
-      # Flutter's Gradle plugin names split APKs app-<abi>-<flavor>-release.apk
-      # (ABI before flavor); the other order is accepted too so a tooling change
-      # can't silently drop an APK. The job fails, listing what was built, if
-      # one is missing.
+      # The in-app updater matches APKs by "-<abi>-" in the name.
       - name: Rename and Prepare APKs
         env:
           VERSION: ${{ needs.prepare.outputs.version }}
@@ -216,21 +186,14 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-  # Built with package.sh, the same script as local releases (the old
-  # flutter_distributor configs produced packages that would not install).
-  # Ubuntu 22.04 links against glibc 2.35, so the packages also run on
-  # Ubuntu 22.04 / Debian 12 and newer, not just distros as new as the
-  # build machine. Needs no secrets.
+  # 22.04 keeps the glibc floor at 2.35.
   build-linux:
     needs: prepare
     if: inputs.platforms == 'all' || inputs.platforms == 'linux'
     runs-on: ubuntu-22.04
     timeout-minutes: 60
     env:
-      # appimagetool is itself an AppImage; this runs it without FUSE.
       APPIMAGE_EXTRACT_AND_RUN: 1
-      # Debian/RPM maintainer field (package.sh would otherwise read the
-      # runner's empty git config). Override with a repository variable.
       MAINTAINER: ${{ vars.LINUX_MAINTAINER || 'sthrnilshaaa <sthrnilshaaa@users.noreply.github.com>' }}
     steps:
       - name: Checkout repository
@@ -238,9 +201,6 @@ jobs:
         with:
           persist-credentials: false
 
-      # libstdc++-12-dev: clang on 22.04 cannot link Flutter's runner without
-      # it. rpm/imagemagick/desktop-file-utils are package.sh's packagers.
-      # Rust (for metadata_god) is preinstalled on GitHub's Ubuntu images.
       - name: Install Linux Build Dependencies
         run: |
           sudo apt-get update
@@ -249,7 +209,6 @@ jobs:
             libgtk-3-dev liblzma-dev libstdc++-12-dev \
             rpm imagemagick desktop-file-utils binutils file
 
-      # Pinned release, checked against GitHub's recorded SHA-256.
       - name: Install appimagetool
         run: |
           mkdir -p "$HOME/.local/bin"
@@ -265,11 +224,17 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
 
+      # Same appambit file-name fix as the Android job.
       - name: Install Project Dependencies
-        run: flutter pub get --enforce-lockfile
+        run: |
+          dart pub get --enforce-lockfile
+          find "${PUB_CACHE:-$HOME/.pub-cache}/hosted" \
+            -path '*/appambit_sdk_flutter-*/android/src/main/kotlin/*/AppambitSdkFlutterPlugin.kt' |
+          while read -r f; do
+            mv -v "$f" "$(dirname "$f")/AppAmbitSdkFlutterPlugin.kt"
+          done
+          flutter pub get --enforce-lockfile
 
-      # package.sh skips a format whose tool is missing, so check all four
-      # were made.
       - name: Build Linux Packages
         env:
           VERSION: ${{ needs.prepare.outputs.version }}
@@ -294,9 +259,6 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-  # Only when a release_tag was given and every selected build succeeded.
-  # Also in the `release` environment, so publishing needs the owner's
-  # approval too: the write token never runs for anyone else's run.
   publish-release:
     needs: [prepare, build-android, build-linux]
     if: >-
@@ -324,7 +286,6 @@ jobs:
           name: linux-packages
           path: release-binaries
 
-      # One checksum file covering every attached binary.
       - name: Write Checksums
         env:
           VERSION: ${{ needs.prepare.outputs.version }}
@@ -334,9 +295,6 @@ jobs:
           ls -lh
           cat "SHA256SUMS-v${VERSION}.txt"
 
-      # A release that already exists for this tag (made by hand, draft or
-      # published) gets the files added, replacing same-named ones; otherwise
-      # a new release and tag are created on the commit this run built.
       - name: Publish Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
