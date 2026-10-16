@@ -937,10 +937,10 @@ packages:
     dependency: "direct main"
     description:
       name: mpv_audio_kit
-      sha256: "2014dfafc20d7b28758fba8b5c08a0301a938f6af52123f55603461b29976a5f"
+      sha256: ceea44c5e2180fa028a3ceae3e7ac5ca0c9fdd06de793c27820b594772551436
       url: "https://pub.dev"
     source: hosted
-    version: "0.4.8"
+    version: "0.4.9"
   msix:
     dependency: transitive
     description:

@@ -179,9 +179,9 @@ class AudioService {
       await player.setRawProperty('audio-buffer', '0.2');
     } catch (e) {}
 
-    try {
-      await player.setRawProperty('audio-stream-silence', 'yes');
-    } catch (e) {}
+    // No 'audio-stream-silence': it keeps the output streaming silence while
+    // paused, so Android and Bluetooth earbuds still see active playback
+    // and in-ear detection never sends PLAY when the buds go back in.
 
     try {
       await player.setRawProperty('demuxer-lavf-analyzeduration', '1.0');
