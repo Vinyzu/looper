@@ -7,6 +7,7 @@ extension _HomeTabSections on _AndroidHomeTabState {
     required VoidCallback onActionTap,
     required int itemCount,
     required Widget Function(BuildContext, int) itemBuilder,
+    double listHeight = 170,
   }) {
     if (itemCount == 0) return const SizedBox.shrink();
     return SliverToBoxAdapter(
@@ -62,7 +63,7 @@ extension _HomeTabSections on _AndroidHomeTabState {
             ),
           ),
           SizedBox(
-            height: 170,
+            height: listHeight,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               physics: const BouncingScrollPhysics(),
@@ -187,9 +188,15 @@ extension _HomeTabSections on _AndroidHomeTabState {
     );
   }
 
+  /// Same size and shape as a card on the Genres screen (two columns on a
+  /// phone, 1.35 wide to tall).
+  static const double _genreCardWidth = 172;
+  static const double _genreCardHeight = _genreCardWidth / 1.35;
+  static const double genreRowHeight = _genreCardHeight + 16;
+
   Widget _buildGenreItem(String genre, List<Song> genreSongs) {
     return Container(
-      width: 200,
+      width: _genreCardWidth,
       margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
       child: GenreCard(genre: genre, songs: genreSongs, hapticOnTap: true),
     );

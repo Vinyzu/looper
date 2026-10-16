@@ -736,6 +736,7 @@ class _AndroidHomeTabState extends ConsumerState<AndroidHomeTab> {
                     .setItem(NavItem.genres);
               },
               itemCount: genres.length,
+              listHeight: _HomeTabSections.genreRowHeight,
               itemBuilder: (context, index) {
                 final genre = genres[index];
                 return _buildGenreItem(genre, genresMap[genre]!);
