@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:looper_player/ui/widgets/common/cover_resize_image.dart';
 
 class OptimizedImage extends StatelessWidget {
   final String? imagePath;
@@ -62,7 +63,38 @@ class OptimizedImage extends StatelessWidget {
         cacheWidth ?? (width != null ? (width! * dpr).toInt() : 400);
     final int? computedCacheHeight = cacheHeight;
 
-    if (resolvedImagePath != null && resolvedImagePath.isNotEmpty) {
+    if (resolvedImagePath != null &&
+        resolvedImagePath.isNotEmpty &&
+        cacheWidth == null &&
+        cacheHeight == null) {
+      // Decode for the box actually on screen (measured when no size was
+      // given), covering it on both sides - see [CoverResizeImage].
+      Widget sized(double boxWidth, double boxHeight) => Image(
+        image: CoverResizeImage(
+          FileImage(File(resolvedImagePath)),
+          width: _bucket(boxWidth * dpr),
+          height: _bucket(boxHeight * dpr),
+        ),
+        width: width,
+        height: height,
+        fit: fit,
+        gaplessPlayback: true,
+        errorBuilder: (context, error, stackTrace) => fallback,
+      );
+      // Measure only when the size wasn't given (a LayoutBuilder can't
+      // answer intrinsic-size queries).
+      imageWidget = width != null && height != null
+          ? sized(width!, height!)
+          : LayoutBuilder(
+              builder: (context, constraints) {
+                double? boxWidth = width ?? _finite(constraints.maxWidth);
+                double? boxHeight = height ?? _finite(constraints.maxHeight);
+                boxWidth ??= boxHeight ?? 200;
+                boxHeight ??= boxWidth;
+                return sized(boxWidth, boxHeight);
+              },
+            );
+    } else if (resolvedImagePath != null && resolvedImagePath.isNotEmpty) {
       imageWidget = Image.file(
         File(resolvedImagePath),
         width: width,
@@ -96,5 +128,19 @@ class OptimizedImage extends StatelessWidget {
     }
 
     return SizedBox(width: width, height: height, child: imageWidget);
+  }
+
+  static double? _finite(double value) =>
+      value.isFinite && value > 0 ? value : null;
+
+  /// Rounds a decode size up to a few fixed steps, so a picture whose box
+  /// animates (hero flights, the player expanding) decodes a handful of
+  /// times instead of once per frame, and the image cache can reuse them.
+  static int _bucket(double pixels) {
+    const steps = [96, 160, 256, 384, 512, 768, 1024, 1536, 2048];
+    for (final step in steps) {
+      if (pixels <= step) return step;
+    }
+    return pixels.ceil();
   }
 }

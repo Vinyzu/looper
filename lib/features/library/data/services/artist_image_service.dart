@@ -30,7 +30,9 @@ class ArtistImageService {
             results.whereType<Map>().map((r) => r['name']?.toString() ?? ''),
           );
           if (match != null) {
+            // 1000 px when Deezer has it; picture_big is only 500 px.
             final imageUrl =
+                results[match]['picture_xl'] ??
                 results[match]['picture_big'] ??
                 results[match]['picture_medium'];
             if (imageUrl != null) {
