@@ -204,6 +204,27 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!-- "Open with" for audio files from file managers etc.: a small
+             Dial-widget-style player that doesn't start the full app. -->
+        <activity
+            android:name="com.looper.player.QuickPlayActivity"
+            android:exported="true"
+            android:label="Looper Player"
+            android:icon="@mipmap/ic_launcher"
+            android:launchMode="singleTask"
+            android:taskAffinity="com.looper.player.quickplay"
+            android:excludeFromRecents="true"
+            android:theme="@style/QuickPlayTheme">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="content" />
+                <data android:scheme="file" />
+                <data android:mimeType="audio/*" />
+                <data android:mimeType="application/ogg" />
+                <data android:mimeType="application/x-flac" />
+            </intent-filter>
+        </activity>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

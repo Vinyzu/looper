@@ -17,7 +17,7 @@ import android.util.Log
 open class PlayerWidgetProvider : AppWidgetProvider() {
 
     /** Where a card-style widget's artwork sits, in dp, for a given widget size. */
-    private class ArtBox(
+    internal class ArtBox(
         val widthDp: Int,
         val heightDp: Int,
         // Only the right-hand corners are rounded (artwork flush with the card's right edge)
@@ -306,15 +306,7 @@ open class PlayerWidgetProvider : AppWidgetProvider() {
          * this app still supports.
          */
         private fun renderArtwork(context: Context, file: java.io.File?, box: ArtBox): Bitmap {
-            val density = context.resources.displayMetrics.density
-            var scale = density
-            val longestSide = maxOf(box.widthDp, box.heightDp) * density
-            if (longestSide > MAX_ART_SIDE_PX) scale = density * MAX_ART_SIDE_PX / longestSide
-            val width = (box.widthDp * scale).toInt().coerceAtLeast(1)
-            val height = (box.heightDp * scale).toInt().coerceAtLeast(1)
-
-            val content = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-            val canvas = Canvas(content)
+            val (width, height) = artPixelSize(context, box)
             val source = file?.let {
                 try {
                     decodeSampledBitmapFromFile(it.absolutePath, width, height)
@@ -323,6 +315,30 @@ open class PlayerWidgetProvider : AppWidgetProvider() {
                     null
                 }
             }
+            return renderArtwork(context, source, box)
+        }
+
+        private fun artPixelSize(context: Context, box: ArtBox): Pair<Int, Int> {
+            val scale = artScale(context, box)
+            return Pair(
+                (box.widthDp * scale).toInt().coerceAtLeast(1),
+                (box.heightDp * scale).toInt().coerceAtLeast(1)
+            )
+        }
+
+        private fun artScale(context: Context, box: ArtBox): Float {
+            val density = context.resources.displayMetrics.density
+            val longestSide = maxOf(box.widthDp, box.heightDp) * density
+            return if (longestSide > MAX_ART_SIDE_PX) density * MAX_ART_SIDE_PX / longestSide else density
+        }
+
+        /** Same look as a widget's artwork, from an already decoded [source] (QuickPlayActivity). */
+        internal fun renderArtwork(context: Context, source: Bitmap?, box: ArtBox): Bitmap {
+            val scale = artScale(context, box)
+            val (width, height) = artPixelSize(context, box)
+
+            val content = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+            val canvas = Canvas(content)
             if (source != null) {
                 // Centre-crop
                 val fit = maxOf(width.toFloat() / source.width, height.toFloat() / source.height)
