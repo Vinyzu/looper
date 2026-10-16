@@ -303,29 +303,45 @@ jobs:
           ls -lh
           cat "SHA256SUMS-v${VERSION}.txt"
 
+      - name: Checkout release notes
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+          sparse-checkout: media/release-notes
+          path: src
+
+      # media/release-notes/<tag>.md if it exists, otherwise a default text plus
+      # GitHub's generated list of changes.
       - name: Publish Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
           TAG_NAME: ${{ inputs.release_tag }}
         run: |
+          notes="src/media/release-notes/${TAG_NAME}.md"
+          generate=""
+          if [ ! -f "$notes" ]; then
+            echo "::warning::$notes not found; using the default notes"
+            notes=default-notes.md
+            generate=--generate-notes
+            cat > "$notes" <<EOF
+          ## Looper Player $TAG_NAME
+
+          #### Downloads
+          - **Android**: pick the APK for your phone (\`arm64-v8a\` for most phones) or the universal APK.
+          - **Linux**: \`.deb\` (Debian/Ubuntu), \`.rpm\` (Fedora/openSUSE), \`.AppImage\`, or the portable \`.tar.gz\` with an install script.
+
+          Verify downloads with the \`SHA256SUMS\` file.
+          EOF
+          fi
+
           if gh release view "$TAG_NAME" >/dev/null 2>&1; then
             gh release upload "$TAG_NAME" release-binaries/* --clobber
+            [ -z "$generate" ] && gh release edit "$TAG_NAME" --notes-file "$notes"
             exit 0
           fi
 
           gh release create "$TAG_NAME" release-binaries/* \
             --target "$GITHUB_SHA" \
             --title "Looper Player $TAG_NAME" \
-            --notes "### 🚀 Welcome to Looper Player $TAG_NAME!
-
-          We are excited to present **Looper Player $TAG_NAME**—the ultimate offline-first, high-fidelity local music player for Android and Linux!
-
-          This release features secure, cryptographically signed production builds for Android and complete Linux packages (Debian, RedHat, AppImage, and portable Archive formats) built directly through our automated CI/CD pipelines.
-
-          #### 📱 Platforms Supported
-          - **Android**: Signed production APKs supporting modern \`arm64-v8a\`, \`armeabi-v7a\`, and \`x86_64\` architectures, plus a universal APK.
-          - **Linux**: Native packages for Debian/Ubuntu (\`.deb\`), RedHat/Fedora (\`.rpm\`), standalone \`.AppImage\`, and a portable \`.tar.gz\` archive with an install script.
-
-          ---
-          *Looper Player is 100% offline-first, private, and telemetry-free. Enjoy your local high-fidelity audio with beautifully synchronized interactive lyrics.*"
+            --notes-file "$notes" $generate

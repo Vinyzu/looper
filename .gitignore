@@ -65,6 +65,10 @@ app.*.map.json
 
 # Android Signing & Local Files
 *.jks
+*.keystore
+*.p12
+*.pem
+.env
 **/android/key.properties
 scratch/
 log.txt
