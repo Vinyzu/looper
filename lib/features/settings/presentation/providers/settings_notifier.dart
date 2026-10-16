@@ -334,6 +334,7 @@ class Settings extends _$Settings {
       ..animatePlayerGradient = s.animatePlayerGradient
       ..segmentedUtilityButtons = s.segmentedUtilityButtons
       ..showAlbumNextToArtist = s.showAlbumNextToArtist
+      ..showAlbumInQuickPicks = s.showAlbumInQuickPicks
       ..disableHaptics = s.disableHaptics
       ..animateBackgroundGradient = s.animateBackgroundGradient
       ..settingsV2 = s.settingsV2
@@ -479,6 +480,9 @@ class Settings extends _$Settings {
 
   Future<void> updateShowAlbumNextToArtist(bool value) =>
       _update((s) => s..showAlbumNextToArtist = value);
+
+  Future<void> updateShowAlbumInQuickPicks(bool value) =>
+      _update((s) => s..showAlbumInQuickPicks = value);
 
   Future<void> updateHapticsEnabled(bool value) =>
       _update((s) => s..disableHaptics = !value);

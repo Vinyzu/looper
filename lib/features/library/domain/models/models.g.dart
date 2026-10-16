@@ -9922,83 +9922,88 @@ const AppSettingsSchema = CollectionSchema(
       name: r'settingsV3',
       type: IsarType.bool,
     ),
-    r'showAlbumNextToArtist': PropertySchema(
+    r'showAlbumInQuickPicks': PropertySchema(
       id: 115,
+      name: r'showAlbumInQuickPicks',
+      type: IsarType.bool,
+    ),
+    r'showAlbumNextToArtist': PropertySchema(
+      id: 116,
       name: r'showAlbumNextToArtist',
       type: IsarType.bool,
     ),
     r'showHomeAlbums': PropertySchema(
-      id: 116,
+      id: 117,
       name: r'showHomeAlbums',
       type: IsarType.bool,
     ),
     r'showHomeArtists': PropertySchema(
-      id: 117,
+      id: 118,
       name: r'showHomeArtists',
       type: IsarType.bool,
     ),
     r'showHomeGenres': PropertySchema(
-      id: 118,
+      id: 119,
       name: r'showHomeGenres',
       type: IsarType.bool,
     ),
     r'showHomePlaylists': PropertySchema(
-      id: 119,
+      id: 120,
       name: r'showHomePlaylists',
       type: IsarType.bool,
     ),
     r'showHomeRecent': PropertySchema(
-      id: 120,
+      id: 121,
       name: r'showHomeRecent',
       type: IsarType.bool,
     ),
     r'showPerformanceOptimizer': PropertySchema(
-      id: 121,
+      id: 122,
       name: r'showPerformanceOptimizer',
       type: IsarType.bool,
     ),
     r'showQualityBadge': PropertySchema(
-      id: 122,
+      id: 123,
       name: r'showQualityBadge',
       type: IsarType.bool,
     ),
-    r'shuffle': PropertySchema(id: 123, name: r'shuffle', type: IsarType.bool),
+    r'shuffle': PropertySchema(id: 124, name: r'shuffle', type: IsarType.bool),
     r'songsDarkness': PropertySchema(
-      id: 124,
+      id: 125,
       name: r'songsDarkness',
       type: IsarType.double,
     ),
     r'sortAscending': PropertySchema(
-      id: 125,
+      id: 126,
       name: r'sortAscending',
       type: IsarType.bool,
     ),
     r'sortStrategyIndex': PropertySchema(
-      id: 126,
+      id: 127,
       name: r'sortStrategyIndex',
       type: IsarType.long,
     ),
     r'stackSansDefaultMigrated': PropertySchema(
-      id: 127,
+      id: 128,
       name: r'stackSansDefaultMigrated',
       type: IsarType.bool,
     ),
     r'stopOnTaskRemoved': PropertySchema(
-      id: 128,
+      id: 129,
       name: r'stopOnTaskRemoved',
       type: IsarType.bool,
     ),
     r'useNewFont': PropertySchema(
-      id: 129,
+      id: 130,
       name: r'useNewFont',
       type: IsarType.bool,
     ),
     r'useNewFontLyrics': PropertySchema(
-      id: 130,
+      id: 131,
       name: r'useNewFontLyrics',
       type: IsarType.bool,
     ),
-    r'volume': PropertySchema(id: 131, name: r'volume', type: IsarType.double),
+    r'volume': PropertySchema(id: 132, name: r'volume', type: IsarType.double),
   },
 
   estimateSize: _appSettingsEstimateSize,
@@ -10190,23 +10195,24 @@ void _appSettingsSerialize(
   writer.writeString(offsets[112], object.selectedAvatarAsset);
   writer.writeBool(offsets[113], object.settingsV2);
   writer.writeBool(offsets[114], object.settingsV3);
-  writer.writeBool(offsets[115], object.showAlbumNextToArtist);
-  writer.writeBool(offsets[116], object.showHomeAlbums);
-  writer.writeBool(offsets[117], object.showHomeArtists);
-  writer.writeBool(offsets[118], object.showHomeGenres);
-  writer.writeBool(offsets[119], object.showHomePlaylists);
-  writer.writeBool(offsets[120], object.showHomeRecent);
-  writer.writeBool(offsets[121], object.showPerformanceOptimizer);
-  writer.writeBool(offsets[122], object.showQualityBadge);
-  writer.writeBool(offsets[123], object.shuffle);
-  writer.writeDouble(offsets[124], object.songsDarkness);
-  writer.writeBool(offsets[125], object.sortAscending);
-  writer.writeLong(offsets[126], object.sortStrategyIndex);
-  writer.writeBool(offsets[127], object.stackSansDefaultMigrated);
-  writer.writeBool(offsets[128], object.stopOnTaskRemoved);
-  writer.writeBool(offsets[129], object.useNewFont);
-  writer.writeBool(offsets[130], object.useNewFontLyrics);
-  writer.writeDouble(offsets[131], object.volume);
+  writer.writeBool(offsets[115], object.showAlbumInQuickPicks);
+  writer.writeBool(offsets[116], object.showAlbumNextToArtist);
+  writer.writeBool(offsets[117], object.showHomeAlbums);
+  writer.writeBool(offsets[118], object.showHomeArtists);
+  writer.writeBool(offsets[119], object.showHomeGenres);
+  writer.writeBool(offsets[120], object.showHomePlaylists);
+  writer.writeBool(offsets[121], object.showHomeRecent);
+  writer.writeBool(offsets[122], object.showPerformanceOptimizer);
+  writer.writeBool(offsets[123], object.showQualityBadge);
+  writer.writeBool(offsets[124], object.shuffle);
+  writer.writeDouble(offsets[125], object.songsDarkness);
+  writer.writeBool(offsets[126], object.sortAscending);
+  writer.writeLong(offsets[127], object.sortStrategyIndex);
+  writer.writeBool(offsets[128], object.stackSansDefaultMigrated);
+  writer.writeBool(offsets[129], object.stopOnTaskRemoved);
+  writer.writeBool(offsets[130], object.useNewFont);
+  writer.writeBool(offsets[131], object.useNewFontLyrics);
+  writer.writeDouble(offsets[132], object.volume);
 }
 
 AppSettings _appSettingsDeserialize(
@@ -10332,23 +10338,24 @@ AppSettings _appSettingsDeserialize(
   object.selectedAvatarAsset = reader.readString(offsets[112]);
   object.settingsV2 = reader.readBool(offsets[113]);
   object.settingsV3 = reader.readBool(offsets[114]);
-  object.showAlbumNextToArtist = reader.readBool(offsets[115]);
-  object.showHomeAlbums = reader.readBool(offsets[116]);
-  object.showHomeArtists = reader.readBool(offsets[117]);
-  object.showHomeGenres = reader.readBool(offsets[118]);
-  object.showHomePlaylists = reader.readBoolOrNull(offsets[119]);
-  object.showHomeRecent = reader.readBool(offsets[120]);
-  object.showPerformanceOptimizer = reader.readBool(offsets[121]);
-  object.showQualityBadge = reader.readBool(offsets[122]);
-  object.shuffle = reader.readBool(offsets[123]);
-  object.songsDarkness = reader.readDouble(offsets[124]);
-  object.sortAscending = reader.readBool(offsets[125]);
-  object.sortStrategyIndex = reader.readLong(offsets[126]);
-  object.stackSansDefaultMigrated = reader.readBool(offsets[127]);
-  object.stopOnTaskRemoved = reader.readBool(offsets[128]);
-  object.useNewFont = reader.readBool(offsets[129]);
-  object.useNewFontLyrics = reader.readBool(offsets[130]);
-  object.volume = reader.readDouble(offsets[131]);
+  object.showAlbumInQuickPicks = reader.readBool(offsets[115]);
+  object.showAlbumNextToArtist = reader.readBool(offsets[116]);
+  object.showHomeAlbums = reader.readBool(offsets[117]);
+  object.showHomeArtists = reader.readBool(offsets[118]);
+  object.showHomeGenres = reader.readBool(offsets[119]);
+  object.showHomePlaylists = reader.readBoolOrNull(offsets[120]);
+  object.showHomeRecent = reader.readBool(offsets[121]);
+  object.showPerformanceOptimizer = reader.readBool(offsets[122]);
+  object.showQualityBadge = reader.readBool(offsets[123]);
+  object.shuffle = reader.readBool(offsets[124]);
+  object.songsDarkness = reader.readDouble(offsets[125]);
+  object.sortAscending = reader.readBool(offsets[126]);
+  object.sortStrategyIndex = reader.readLong(offsets[127]);
+  object.stackSansDefaultMigrated = reader.readBool(offsets[128]);
+  object.stopOnTaskRemoved = reader.readBool(offsets[129]);
+  object.useNewFont = reader.readBool(offsets[130]);
+  object.useNewFontLyrics = reader.readBool(offsets[131]);
+  object.volume = reader.readDouble(offsets[132]);
   return object;
 }
 
@@ -10598,9 +10605,9 @@ P _appSettingsDeserializeProp<P>(
     case 118:
       return (reader.readBool(offset)) as P;
     case 119:
-      return (reader.readBoolOrNull(offset)) as P;
-    case 120:
       return (reader.readBool(offset)) as P;
+    case 120:
+      return (reader.readBoolOrNull(offset)) as P;
     case 121:
       return (reader.readBool(offset)) as P;
     case 122:
@@ -10608,13 +10615,13 @@ P _appSettingsDeserializeProp<P>(
     case 123:
       return (reader.readBool(offset)) as P;
     case 124:
-      return (reader.readDouble(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 125:
-      return (reader.readBool(offset)) as P;
+      return (reader.readDouble(offset)) as P;
     case 126:
-      return (reader.readLong(offset)) as P;
-    case 127:
       return (reader.readBool(offset)) as P;
+    case 127:
+      return (reader.readLong(offset)) as P;
     case 128:
       return (reader.readBool(offset)) as P;
     case 129:
@@ -10622,6 +10629,8 @@ P _appSettingsDeserializeProp<P>(
     case 130:
       return (reader.readBool(offset)) as P;
     case 131:
+      return (reader.readBool(offset)) as P;
+    case 132:
       return (reader.readDouble(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -17160,6 +17169,18 @@ extension AppSettingsQueryFilter
   }
 
   QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+  showAlbumInQuickPicksEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'showAlbumInQuickPicks',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
   showAlbumNextToArtistEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
@@ -19012,6 +19033,20 @@ extension AppSettingsQuerySortBy
   }
 
   QueryBuilder<AppSettings, AppSettings, QAfterSortBy>
+  sortByShowAlbumInQuickPicks() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'showAlbumInQuickPicks', Sort.asc);
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterSortBy>
+  sortByShowAlbumInQuickPicksDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'showAlbumInQuickPicks', Sort.desc);
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterSortBy>
   sortByShowAlbumNextToArtist() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'showAlbumNextToArtist', Sort.asc);
@@ -20737,6 +20772,20 @@ extension AppSettingsQuerySortThenBy
   }
 
   QueryBuilder<AppSettings, AppSettings, QAfterSortBy>
+  thenByShowAlbumInQuickPicks() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'showAlbumInQuickPicks', Sort.asc);
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterSortBy>
+  thenByShowAlbumInQuickPicksDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'showAlbumInQuickPicks', Sort.desc);
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterSortBy>
   thenByShowAlbumNextToArtist() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'showAlbumNextToArtist', Sort.asc);
@@ -21776,6 +21825,13 @@ extension AppSettingsQueryWhereDistinct
   }
 
   QueryBuilder<AppSettings, AppSettings, QDistinct>
+  distinctByShowAlbumInQuickPicks() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'showAlbumInQuickPicks');
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QDistinct>
   distinctByShowAlbumNextToArtist() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'showAlbumNextToArtist');
@@ -22659,6 +22715,13 @@ extension AppSettingsQueryProperty
   QueryBuilder<AppSettings, bool, QQueryOperations> settingsV3Property() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'settingsV3');
+    });
+  }
+
+  QueryBuilder<AppSettings, bool, QQueryOperations>
+  showAlbumInQuickPicksProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'showAlbumInQuickPicks');
     });
   }
 

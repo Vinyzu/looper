@@ -391,6 +391,7 @@ class Playback extends _$Playback {
         final song = _playlist[_currentIndex];
         state = state.copyWith(
           queue: List.from(_playlist),
+          queueSourceKey: collectionKey(loadedSongs),
           currentSong: song,
           isRestoredSession: true,
           position: Duration(milliseconds: settings.lastPositionMs),
@@ -489,7 +490,9 @@ class Playback extends _$Playback {
     int? sourcePlaylistId,
   }) async {
     if (songs.isEmpty) return;
-    if (state.isShuffle) {
+    // Only switches shuffle off for the collection that is actually playing
+    // shuffled; anywhere else a tap starts this collection shuffled.
+    if (state.isShuffle && state.queueSourceKey == collectionKey(songs)) {
       await toggleShuffle();
     } else {
       await playCollection(
@@ -565,7 +568,10 @@ class Playback extends _$Playback {
       _manualQueueCount = 0;
     }
 
-    state = state.copyWith(queue: List.from(_playlist));
+    state = state.copyWith(
+      queue: List.from(_playlist),
+      queueSourceKey: collectionKey(songs),
+    );
     if (_playlist.isNotEmpty && _currentIndex != -1) {
       if (continueCurrent &&
           _playlist[_currentIndex].path == state.currentSong?.path) {
@@ -877,6 +883,7 @@ class Playback extends _$Playback {
         _originalPlaylist = [song];
         _currentIndex = 0;
         _manualQueueCount = 0;
+        state = state.copyWith(queueSourceKey: collectionKey([song]));
       } else {
         final currentSong = _playlist[_currentIndex];
         _playlist.insert(_currentIndex + 1, song);

@@ -284,13 +284,10 @@ class MyApp extends ConsumerWidget {
           fontFamilyFallback: fontFallback,
           textTheme: textTheme,
           // Material 3 defaults snackbars to inverseSurface, a near-white
-          // block on this dark theme. Match the app's dark sheets instead,
-          // tinted with the accent.
+          // block on this dark theme. Use a plain near-black instead. Their
+          // bottom inset clears the navbar / music bar (AndroidMainScreen).
           snackBarTheme: SnackBarThemeData(
-            backgroundColor: Color.alphaBlend(
-              colorScheme.primary.withValues(alpha: 0.16),
-              const Color(0xFF1E1E1E),
-            ),
+            backgroundColor: Colors.black.withValues(alpha: 0.9),
             contentTextStyle: TextStyle(
               color: Colors.white,
               fontSize: 14,
@@ -303,9 +300,7 @@ class MyApp extends ConsumerWidget {
             elevation: 0,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
-              side: BorderSide(
-                color: colorScheme.primary.withValues(alpha: 0.25),
-              ),
+              side: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
             ),
           ),
         ),

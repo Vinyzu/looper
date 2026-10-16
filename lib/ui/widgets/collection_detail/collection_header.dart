@@ -77,14 +77,20 @@ extension _CollectionHeader on CollectionDetailView {
     String? subtitleToRender,
     List<Song> songsToRender, {
     bool canReorder = false,
+    Key? titleKey,
   }) {
     final l10n = AppLocalizations.of(context)!;
-    final isShuffle = ref.watch(playbackProvider.select((s) => s.isShuffle));
+    // Lit only while this collection is the one playing shuffled.
+    final key = collectionKey(songsToRender);
+    final isShuffle = ref.watch(
+      playbackProvider.select((s) => s.isShuffle && s.queueSourceKey == key),
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           titleToRender,
+          key: titleKey,
           style: AppFonts.jostStyle(
             fontSize: 28,
             fontWeight: FontWeight.bold,

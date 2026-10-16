@@ -16,6 +16,10 @@ class PlaybackState {
   final bool isScrubbing;
   final List<Song> queue;
 
+  /// [collectionKey] of the songs the current queue was loaded from, so a
+  /// collection can tell whether it is the one playing (shuffled or not).
+  final int? queueSourceKey;
+
   /// True when a song was loaded from saved state on startup but playback
   /// hasn't started yet (resumeOnStart = false). The player bar is hidden
   /// when this is true and isPlaying is false, preventing the stale
@@ -38,6 +42,7 @@ class PlaybackState {
     this.volume = 1.0,
     this.isScrubbing = false,
     this.queue = const [],
+    this.queueSourceKey,
     this.isRestoredSession = false,
     this.isSleepTimerActive = false,
     this.sleepTimerDurationRemaining,
@@ -56,6 +61,7 @@ class PlaybackState {
     double? volume,
     bool? isScrubbing,
     List<Song>? queue,
+    Object? queueSourceKey = _sentinel,
     bool? isRestoredSession,
     bool? isSleepTimerActive,
     Object? sleepTimerDurationRemaining = _sentinel,
@@ -75,6 +81,9 @@ class PlaybackState {
       volume: volume ?? this.volume,
       isScrubbing: isScrubbing ?? this.isScrubbing,
       queue: queue ?? this.queue,
+      queueSourceKey: queueSourceKey == _sentinel
+          ? this.queueSourceKey
+          : queueSourceKey as int?,
       isRestoredSession: isRestoredSession ?? this.isRestoredSession,
       isSleepTimerActive: isSleepTimerActive ?? this.isSleepTimerActive,
       sleepTimerDurationRemaining: sleepTimerDurationRemaining == _sentinel
@@ -94,3 +103,10 @@ class PlaybackState {
 }
 
 const _sentinel = Object();
+
+/// Identifies a set of songs regardless of their order (sorting a collection
+/// or shuffling its queue keeps the same key).
+int collectionKey(Iterable<Song> songs) => Object.hash(
+  songs.length,
+  Object.hashAllUnordered(songs.map((song) => song.path)),
+);

@@ -90,7 +90,6 @@ extension _PlaybackMaintenance on Playback {
         duration: const Duration(seconds: 4),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: const EdgeInsets.only(bottom: 24, left: 24, right: 24),
       ),
     );
   }

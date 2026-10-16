@@ -313,7 +313,7 @@ class CategoryDetailWrapper extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(8, 20, 16, 12),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
               child: Row(
                 children: [
                   PremiumSection(
@@ -324,8 +324,10 @@ class CategoryDetailWrapper extends ConsumerWidget {
                       topRight: Radius.circular(10),
                       bottomRight: Radius.circular(10),
                     ),
-                    width: 44,
-                    height: 44,
+                    width: 48,
+                    height: 48,
+                    backgroundColor: Colors.white.withValues(alpha: 0.04),
+                    useBlur: true,
                     onTap: () =>
                         ref.read(appNavigationProvider.notifier).goBack(),
                     child: const Icon(
@@ -349,9 +351,11 @@ class CategoryDetailWrapper extends ConsumerWidget {
                     const SizedBox(width: 8),
                     PremiumSection(
                       useExpanded: false,
-                      borderRadius: BorderRadius.circular(22),
-                      width: 44,
-                      height: 44,
+                      borderRadius: BorderRadius.circular(24),
+                      width: 48,
+                      height: 48,
+                      backgroundColor: Colors.white.withValues(alpha: 0.04),
+                      useBlur: true,
                       onTap: () {
                         AppHaptics.light();
                         _showSortBottomSheet(context, ref, title, l10n);

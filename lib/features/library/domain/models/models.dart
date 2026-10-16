@@ -222,6 +222,8 @@ class AppSettings {
   // Shows "Artist • Album" instead of just the artist under song titles
   // (lists, players, Home, Analyze, share card).
   bool showAlbumNextToArtist = false;
+  // Quick Picks stay artist-only unless this is on too.
+  bool showAlbumInQuickPicks = false;
   // Master switch for every haptic (AppHaptics). Stored inverted so rows
   // saved before it existed read back as "haptics on".
   bool disableHaptics = false;

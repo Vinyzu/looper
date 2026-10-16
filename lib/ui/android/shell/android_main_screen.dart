@@ -15,6 +15,7 @@ import 'package:looper_player/features/settings/presentation/providers/settings_
 import 'package:looper_player/features/settings/presentation/screens/settings_view/settings_view.dart';
 import 'package:looper_player/l10n/app_localizations.dart';
 import 'package:looper_player/ui/android/shell/music_bar/premium_music_bar.dart';
+import 'package:looper_player/ui/android/shell/music_bar/fluid_player_motion.dart';
 import 'package:looper_player/ui/welcome/welcome_screen.dart';
 import 'package:looper_player/ui/widgets/collection_detail/collection_detail_view.dart';
 import 'package:looper_player/features/playlists/presentation/screens/playlist_view.dart';
@@ -201,7 +202,6 @@ class _AndroidMainScreenState extends ConsumerState<AndroidMainScreen>
         return; // Try again on the next resume.
       }
       final l10n = AppLocalizations.of(context)!;
-      final hasSong = ref.read(playbackProvider).currentSong != null;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -210,11 +210,6 @@ class _AndroidMainScreenState extends ConsumerState<AndroidMainScreen>
           ),
           duration: const Duration(seconds: 10),
           behavior: SnackBarBehavior.floating,
-          margin: EdgeInsets.only(
-            bottom: hasSong ? 180 : 100, // Above the navbar
-            left: 20,
-            right: 20,
-          ),
           action: SnackBarAction(
             label: l10n.supportPromptAction,
             textColor: const Color(0xFFFFDD00),
@@ -481,6 +476,19 @@ class _AndroidMainScreenState extends ConsumerState<AndroidMainScreen>
         (isShortWindow ? 56.0 + 10.0 : 72.0 + 18.0) +
         MediaQuery.of(context).padding.bottom;
 
+    final baseTheme = Theme.of(context);
+    final double systemBottom = MediaQuery.of(context).padding.bottom;
+    // Mirrors the music bar slots below (resting bottom + its height).
+    final double musicBarHeight = settings.enableSlideGesture
+        ? FluidPlayerGeometry.miniHeight
+        : (isShortWindow ? 56.0 : 72.0);
+    final double barsTop = song != null
+        ? (_navAtRoot ? navbarHeight + 4.0 : 16.0 + systemBottom) +
+              musicBarHeight
+        : (_navAtRoot ? navbarHeight : systemBottom);
+    // Scaffold adds the system inset itself.
+    final double snackBarInset = barsTop - systemBottom + 10.0;
+
     final activeDarkness = () {
       final val = rootItem == NavItem.home
           ? settings.homeDarkness
@@ -546,336 +554,353 @@ class _AndroidMainScreenState extends ConsumerState<AndroidMainScreen>
               ),
               duration: const Duration(seconds: 2),
               behavior: SnackBarBehavior.floating,
-              margin: EdgeInsets.only(
-                bottom: song != null ? 180 : 100, // Above the navbar
-                left: 20,
-                right: 20,
-              ),
             ),
           );
         } else {
           SystemNavigator.pop();
         }
       },
-      child: Scaffold(
-        resizeToAvoidBottomInset: false,
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        body: Stack(
-          children: [
-            // Dynamic Background / Gradient Layer
-            if (settings.enableDynamicTheming ||
-                settings.keepBackgroundGradient) ...[
-              if (song?.artPath != null && settings.enableDynamicTheming) ...[
+      // Floating snackbars sit above whatever is at the bottom: the navbar
+      // (tab roots) and the music bar. Only the snackbar sees this theme;
+      // the body gets the original back so nothing else rebuilds.
+      child: Theme(
+        data: baseTheme.copyWith(
+          snackBarTheme: baseTheme.snackBarTheme.copyWith(
+            insetPadding: EdgeInsets.fromLTRB(16, 0, 16, snackBarInset),
+          ),
+        ),
+        child: Scaffold(
+          resizeToAvoidBottomInset: false,
+          backgroundColor: Theme.of(context).colorScheme.surface,
+          body: Theme(
+            data: baseTheme,
+            child: Stack(
+              children: [
+                // Dynamic Background / Gradient Layer
+                if (settings.enableDynamicTheming ||
+                    settings.keepBackgroundGradient) ...[
+                  if (song?.artPath != null &&
+                      settings.enableDynamicTheming) ...[
+                    Positioned.fill(
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 800),
+                        transitionBuilder: (child, animation) {
+                          return FadeTransition(
+                            opacity: animation,
+                            child: child,
+                          );
+                        },
+                        child: BlurredBackgroundArt(
+                          key: ValueKey(song!.artPath),
+                          song: song,
+                        ),
+                      ),
+                    ),
+
+                    // Dark overlay
+                    Positioned.fill(
+                      child: Container(
+                        color: Colors.black.withValues(alpha: activeDarkness),
+                      ),
+                    ),
+                  ] else if (settings.animateBackgroundGradient) ...[
+                    // Animated Background: the player's flowing gradient, with the
+                    // same per-screen darkness sliders as its darkness layer.
+                    Positioned.fill(
+                      child: AnimatedPlayerGradient(
+                        darkness: activeDarkness,
+                        pauseUnderPlayer: true,
+                      ),
+                    ),
+                  ] else ...[
+                    Positioned.fill(
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 600),
+                        curve: Curves.easeInOut,
+                        decoration: BoxDecoration(
+                          gradient: RadialGradient(
+                            center: Alignment.topRight,
+                            radius: 1.5,
+                            colors: [
+                              Theme.of(
+                                context,
+                              ).colorScheme.primary.withValues(alpha: 0.18),
+                              Theme.of(context).colorScheme.surface,
+                            ],
+                            stops: const [0.0, 1.0],
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // Dark overlay - same per-screen darkness sliders as the
+                    // dynamic-art background above, so they aren't dead controls
+                    // when gradient mode is what's actually active.
+                    Positioned.fill(
+                      child: Container(
+                        color: Colors.black.withValues(alpha: activeDarkness),
+                      ),
+                    ),
+                  ],
+                ],
+
                 Positioned.fill(
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 800),
-                    transitionBuilder: (child, animation) {
-                      return FadeTransition(opacity: animation, child: child);
+                  child: Navigator(
+                    key: navigatorKey,
+                    observers: [_navDepthObserver],
+                    onGenerateRoute: (settings) {
+                      return PageRouteBuilder(
+                        pageBuilder: (context, animation, secondaryAnimation) =>
+                            _buildTabStack(),
+                        // The tab stack gets the same covered/uncovered parallax
+                        // as pushed pages, so popping back to it eases it in
+                        // instead of snapping it on in the last frame.
+                        transitionsBuilder:
+                            (context, animation, secondaryAnimation, child) =>
+                                _coveredTransition(secondaryAnimation, child),
+                      );
                     },
-                    child: BlurredBackgroundArt(
-                      key: ValueKey(song!.artPath),
-                      song: song,
-                    ),
                   ),
                 ),
-
-                // Dark overlay
-                Positioned.fill(
-                  child: Container(
-                    color: Colors.black.withValues(alpha: activeDarkness),
-                  ),
-                ),
-              ] else if (settings.animateBackgroundGradient) ...[
-                // Animated Background: the player's flowing gradient, with the
-                // same per-screen darkness sliders as its darkness layer.
-                Positioned.fill(
-                  child: AnimatedPlayerGradient(
-                    darkness: activeDarkness,
-                    pauseUnderPlayer: true,
-                  ),
-                ),
-              ] else ...[
-                Positioned.fill(
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 600),
-                    curve: Curves.easeInOut,
-                    decoration: BoxDecoration(
-                      gradient: RadialGradient(
-                        center: Alignment.topRight,
-                        radius: 1.5,
-                        colors: [
-                          Theme.of(
-                            context,
-                          ).colorScheme.primary.withValues(alpha: 0.18),
-                          Theme.of(context).colorScheme.surface,
-                        ],
-                        stops: const [0.0, 1.0],
+                // Backdrop behind the navbar - always present and faded with it
+                // (same duration) rather than popping in/out out of sync with it.
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: IgnorePointer(
+                    child: AnimatedOpacity(
+                      opacity: _navAtRoot ? 1.0 : 0.0,
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeInOut,
+                      child: Container(
+                        height: 180,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.transparent,
+                              Colors.black.withValues(alpha: 0.45),
+                              Colors.black.withValues(alpha: 0.8),
+                              Colors.black,
+                            ],
+                            stops: const [0.0, 0.35, 0.7, 1.0],
+                          ),
+                        ),
                       ),
                     ),
                   ),
                 ),
 
-                // Dark overlay - same per-screen darkness sliders as the
-                // dynamic-art background above, so they aren't dead controls
-                // when gradient mode is what's actually active.
-                Positioned.fill(
-                  child: Container(
-                    color: Colors.black.withValues(alpha: activeDarkness),
-                  ),
-                ),
-              ],
-            ],
-
-            Positioned.fill(
-              child: Navigator(
-                key: navigatorKey,
-                observers: [_navDepthObserver],
-                onGenerateRoute: (settings) {
-                  return PageRouteBuilder(
-                    pageBuilder: (context, animation, secondaryAnimation) =>
-                        _buildTabStack(),
-                    // The tab stack gets the same covered/uncovered parallax
-                    // as pushed pages, so popping back to it eases it in
-                    // instead of snapping it on in the last frame.
-                    transitionsBuilder:
-                        (context, animation, secondaryAnimation, child) =>
-                            _coveredTransition(secondaryAnimation, child),
-                  );
-                },
-              ),
-            ),
-            // Backdrop behind the navbar - always present and faded with it
-            // (same duration) rather than popping in/out out of sync with it.
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: IgnorePointer(
-                child: AnimatedOpacity(
-                  opacity: _navAtRoot ? 1.0 : 0.0,
-                  duration: const Duration(milliseconds: 250),
-                  curve: Curves.easeInOut,
-                  child: Container(
-                    height: 180,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.transparent,
-                          Colors.black.withValues(alpha: 0.45),
-                          Colors.black.withValues(alpha: 0.8),
-                          Colors.black,
-                        ],
-                        stops: const [0.0, 0.35, 0.7, 1.0],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-
-            if (settings.enableSlideGesture)
-              Positioned.fill(
-                // Not a Consumer watching the expand progress anymore: that
-                // rebuilt this whole stack, navbar included, on every frame
-                // of a Fluid Player drag. The ValueListenableBuilders inside
-                // only rerun the Positioned/Opacity wrappers that move.
-                child: Stack(
-                  children: [
-                    Positioned(
-                      key: const ValueKey('navbar_slot'),
-                      left: 0,
-                      right: 0,
-                      bottom: MediaQuery.of(context).viewInsets.bottom > 0
-                          ? -150
-                          : 0,
-                      child: IgnorePointer(
-                        ignoring: !_navAtRoot,
-                        // Discrete show/hide only (tab root, keyboard). The
-                        // Fluid Player's expand fade is applied directly
-                        // below - feeding a per-frame value into this
-                        // AnimatedOpacity restarted its 300ms tween every
-                        // frame, so the navbar trailed the finger.
-                        child: AnimatedOpacity(
-                          opacity: !_navAtRoot
-                              ? 0.0
-                              : (MediaQuery.of(context).viewInsets.bottom > 0
-                                    ? 0.0
-                                    : 1.0),
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeInOut,
-                          child: AnimatedSlide(
-                            // Offset is a fraction of the navbar's own
-                            // size - 1.2 clears it fully off-screen
-                            // (previously 0.4, only 40% of its own
-                            // height, which just moved it partway while
-                            // fading, on a different clock than the
-                            // mini player's reposition below).
-                            offset: _navAtRoot
-                                ? Offset.zero
-                                : const Offset(0, 1.2),
-                            duration: const Duration(milliseconds: 300),
-                            curve: Curves.easeInOut,
-                            // Only this thin wrapper reruns per expand
-                            // frame; the navbar itself is built once.
-                            child: ValueListenableBuilder<double>(
-                              valueListenable: expandProgress,
-                              builder: (context, progress, child) {
-                                return Opacity(
-                                  opacity: (1.0 - progress * 3.0).clamp(
-                                    0.0,
-                                    1.0,
+                if (settings.enableSlideGesture)
+                  Positioned.fill(
+                    // Not a Consumer watching the expand progress anymore: that
+                    // rebuilt this whole stack, navbar included, on every frame
+                    // of a Fluid Player drag. The ValueListenableBuilders inside
+                    // only rerun the Positioned/Opacity wrappers that move.
+                    child: Stack(
+                      children: [
+                        Positioned(
+                          key: const ValueKey('navbar_slot'),
+                          left: 0,
+                          right: 0,
+                          bottom: MediaQuery.of(context).viewInsets.bottom > 0
+                              ? -150
+                              : 0,
+                          child: IgnorePointer(
+                            ignoring: !_navAtRoot,
+                            // Discrete show/hide only (tab root, keyboard). The
+                            // Fluid Player's expand fade is applied directly
+                            // below - feeding a per-frame value into this
+                            // AnimatedOpacity restarted its 300ms tween every
+                            // frame, so the navbar trailed the finger.
+                            child: AnimatedOpacity(
+                              opacity: !_navAtRoot
+                                  ? 0.0
+                                  : (MediaQuery.of(context).viewInsets.bottom >
+                                            0
+                                        ? 0.0
+                                        : 1.0),
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeInOut,
+                              child: AnimatedSlide(
+                                // Offset is a fraction of the navbar's own
+                                // size - 1.2 clears it fully off-screen
+                                // (previously 0.4, only 40% of its own
+                                // height, which just moved it partway while
+                                // fading, on a different clock than the
+                                // mini player's reposition below).
+                                offset: _navAtRoot
+                                    ? Offset.zero
+                                    : const Offset(0, 1.2),
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeInOut,
+                                // Only this thin wrapper reruns per expand
+                                // frame; the navbar itself is built once.
+                                child: ValueListenableBuilder<double>(
+                                  valueListenable: expandProgress,
+                                  builder: (context, progress, child) {
+                                    return Opacity(
+                                      opacity: (1.0 - progress * 3.0).clamp(
+                                        0.0,
+                                        1.0,
+                                      ),
+                                      child: Transform.translate(
+                                        offset: Offset(0.0, progress * 110.0),
+                                        child: child,
+                                      ),
+                                    );
+                                  },
+                                  child: PremiumNavbar(
+                                    currentIndex: rootItem == NavItem.home
+                                        ? 0
+                                        : (rootItem == NavItem.songs ? 1 : 2),
+                                    onTap: (index) {
+                                      NavItem target;
+                                      switch (index) {
+                                        case 1:
+                                          target = NavItem.songs;
+                                          break;
+                                        case 2:
+                                          target = NavItem.library;
+                                          break;
+                                        case 0:
+                                        default:
+                                          target = NavItem.home;
+                                          break;
+                                      }
+                                      ref
+                                          .read(appNavigationProvider.notifier)
+                                          .setItem(target);
+                                    },
                                   ),
-                                  child: Transform.translate(
-                                    offset: Offset(0.0, progress * 110.0),
-                                    child: child,
-                                  ),
-                                );
-                              },
-                              child: PremiumNavbar(
-                                currentIndex: rootItem == NavItem.home
-                                    ? 0
-                                    : (rootItem == NavItem.songs ? 1 : 2),
-                                onTap: (index) {
-                                  NavItem target;
-                                  switch (index) {
-                                    case 1:
-                                      target = NavItem.songs;
-                                      break;
-                                    case 2:
-                                      target = NavItem.library;
-                                      break;
-                                    case 0:
-                                    default:
-                                      target = NavItem.home;
-                                      break;
-                                  }
-                                  ref
-                                      .read(appNavigationProvider.notifier)
-                                      .setItem(target);
-                                },
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                    ),
 
-                    if (song != null && !showSupportUsSheet)
-                      // A fixed full-screen slot: the Fluid Player lays its panel out
-                      // itself (fluid_player_motion.dart), so nothing here changes per
-                      // frame. Only the resting gap's *target* is passed down; the bar
-                      // animates it (same 300ms easeInOut as the navbar) without this
-                      // host rebuilding it every frame.
-                      Positioned.fill(
-                        key: const ValueKey('music_bar_slot'),
-                        child: Offstage(
-                          // Hidden, not unmounted, while the keyboard is up, so the
-                          // expanded player it keeps warm survives a search.
-                          offstage:
-                              MediaQuery.of(context).viewInsets.bottom > 0,
-                          child: PremiumMusicBar(
-                            key: const ValueKey('music_bar'),
-                            restingBottom: _navAtRoot
-                                ? (navbarHeight + 4.0)
-                                : (16.0 +
-                                      MediaQuery.of(context).padding.bottom),
+                        if (song != null && !showSupportUsSheet)
+                          // A fixed full-screen slot: the Fluid Player lays its panel out
+                          // itself (fluid_player_motion.dart), so nothing here changes per
+                          // frame. Only the resting gap's *target* is passed down; the bar
+                          // animates it (same 300ms easeInOut as the navbar) without this
+                          // host rebuilding it every frame.
+                          Positioned.fill(
+                            key: const ValueKey('music_bar_slot'),
+                            child: Offstage(
+                              // Hidden, not unmounted, while the keyboard is up, so the
+                              // expanded player it keeps warm survives a search.
+                              offstage:
+                                  MediaQuery.of(context).viewInsets.bottom > 0,
+                              child: PremiumMusicBar(
+                                key: const ValueKey('music_bar'),
+                                restingBottom: _navAtRoot
+                                    ? (navbarHeight + 4.0)
+                                    : (16.0 +
+                                          MediaQuery.of(
+                                            context,
+                                          ).padding.bottom),
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                  ],
-                ),
-              )
-            else ...[
-              // Mini player and navbar each get their own AnimatedPositioned,
-              // on the same duration/curve, instead of both being stacked in
-              // one Column that an AnimatedSwitcher resized abruptly. That
-              // old version only animated *opacity* (AnimatedSwitcher doesn't
-              // animate its own layout box's size) while the Column's actual
-              // height snapped to the new value the instant the switch
-              // resolved - since the whole block was pinned by `bottom: 0`,
-              // that snap yanked the mini player to its new position in one
-              // frame. Now the navbar genuinely slides fully off-screen and
-              // the mini player genuinely slides down into the spot it
-              // vacates, in lockstep.
-              if (song != null && !showSupportUsSheet)
-                AnimatedPositioned(
-                  // Keyed so the conditional `if` above never makes this
-                  // slot's element get reused-by-index for the always-
-                  // present navbar slot below when it disappears (that
-                  // index shuffle was corrupting the navbar's own
-                  // AnimatedPositioned - it would resume its animation from
-                  // this widget's last position instead of its own,
-                  // producing a visible pop on dismiss).
-                  key: const ValueKey('music_bar_slot'),
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeInOut,
-                  left: 0,
-                  right: 0,
-                  bottom: MediaQuery.of(context).viewInsets.bottom > 0
-                      ? -150
-                      : (_navAtRoot
-                            ? navbarHeight + 4.0
-                            : 16.0 + MediaQuery.of(context).padding.bottom),
-                  child: AnimatedOpacity(
-                    opacity: MediaQuery.of(context).viewInsets.bottom > 0
-                        ? 0.0
-                        : 1.0,
-                    duration: const Duration(milliseconds: 200),
-                    child: const PremiumMusicBar(key: ValueKey('music_bar')),
-                  ),
-                ),
-              AnimatedPositioned(
-                key: const ValueKey('navbar_slot'),
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeInOut,
-                left: 0,
-                right: 0,
-                bottom: MediaQuery.of(context).viewInsets.bottom > 0
-                    ? -150
-                    : (_navAtRoot ? 0 : -navbarHeight),
-                child: IgnorePointer(
-                  ignoring: !_navAtRoot,
-                  child: AnimatedOpacity(
-                    opacity: MediaQuery.of(context).viewInsets.bottom > 0
-                        ? 0.0
-                        : (_navAtRoot ? 1.0 : 0.0),
-                    duration: const Duration(milliseconds: 200),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const SizedBox(height: 4),
-                        PremiumNavbar(
-                          currentIndex: rootItem == NavItem.home
-                              ? 0
-                              : (rootItem == NavItem.songs ? 1 : 2),
-                          onTap: (index) {
-                            NavItem target;
-                            switch (index) {
-                              case 1:
-                                target = NavItem.songs;
-                                break;
-                              case 2:
-                                target = NavItem.library;
-                                break;
-                              case 0:
-                              default:
-                                target = NavItem.home;
-                                break;
-                            }
-                            ref
-                                .read(appNavigationProvider.notifier)
-                                .setItem(target);
-                          },
-                        ),
                       ],
                     ),
+                  )
+                else ...[
+                  // Mini player and navbar each get their own AnimatedPositioned,
+                  // on the same duration/curve, instead of both being stacked in
+                  // one Column that an AnimatedSwitcher resized abruptly. That
+                  // old version only animated *opacity* (AnimatedSwitcher doesn't
+                  // animate its own layout box's size) while the Column's actual
+                  // height snapped to the new value the instant the switch
+                  // resolved - since the whole block was pinned by `bottom: 0`,
+                  // that snap yanked the mini player to its new position in one
+                  // frame. Now the navbar genuinely slides fully off-screen and
+                  // the mini player genuinely slides down into the spot it
+                  // vacates, in lockstep.
+                  if (song != null && !showSupportUsSheet)
+                    AnimatedPositioned(
+                      // Keyed so the conditional `if` above never makes this
+                      // slot's element get reused-by-index for the always-
+                      // present navbar slot below when it disappears (that
+                      // index shuffle was corrupting the navbar's own
+                      // AnimatedPositioned - it would resume its animation from
+                      // this widget's last position instead of its own,
+                      // producing a visible pop on dismiss).
+                      key: const ValueKey('music_bar_slot'),
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                      left: 0,
+                      right: 0,
+                      bottom: MediaQuery.of(context).viewInsets.bottom > 0
+                          ? -150
+                          : (_navAtRoot
+                                ? navbarHeight + 4.0
+                                : 16.0 + MediaQuery.of(context).padding.bottom),
+                      child: AnimatedOpacity(
+                        opacity: MediaQuery.of(context).viewInsets.bottom > 0
+                            ? 0.0
+                            : 1.0,
+                        duration: const Duration(milliseconds: 200),
+                        child: const PremiumMusicBar(
+                          key: ValueKey('music_bar'),
+                        ),
+                      ),
+                    ),
+                  AnimatedPositioned(
+                    key: const ValueKey('navbar_slot'),
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                    left: 0,
+                    right: 0,
+                    bottom: MediaQuery.of(context).viewInsets.bottom > 0
+                        ? -150
+                        : (_navAtRoot ? 0 : -navbarHeight),
+                    child: IgnorePointer(
+                      ignoring: !_navAtRoot,
+                      child: AnimatedOpacity(
+                        opacity: MediaQuery.of(context).viewInsets.bottom > 0
+                            ? 0.0
+                            : (_navAtRoot ? 1.0 : 0.0),
+                        duration: const Duration(milliseconds: 200),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const SizedBox(height: 4),
+                            PremiumNavbar(
+                              currentIndex: rootItem == NavItem.home
+                                  ? 0
+                                  : (rootItem == NavItem.songs ? 1 : 2),
+                              onTap: (index) {
+                                NavItem target;
+                                switch (index) {
+                                  case 1:
+                                    target = NavItem.songs;
+                                    break;
+                                  case 2:
+                                    target = NavItem.library;
+                                    break;
+                                  case 0:
+                                  default:
+                                    target = NavItem.home;
+                                    break;
+                                }
+                                ref
+                                    .read(appNavigationProvider.notifier)
+                                    .setItem(target);
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-              ),
-            ],
-          ],
+                ],
+              ],
+            ),
+          ),
         ),
       ),
     );

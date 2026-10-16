@@ -68,7 +68,9 @@ class _AndroidHomeTabState extends ConsumerState<AndroidHomeTab> {
 
   @override
   Widget build(BuildContext context) {
-    final showAlbum = watchShowAlbum(ref);
+    // Quick Picks show the title only until "Show Album Next to Artist" is on.
+    final showArtistInQuickPicks = watchShowAlbum(ref);
+    final showAlbumInQuickPicks = watchShowAlbumInQuickPicks(ref);
     // This tab is now permanently mounted alongside Songs/Library (see
     // AndroidMainScreen) instead of being torn down on every tab switch, so
     // an unscoped watch of the entire LibraryState/AppSettings objects meant
@@ -525,20 +527,23 @@ class _AndroidHomeTabState extends ConsumerState<AndroidHomeTab> {
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
                                               ),
-                                              Text(
-                                                artistAlbumLabel(
-                                                  song,
-                                                  l10n,
-                                                  showAlbum: showAlbum,
+                                              if (showArtistInQuickPicks)
+                                                Text(
+                                                  artistAlbumLabel(
+                                                    song,
+                                                    l10n,
+                                                    showAlbum:
+                                                        showAlbumInQuickPicks,
+                                                  ),
+                                                  style: AppFonts.jostStyle(
+                                                    color: Colors.white
+                                                        .withValues(alpha: 0.6),
+                                                    fontSize: 10,
+                                                  ),
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
                                                 ),
-                                                style: AppFonts.jostStyle(
-                                                  color: Colors.white
-                                                      .withValues(alpha: 0.6),
-                                                  fontSize: 10,
-                                                ),
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
                                             ],
                                           ),
                                         ),

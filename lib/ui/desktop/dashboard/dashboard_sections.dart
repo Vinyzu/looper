@@ -96,7 +96,9 @@ extension _DashboardSections on HomeDashboard {
     AppLocalizations l10n,
   ) {
     final topSongsAsync = ref.watch(topSongsProvider);
-    final showAlbum = watchShowAlbum(ref);
+    // Title only until "Show Album Next to Artist" is on.
+    final showArtist = watchShowAlbum(ref);
+    final showAlbum = watchShowAlbumInQuickPicks(ref);
 
     return topSongsAsync.when(
       data: (songs) {
@@ -162,19 +164,20 @@ extension _DashboardSections on HomeDashboard {
                                   fontSize: 13,
                                 ),
                               ),
-                              Text(
-                                artistAlbumLabel(
-                                  song,
-                                  l10n,
-                                  showAlbum: showAlbum,
+                              if (showArtist)
+                                Text(
+                                  artistAlbumLabel(
+                                    song,
+                                    l10n,
+                                    showAlbum: showAlbum,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey,
+                                  ),
                                 ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  color: Colors.grey,
-                                ),
-                              ),
                             ],
                           ),
                         ),

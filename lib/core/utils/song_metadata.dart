@@ -7,6 +7,13 @@ import 'package:looper_player/l10n/app_localizations.dart';
 bool watchShowAlbum(WidgetRef ref) =>
     ref.watch(settingsProvider.select((s) => s.showAlbumNextToArtist));
 
+/// Quick Picks add the album only when their own toggle is on as well.
+bool watchShowAlbumInQuickPicks(WidgetRef ref) => ref.watch(
+  settingsProvider.select(
+    (s) => s.showAlbumNextToArtist && s.showAlbumInQuickPicks,
+  ),
+);
+
 /// The artist, or "Artist • Album" when [showAlbum] is on.
 String artistAlbumLabel(
   Song song,

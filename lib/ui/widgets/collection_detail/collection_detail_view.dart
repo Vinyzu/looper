@@ -9,6 +9,7 @@ import 'package:looper_player/ui/widgets/common/song_favorite_button.dart';
 import 'package:looper_player/ui/widgets/common/playlist_reorderable_listener.dart';
 import 'package:looper_player/ui/widgets/common/song_playback_overlay.dart';
 import 'package:looper_player/ui/widgets/common/collection_scroll_to_end.dart';
+import 'package:looper_player/ui/widgets/collection_detail/collection_pinned_bar.dart';
 import 'package:looper_player/ui/widgets/sheets/app_bottom_sheet.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:looper_player/features/library/presentation/widgets/songs/songs_list.dart';
@@ -31,6 +32,10 @@ part 'collection_header.dart';
 part 'desktop_collection.dart';
 part 'sort_sheet.dart';
 part 'playlist_options.dart';
+
+/// The big title of each open collection, which [CollectionPinnedBar]
+/// watches to know when to show its own small one.
+final _collectionTitleKeys = Expando<GlobalKey>();
 
 // Persistent collection sorting is stored in settings.collectionSortOptionIndex
 
@@ -217,6 +222,10 @@ class CollectionDetailView extends ConsumerWidget {
       );
     }
 
+    // One key per screen: the scroll controller lives as long as it does.
+    GlobalKey titleKey(ScrollController controller) =>
+        _collectionTitleKeys[controller] ??= GlobalKey();
+
     return Scaffold(
       // Not Colors.transparent - see the comment on CategoryDetailWrapper's
       // Scaffold in library_categories_views.dart for why.
@@ -247,56 +256,26 @@ class CollectionDetailView extends ConsumerWidget {
               controller: controller,
               physics: const BouncingScrollPhysics(),
               slivers: [
+                SliverPersistentHeader(
+                  pinned: true,
+                  delegate: CollectionPinnedBar(
+                    controller: controller,
+                    titleKey: titleKey(controller),
+                    title: titleToRender,
+                    art: artToRender,
+                    imageUrl: imageUrl,
+                    playlist: reactivePlaylist,
+                    onBack: () =>
+                        ref.read(appNavigationProvider.notifier).goBack(),
+                    onAdd: reactivePlaylist != null
+                        ? () => _showAddSongsHint(context)
+                        : null,
+                  ),
+                ),
                 SliverToBoxAdapter(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
-                        child: Row(
-                          children: [
-                            PremiumSection(
-                              useExpanded: false,
-                              borderRadius: const BorderRadius.only(
-                                topLeft: Radius.circular(32),
-                                bottomLeft: Radius.circular(32),
-                                topRight: Radius.circular(10),
-                                bottomRight: Radius.circular(10),
-                              ),
-                              width: 44,
-                              height: 44,
-                              onTap: () => ref
-                                  .read(appNavigationProvider.notifier)
-                                  .goBack(),
-                              child: const Icon(
-                                LucideIcons.chevronLeft,
-                                color: Colors.white,
-                                size: 20,
-                              ),
-                            ),
-                            if (reactivePlaylist != null) ...[
-                              const Spacer(),
-                              PremiumSection(
-                                useExpanded: false,
-                                borderRadius: const BorderRadius.only(
-                                  topLeft: Radius.circular(10),
-                                  bottomLeft: Radius.circular(10),
-                                  topRight: Radius.circular(32),
-                                  bottomRight: Radius.circular(32),
-                                ),
-                                width: 44,
-                                height: 44,
-                                onTap: () => _showAddSongsHint(context),
-                                child: const Icon(
-                                  LucideIcons.plus,
-                                  color: Colors.white,
-                                  size: 20,
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
                       // Header - Now always a Row for cover and name
                       Container(
                         padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
@@ -326,6 +305,7 @@ class CollectionDetailView extends ConsumerWidget {
                                     canReorder:
                                         canReorderPlaylist &&
                                         sortedSongs.length > 1,
+                                    titleKey: titleKey(controller),
                                   ),
                                 ],
                               )
@@ -353,6 +333,7 @@ class CollectionDetailView extends ConsumerWidget {
                                       canReorder:
                                           canReorderPlaylist &&
                                           sortedSongs.length > 1,
+                                      titleKey: titleKey(controller),
                                     ),
                                   ),
                                 ],

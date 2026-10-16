@@ -126,6 +126,31 @@ class ShowAlbumNextToArtistTile extends ConsumerWidget {
   }
 }
 
+/// Also adds the album in Home's Quick Picks; shown only while
+/// [ShowAlbumNextToArtistTile] is on.
+class ShowAlbumInQuickPicksTile extends ConsumerWidget {
+  const ShowAlbumInQuickPicksTile({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(settingsProvider);
+    final l10n = AppLocalizations.of(context)!;
+    return SwitchListTile(
+      secondary: const Icon(LucideIcons.sparkles, color: Colors.white70),
+      title: Text(l10n.showAlbumInQuickPicks, style: _tileTitleStyle()),
+      subtitle: Text(
+        l10n.showAlbumInQuickPicksDesc,
+        style: _tileSubtitleStyle(),
+      ),
+      activeThumbColor: Color(settings.accentColor),
+      value: settings.showAlbumInQuickPicks,
+      onChanged: (value) {
+        ref.read(settingsProvider.notifier).updateShowAlbumInQuickPicks(value);
+      },
+    );
+  }
+}
+
 /// Opens the quality badge style sheet (look, icon, colors, details).
 class QualityBadgeStyleTile extends ConsumerWidget {
   const QualityBadgeStyleTile({super.key});

@@ -252,6 +252,13 @@ extension _SettingsSearch on _SettingsViewState {
         category: '${l10n.theme} · ${l10n.nowPlaying}',
         widget: const ShowAlbumNextToArtistTile(),
       ),
+      if (settings.showAlbumNextToArtist)
+        SettingsSearchItem(
+          title: l10n.showAlbumInQuickPicks,
+          subtitle: l10n.showAlbumInQuickPicksDesc,
+          category: '${l10n.theme} · ${l10n.nowPlaying}',
+          widget: const ShowAlbumInQuickPicksTile(),
+        ),
       SettingsSearchItem(
         title: l10n.enablePlayerGradient,
         subtitle: l10n.enablePlayerGradientDesc,

@@ -5,6 +5,10 @@ import 'package:looper_player/ui/widgets/common/momentum_scroll_controller.dart'
 import 'package:looper_player/core/utils/l10n.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+/// Which way the floating jump button points.
+enum _Jump { end, top }
+
+/// Scrolling down offers a jump to the end, scrolling up a jump to the top.
 class CollectionScrollToEnd extends StatefulWidget {
   const CollectionScrollToEnd({
     super.key,
@@ -23,8 +27,10 @@ class CollectionScrollToEnd extends StatefulWidget {
 
 class _CollectionScrollToEndState extends State<CollectionScrollToEnd> {
   final _controller = MomentumScrollController();
-  final _visible = ValueNotifier(false);
+  final _visible = ValueNotifier<_Jump?>(null);
   Timer? _hideTimer;
+  // The button's own jump scrolls too; don't let it bring itself back.
+  bool _jumping = false;
 
   @override
   void dispose() {
@@ -35,31 +41,58 @@ class _CollectionScrollToEndState extends State<CollectionScrollToEnd> {
   }
 
   bool _onScroll(ScrollNotification notification) {
-    if (!widget.enabled || notification.depth != 0) return false;
+    if (!widget.enabled || _jumping || notification.depth != 0) return false;
     if (notification is ScrollStartNotification) {
       _hideTimer?.cancel();
     }
     if (notification is ScrollUpdateNotification) {
       final metrics = notification.metrics;
-      _visible.value =
-          (notification.scrollDelta ?? 0) > 0 &&
-          metrics.pixels > 0 &&
-          metrics.maxScrollExtent - metrics.pixels > metrics.viewportDimension;
+      final delta = notification.scrollDelta ?? 0;
+      if (delta > 0) {
+        _visible.value =
+            metrics.pixels > 0 &&
+                metrics.maxScrollExtent - metrics.pixels >
+                    metrics.viewportDimension
+            ? _Jump.end
+            : null;
+      } else if (delta < 0) {
+        _visible.value = metrics.pixels > metrics.viewportDimension
+            ? _Jump.top
+            : null;
+      }
       _hideTimer?.cancel();
-    } else if (notification is ScrollEndNotification && _visible.value) {
+    } else if (notification is ScrollEndNotification &&
+        _visible.value != null) {
       _hideTimer = Timer(
         const Duration(milliseconds: 1400),
-        () => _visible.value = false,
+        () => _visible.value = null,
       );
     }
     return false;
   }
 
-  void _scrollToEnd() {
+  Future<void> _jump(_Jump target) async {
     _hideTimer?.cancel();
-    _visible.value = false;
-    // Skip building and decoding artwork for every intermediate row.
-    _controller.jumpTo(_controller.position.maxScrollExtent);
+    _visible.value = null;
+    final position = _controller.position;
+    _jumping = true;
+    final to = target == _Jump.end ? position.maxScrollExtent : 0.0;
+    // Animating the whole way would build and decode artwork for every row
+    // in between. Jump to within a screen and a half, then glide the rest.
+    final runUp = position.viewportDimension * 1.5;
+    if ((to - position.pixels).abs() > runUp) {
+      _controller.jumpTo(target == _Jump.end ? to - runUp : to + runUp);
+    }
+    _jumping = true;
+    try {
+      await _controller.animateTo(
+        to,
+        duration: const Duration(milliseconds: 450),
+        curve: Curves.easeOutCubic,
+      );
+    } finally {
+      _jumping = false;
+    }
   }
 
   @override
@@ -72,11 +105,13 @@ class _CollectionScrollToEndState extends State<CollectionScrollToEnd> {
             PositionedDirectional(
               end: 16,
               bottom: widget.bottomPadding,
-              child: ValueListenableBuilder<bool>(
+              child: ValueListenableBuilder<_Jump?>(
                 valueListenable: _visible,
-                builder: (context, visible, _) => visible && widget.enabled
+                builder: (context, jump, _) => jump != null && widget.enabled
                     ? IconButton.filled(
-                        tooltip: context.l10n.scrollToEnd,
+                        tooltip: jump == _Jump.end
+                            ? context.l10n.scrollToEnd
+                            : context.l10n.scrollToTop,
                         style: IconButton.styleFrom(
                           backgroundColor: const Color(0xFF181818),
                           foregroundColor: Colors.white.withValues(alpha: 0.5),
@@ -84,8 +119,13 @@ class _CollectionScrollToEndState extends State<CollectionScrollToEnd> {
                             color: Colors.white.withValues(alpha: 0.08),
                           ),
                         ),
-                        onPressed: _scrollToEnd,
-                        icon: const Icon(LucideIcons.chevronsDown, size: 18),
+                        onPressed: () => _jump(jump),
+                        icon: Icon(
+                          jump == _Jump.end
+                              ? LucideIcons.chevronsDown
+                              : LucideIcons.chevronsUp,
+                          size: 18,
+                        ),
                       )
                     : const SizedBox.shrink(),
               ),

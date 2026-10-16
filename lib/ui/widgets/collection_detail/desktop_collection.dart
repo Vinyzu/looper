@@ -19,7 +19,11 @@ extension _DesktopCollection on CollectionDetailView {
     required String? activePath,
   }) {
     final l10n = AppLocalizations.of(context)!;
-    final isShuffle = ref.watch(playbackProvider.select((s) => s.isShuffle));
+    // Lit only while this collection is the one playing shuffled.
+    final key = collectionKey(songs);
+    final isShuffle = ref.watch(
+      playbackProvider.select((s) => s.isShuffle && s.queueSourceKey == key),
+    );
 
     Widget row(int index, {int? reorderIndex}) {
       final song = songs[index];

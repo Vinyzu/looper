@@ -966,7 +966,6 @@ class AndroidEqualizerScreen extends ConsumerWidget {
                                       color: Colors.white,
                                     ),
                                   ),
-                                  backgroundColor: accentColor,
                                 ),
                               );
                             }
@@ -1012,7 +1011,6 @@ class AndroidEqualizerScreen extends ConsumerWidget {
                                 l10n.songSpecificResetGlobal,
                                 style: AppFonts.jostStyle(color: Colors.white),
                               ),
-                              backgroundColor: accentColor,
                             ),
                           );
                         }
