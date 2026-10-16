@@ -184,6 +184,7 @@ class _AndroidExpandedPlayerState extends ConsumerState<AndroidExpandedPlayer>
 
   @override
   Widget build(BuildContext context) {
+    final showAlbum = watchShowAlbum(ref);
     final song = ref.watch(playbackProvider.select((s) => s.currentSong));
     final l10n = AppLocalizations.of(context)!;
 
@@ -586,7 +587,11 @@ class _AndroidExpandedPlayerState extends ConsumerState<AndroidExpandedPlayer>
                                   child: Align(
                                     alignment: Alignment.centerLeft,
                                     child: Text(
-                                      artistAlbumLabel(song, context.l10n),
+                                      artistAlbumLabel(
+                                        song,
+                                        context.l10n,
+                                        showAlbum: showAlbum,
+                                      ),
                                       style: TextStyle.lerp(
                                         fromStyle,
                                         toStyle,
@@ -642,7 +647,11 @@ class _AndroidExpandedPlayerState extends ConsumerState<AndroidExpandedPlayer>
                             }
                           },
                           child: ScrollingText(
-                            text: artistAlbumLabel(song, context.l10n),
+                            text: artistAlbumLabel(
+                              song,
+                              context.l10n,
+                              showAlbum: showAlbum,
+                            ),
                             lockLineHeight: true,
                             style: AppFonts.jostStyle(
                               color: Colors.white.withValues(alpha: 0.6),

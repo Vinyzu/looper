@@ -125,7 +125,7 @@ class _LimitToggle extends ConsumerWidget {
   }
 }
 
-class _TopSongRow extends StatelessWidget {
+class _TopSongRow extends ConsumerWidget {
   final SongStat stat;
   final Color accent;
   final VoidCallback onTap;
@@ -137,7 +137,7 @@ class _TopSongRow extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final rankColor = stat.rank <= 3 ? _rankColors[stat.rank - 1] : null;
 
     return Material(
@@ -210,7 +210,11 @@ class _TopSongRow extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          artistAlbumLabel(stat.song, context.l10n),
+                          artistAlbumLabel(
+                            stat.song,
+                            context.l10n,
+                            showAlbum: watchShowAlbum(ref),
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: AppFonts.jostStyle(

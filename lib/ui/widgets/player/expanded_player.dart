@@ -19,6 +19,7 @@ class ExpandedPlayer extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final showAlbum = watchShowAlbum(ref);
     if (Platform.isAndroid) {
       return const AndroidExpandedPlayer();
     }
@@ -144,7 +145,7 @@ class ExpandedPlayer extends ConsumerWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      artistAlbumLabel(song, l10n),
+                      artistAlbumLabel(song, l10n, showAlbum: showAlbum),
                       style: AppFonts.jostStyle(
                         color: Colors.white.withValues(alpha: 0.6),
                         fontSize: 14.ts,

@@ -16,7 +16,7 @@ import 'package:looper_player/features/playback/presentation/widgets/lyrics/lyri
 import 'package:looper_player/features/settings/presentation/providers/settings_notifier.dart';
 import 'package:looper_player/l10n/app_localizations.dart';
 import 'package:looper_player/ui/widgets/sheets/app_bottom_sheet.dart';
-import 'package:looper_player/ui/widgets/common/song_artwork.dart';
+import 'package:looper_player/ui/widgets/common/optimized_image.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'lyrics_gestures_tutorial_sheet.dart';
@@ -94,6 +94,7 @@ class _LyricsMenuSheetContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final showAlbum = watchShowAlbum(ref);
     final l10n = AppLocalizations.of(context)!;
     final settings = ref.watch(settingsProvider);
     final lyricsState = ref.watch(lyricsProvider);
@@ -136,7 +137,12 @@ class _LyricsMenuSheetContent extends ConsumerWidget {
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(12),
-                    child: SongArtwork(song: song, size: 44),
+                    child: OptimizedImage(
+                      imagePath: song.artPath,
+                      width: 44,
+                      height: 44,
+                      fit: BoxFit.cover,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -155,7 +161,7 @@ class _LyricsMenuSheetContent extends ConsumerWidget {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          '${artistAlbumLabel(song, l10n)} • ${_formatDuration(song.duration ?? 0)}',
+                          '${artistAlbumLabel(song, l10n, showAlbum: showAlbum)} • ${_formatDuration(song.duration ?? 0)}',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: AppFonts.jostStyle(

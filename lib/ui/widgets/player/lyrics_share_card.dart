@@ -1,5 +1,6 @@
 import 'package:looper_player/core/utils/song_metadata.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:looper_player/core/theme/app_fonts.dart';
 import 'package:looper_player/features/library/domain/models/models.dart';
 import 'package:looper_player/features/playback/domain/lyric_models.dart';
@@ -14,7 +15,7 @@ import 'package:looper_player/core/theme/app_assets.dart';
 /// Rendered at a fixed [width] logical pixels so capturing it through a
 /// [RepaintBoundary] at pixelRatio 3.0 always yields a consistent ~1080px
 /// wide PNG regardless of the device's screen size or density.
-class LyricsShareCard extends StatelessWidget {
+class LyricsShareCard extends ConsumerWidget {
   static const double width = 360;
 
   /// The card's original background — used whenever the caller doesn't pick
@@ -35,7 +36,7 @@ class LyricsShareCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       width: width,
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 22),
@@ -77,7 +78,11 @@ class LyricsShareCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      artistAlbumLabel(song, context.l10n),
+                      artistAlbumLabel(
+                        song,
+                        context.l10n,
+                        showAlbum: watchShowAlbum(ref),
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: AppFonts.jostStyle(

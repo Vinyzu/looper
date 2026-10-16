@@ -195,6 +195,7 @@ class _SongOptionsSheetContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final showAlbum = watchShowAlbum(ref);
     final l10n = AppLocalizations.of(context)!;
     final settings = ref.watch(settingsProvider);
     final (
@@ -274,7 +275,7 @@ class _SongOptionsSheetContent extends ConsumerWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        artistAlbumLabel(song, l10n),
+                        artistAlbumLabel(song, l10n, showAlbum: showAlbum),
                         style: AppFonts.jostStyle(
                           fontSize: 12,
                           color: Colors.white54,

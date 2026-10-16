@@ -100,6 +100,7 @@ class SettingsCategoryScreen extends ConsumerWidget {
             const ShowQualityBadgeTile(),
             if (settings.showQualityBadge) const QualityBadgeStyleTile(),
             const SegmentedUtilityButtonsTile(),
+            const ShowAlbumNextToArtistTile(),
           ],
         ),
         (

@@ -1,77 +1,6 @@
 part of 'collection_detail_view.dart';
 
 extension _CollectionHeader on CollectionDetailView {
-  Widget _buildScrollHeader(
-    BuildContext context,
-    WidgetRef ref, {
-    required String title,
-    required String? art,
-    Playlist? playlist,
-  }) => SliverLayoutBuilder(
-    builder: (context, constraints) => SliverAppBar(
-      primary: false,
-      floating: true,
-      snap: true,
-      toolbarHeight: 48,
-      leadingWidth: 48,
-      titleSpacing: 0,
-      elevation: 0,
-      scrolledUnderElevation: 0,
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      surfaceTintColor: Colors.transparent,
-      leading: IconButton(
-        tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-        icon: const Icon(
-          LucideIcons.chevronLeft,
-          size: 20,
-          color: Colors.white,
-        ),
-        onPressed: () => ref.read(appNavigationProvider.notifier).goBack(),
-      ),
-      title: constraints.scrollOffset > 0
-          ? Row(
-              children: [
-                if (playlist != null && playlist.songPaths.isNotEmpty)
-                  PlaylistArtwork(
-                    songPaths: playlist.songPaths,
-                    size: 28,
-                    borderRadius: BorderRadius.circular(4),
-                  )
-                else
-                  OptimizedImage(
-                    imagePath: art,
-                    imageUrl: imageUrl,
-                    width: 28,
-                    height: 28,
-                    borderRadius: BorderRadius.circular(4),
-                    placeholder: Icon(
-                      playlist != null
-                          ? LucideIcons.listMusic
-                          : LucideIcons.music,
-                      size: 16,
-                      color: Colors.white.withValues(alpha: 0.5),
-                    ),
-                  ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppFonts.jostStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 16),
-              ],
-            )
-          : null,
-    ),
-  );
-
   /// Songs join a playlist from their own options menu, so the playlist's +
   /// button explains where that is rather than opening a picker.
   void _showAddSongsHint(BuildContext context) {
@@ -88,6 +17,21 @@ extension _CollectionHeader on CollectionDetailView {
           ),
           behavior: SnackBarBehavior.floating,
           duration: const Duration(seconds: 5),
+        ),
+      );
+  }
+
+  /// Rows only start dragging after a long-press, which isn't discoverable
+  /// on its own, so the playlist header's info button explains it.
+  void _showReorderHint(BuildContext context) {
+    AppHaptics.light();
+    ScaffoldMessenger.of(context)
+      ..clearSnackBars()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.reorderSongsHint),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 4),
         ),
       );
   }
@@ -131,44 +75,55 @@ extension _CollectionHeader on CollectionDetailView {
     Album? reactiveAlbum,
     String titleToRender,
     String? subtitleToRender,
-    List<Song> songsToRender,
-  ) {
+    List<Song> songsToRender, {
+    bool canReorder = false,
+  }) {
     final l10n = AppLocalizations.of(context)!;
     final isShuffle = ref.watch(playbackProvider.select((s) => s.isShuffle));
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                titleToRender,
-                style: AppFonts.jostStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            if (reactivePlaylist != null) ...[
-              const SizedBox(width: 8),
-              IconButton(
-                tooltip: l10n.addSongsToPlaylistTitle,
-                onPressed: () => _showAddSongsHint(context),
-                icon: const Icon(LucideIcons.plus, size: 20),
-              ),
-            ],
-          ],
+        Text(
+          titleToRender,
+          style: AppFonts.jostStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
         ),
         const SizedBox(height: 4),
-        _buildCollectionSubtitle(
-          reactivePlaylist != null ? l10n.playlist : subtitleToRender,
-          songsToRender,
-          l10n,
-          fontSize: 16,
-          color: Colors.white.withValues(alpha: 0.5),
+        Row(
+          children: [
+            Flexible(
+              child: _buildCollectionSubtitle(
+                reactivePlaylist != null ? l10n.playlist : subtitleToRender,
+                songsToRender,
+                l10n,
+                fontSize: 16,
+                color: Colors.white.withValues(alpha: 0.5),
+              ),
+            ),
+            if (canReorder)
+              IconButton(
+                tooltip: l10n.reorderSongsHint,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints.tightFor(
+                  width: 32,
+                  height: 32,
+                ),
+                style: IconButton.styleFrom(
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                onPressed: () => _showReorderHint(context),
+                icon: Icon(
+                  LucideIcons.info,
+                  size: 16,
+                  color: Colors.white.withValues(alpha: 0.5),
+                ),
+              ),
+          ],
         ),
         const SizedBox(height: 16),
         Row(

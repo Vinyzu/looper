@@ -247,17 +247,56 @@ class CollectionDetailView extends ConsumerWidget {
               controller: controller,
               physics: const BouncingScrollPhysics(),
               slivers: [
-                _buildScrollHeader(
-                  context,
-                  ref,
-                  title: titleToRender,
-                  art: artToRender,
-                  playlist: reactivePlaylist,
-                ),
                 SliverToBoxAdapter(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+                        child: Row(
+                          children: [
+                            PremiumSection(
+                              useExpanded: false,
+                              borderRadius: const BorderRadius.only(
+                                topLeft: Radius.circular(32),
+                                bottomLeft: Radius.circular(32),
+                                topRight: Radius.circular(10),
+                                bottomRight: Radius.circular(10),
+                              ),
+                              width: 44,
+                              height: 44,
+                              onTap: () => ref
+                                  .read(appNavigationProvider.notifier)
+                                  .goBack(),
+                              child: const Icon(
+                                LucideIcons.chevronLeft,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                            ),
+                            if (reactivePlaylist != null) ...[
+                              const Spacer(),
+                              PremiumSection(
+                                useExpanded: false,
+                                borderRadius: const BorderRadius.only(
+                                  topLeft: Radius.circular(10),
+                                  bottomLeft: Radius.circular(10),
+                                  topRight: Radius.circular(32),
+                                  bottomRight: Radius.circular(32),
+                                ),
+                                width: 44,
+                                height: 44,
+                                onTap: () => _showAddSongsHint(context),
+                                child: const Icon(
+                                  LucideIcons.plus,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
                       // Header - Now always a Row for cover and name
                       Container(
                         padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
@@ -284,6 +323,9 @@ class CollectionDetailView extends ConsumerWidget {
                                     titleToRender,
                                     subtitleToRender,
                                     sortedSongs,
+                                    canReorder:
+                                        canReorderPlaylist &&
+                                        sortedSongs.length > 1,
                                   ),
                                 ],
                               )
@@ -308,6 +350,9 @@ class CollectionDetailView extends ConsumerWidget {
                                       titleToRender,
                                       subtitleToRender,
                                       sortedSongs,
+                                      canReorder:
+                                          canReorderPlaylist &&
+                                          sortedSongs.length > 1,
                                     ),
                                   ),
                                 ],

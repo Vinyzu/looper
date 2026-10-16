@@ -219,6 +219,9 @@ class AppSettings {
   // Replaces the player's shuffle/repeat/next up/lyrics pill groups with
   // four icon-only tiles styled like the prev/play/next transport row.
   bool segmentedUtilityButtons = false;
+  // Shows "Artist • Album" instead of just the artist under song titles
+  // (lists, players, Home, Analyze, share card).
+  bool showAlbumNextToArtist = false;
   // Master switch for every haptic (AppHaptics). Stored inverted so rows
   // saved before it existed read back as "haptics on".
   bool disableHaptics = false;

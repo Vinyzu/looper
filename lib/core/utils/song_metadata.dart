@@ -1,9 +1,24 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:looper_player/core/services/storage/db_service.dart';
+import 'package:looper_player/features/settings/presentation/providers/settings_notifier.dart';
 import 'package:looper_player/l10n/app_localizations.dart';
 
-String artistAlbumLabel(Song song, AppLocalizations l10n) {
+/// Whether song subtitles add the album ("Artist • Album"); off by default.
+bool watchShowAlbum(WidgetRef ref) =>
+    ref.watch(settingsProvider.select((s) => s.showAlbumNextToArtist));
+
+/// The artist, or "Artist • Album" when [showAlbum] is on.
+String artistAlbumLabel(
+  Song song,
+  AppLocalizations l10n, {
+  required bool showAlbum,
+}) {
   final artist = song.artist?.trim();
+  final artistLabel = artist == null || artist.isEmpty
+      ? l10n.unknownArtist
+      : artist;
+  if (!showAlbum) return artistLabel;
   final album = song.album?.trim();
-  return '${artist == null || artist.isEmpty ? l10n.unknownArtist : artist} • '
+  return '$artistLabel • '
       '${album == null || album.isEmpty ? l10n.unknownAlbum : album}';
 }

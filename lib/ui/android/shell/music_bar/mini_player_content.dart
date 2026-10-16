@@ -103,7 +103,11 @@ extension _MiniPlayerContent on _PremiumMusicBarState {
                       buildHero(
                         tag: 'song_artist',
                         child: ScrollingText(
-                          text: artistAlbumLabel(song, context.l10n),
+                          text: artistAlbumLabel(
+                            song,
+                            context.l10n,
+                            showAlbum: settings.showAlbumNextToArtist as bool,
+                          ),
                           style: AppFonts.jostStyle(
                             color: Colors.white.withValues(alpha: 0.5),
                             fontSize: artistFontSize.ts,

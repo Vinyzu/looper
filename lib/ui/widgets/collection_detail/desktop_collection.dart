@@ -42,13 +42,6 @@ extension _DesktopCollection on CollectionDetailView {
           controller: controller,
           physics: const BouncingScrollPhysics(),
           slivers: [
-            _buildScrollHeader(
-              context,
-              ref,
-              title: title,
-              art: art,
-              playlist: reactivePlaylist,
-            ),
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(24, 28, 24, 0),
               sliver: SliverToBoxAdapter(
@@ -342,11 +335,12 @@ class _DesktopSongRowState extends ConsumerState<_DesktopSongRow> {
 
   @override
   Widget build(BuildContext context) {
+    final showAlbum = watchShowAlbum(ref);
     final l10n = AppLocalizations.of(context)!;
     final song = widget.song;
     final isPlaying = ref.watch(playbackProvider.select((s) => s.isPlaying));
     final lit = _hovered || widget.isCurrent;
-    final row = MouseRegion(
+    return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
@@ -425,7 +419,7 @@ class _DesktopSongRowState extends ConsumerState<_DesktopSongRow> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      artistAlbumLabel(song, l10n),
+                      artistAlbumLabel(song, l10n, showAlbum: showAlbum),
                       style: AppFonts.jostStyle(
                         color: Colors.white.withValues(alpha: 0.45),
                         fontSize: 11,
@@ -436,6 +430,19 @@ class _DesktopSongRowState extends ConsumerState<_DesktopSongRow> {
                   ],
                 ),
               ),
+              // A mouse can't discover a long-press, so Linux keeps a grip.
+              if (widget.reorderIndex != null)
+                ReorderableDragStartListener(
+                  index: widget.reorderIndex!,
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 6),
+                    child: Icon(
+                      LucideIcons.gripVertical,
+                      size: 18,
+                      color: Colors.white38,
+                    ),
+                  ),
+                ),
               Opacity(
                 opacity: _hovered ? 1 : 0,
                 child: IconButton(
@@ -472,8 +479,5 @@ class _DesktopSongRowState extends ConsumerState<_DesktopSongRow> {
         ),
       ),
     );
-    return widget.reorderIndex == null
-        ? row
-        : PlaylistReorderableListener(index: widget.reorderIndex!, child: row);
   }
 }

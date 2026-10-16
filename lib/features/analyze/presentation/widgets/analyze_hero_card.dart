@@ -1,5 +1,6 @@
 import 'package:looper_player/core/utils/song_metadata.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:looper_player/core/theme/app_fonts.dart';
 import 'package:looper_player/core/utils/l10n.dart';
 import 'package:looper_player/features/analyze/domain/analyze_models.dart';
@@ -9,7 +10,7 @@ import 'package:looper_player/core/services/haptics/app_haptics.dart';
 
 /// The report's opener: the most-played song, big artwork and a play button
 /// that starts the Top Songs list from #1.
-class AnalyzeHeroCard extends StatelessWidget {
+class AnalyzeHeroCard extends ConsumerWidget {
   final SongStat stat;
   final Color accent;
   final VoidCallback onPlay;
@@ -22,7 +23,7 @@ class AnalyzeHeroCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return AnalyzeCard(
       padding: const EdgeInsets.all(14),
       radius: 28,
@@ -86,7 +87,11 @@ class AnalyzeHeroCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  artistAlbumLabel(stat.song, context.l10n),
+                  artistAlbumLabel(
+                    stat.song,
+                    context.l10n,
+                    showAlbum: watchShowAlbum(ref),
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppFonts.jostStyle(

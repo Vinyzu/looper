@@ -68,6 +68,7 @@ class _AndroidHomeTabState extends ConsumerState<AndroidHomeTab> {
 
   @override
   Widget build(BuildContext context) {
+    final showAlbum = watchShowAlbum(ref);
     // This tab is now permanently mounted alongside Songs/Library (see
     // AndroidMainScreen) instead of being torn down on every tab switch, so
     // an unscoped watch of the entire LibraryState/AppSettings objects meant
@@ -525,7 +526,11 @@ class _AndroidHomeTabState extends ConsumerState<AndroidHomeTab> {
                                                 overflow: TextOverflow.ellipsis,
                                               ),
                                               Text(
-                                                artistAlbumLabel(song, l10n),
+                                                artistAlbumLabel(
+                                                  song,
+                                                  l10n,
+                                                  showAlbum: showAlbum,
+                                                ),
                                                 style: AppFonts.jostStyle(
                                                   color: Colors.white
                                                       .withValues(alpha: 0.6),

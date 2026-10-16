@@ -87,9 +87,11 @@ class SongTile extends ConsumerWidget {
     final isPlaying =
         isCurrent && ref.watch(playbackProvider.select((s) => s.isPlaying));
     final isCollection = collectionIndex != null || playlist != null;
-    final songSubtitle = showAlbum || isCollection
-        ? artistAlbumLabel(song, l10n)
-        : song.artist ?? l10n.unknownArtist;
+    final songSubtitle = artistAlbumLabel(
+      song,
+      l10n,
+      showAlbum: (showAlbum || isCollection) && watchShowAlbum(ref),
+    );
 
     // The ListTile subtitle fills its column. Loosen those constraints so the
     // link only covers the smaller text, leaving row taps around it for Play.

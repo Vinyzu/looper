@@ -9,6 +9,7 @@ extension _DashboardSections on HomeDashboard {
     AppLocalizations l10n,
   ) {
     final recentSongs = ref.watch(dashboardRecentlyPlayedProvider).value ?? [];
+    final showAlbum = watchShowAlbum(ref);
 
     if (recentSongs.isEmpty) return const SizedBox.shrink();
 
@@ -67,7 +68,7 @@ extension _DashboardSections on HomeDashboard {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          artistAlbumLabel(song, l10n),
+                          artistAlbumLabel(song, l10n, showAlbum: showAlbum),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
@@ -95,6 +96,7 @@ extension _DashboardSections on HomeDashboard {
     AppLocalizations l10n,
   ) {
     final topSongsAsync = ref.watch(topSongsProvider);
+    final showAlbum = watchShowAlbum(ref);
 
     return topSongsAsync.when(
       data: (songs) {
@@ -161,7 +163,11 @@ extension _DashboardSections on HomeDashboard {
                                 ),
                               ),
                               Text(
-                                artistAlbumLabel(song, l10n),
+                                artistAlbumLabel(
+                                  song,
+                                  l10n,
+                                  showAlbum: showAlbum,
+                                ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(

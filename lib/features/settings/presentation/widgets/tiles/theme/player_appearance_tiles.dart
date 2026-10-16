@@ -102,6 +102,30 @@ class ShowQualityBadgeTile extends ConsumerWidget {
   }
 }
 
+/// Adds the album after the artist ("Artist • Album") under song titles.
+class ShowAlbumNextToArtistTile extends ConsumerWidget {
+  const ShowAlbumNextToArtistTile({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(settingsProvider);
+    final l10n = AppLocalizations.of(context)!;
+    return SwitchListTile(
+      secondary: const Icon(LucideIcons.disc3, color: Colors.white70),
+      title: Text(l10n.showAlbumNextToArtist, style: _tileTitleStyle()),
+      subtitle: Text(
+        l10n.showAlbumNextToArtistDesc,
+        style: _tileSubtitleStyle(),
+      ),
+      activeThumbColor: Color(settings.accentColor),
+      value: settings.showAlbumNextToArtist,
+      onChanged: (value) {
+        ref.read(settingsProvider.notifier).updateShowAlbumNextToArtist(value);
+      },
+    );
+  }
+}
+
 /// Opens the quality badge style sheet (look, icon, colors, details).
 class QualityBadgeStyleTile extends ConsumerWidget {
   const QualityBadgeStyleTile({super.key});

@@ -62,7 +62,11 @@ class _PremiumPlayerBar extends ConsumerWidget {
     );
 
     final title = song.title;
-    final artist = artistAlbumLabel(song, AppLocalizations.of(context)!);
+    final artist = artistAlbumLabel(
+      song,
+      AppLocalizations.of(context)!,
+      showAlbum: watchShowAlbum(ref),
+    );
 
     return LayoutBuilder(
       builder: (context, constraints) {
