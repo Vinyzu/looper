@@ -10,6 +10,7 @@ import android.media.AudioManager
 import android.media.MediaMetadataRetriever
 import android.media.MediaPlayer
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -60,6 +61,12 @@ class QuickPlayActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Newer Android finishes activities with the activity transition,
+        // not the window animation, so register the slide for both ways.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            overrideActivityTransition(OVERRIDE_TRANSITION_OPEN, R.anim.quick_play_enter, 0)
+            overrideActivityTransition(OVERRIDE_TRANSITION_CLOSE, 0, R.anim.quick_play_exit)
+        }
         setContentView(R.layout.activity_quick_play)
         artwork = findViewById(R.id.widget_artwork)
         title = findViewById(R.id.widget_title)
@@ -74,6 +81,15 @@ class QuickPlayActivity : Activity() {
         findViewById<View>(R.id.widget_next).setOnClickListener { seekBy(10_000) }
 
         open(intent)
+    }
+
+    override fun finish() {
+        super.finish()
+        // Slide down on close (back, tap outside, leaving); older Android.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            @Suppress("DEPRECATION")
+            overridePendingTransition(0, R.anim.quick_play_exit)
+        }
     }
 
     override fun onNewIntent(intent: Intent) {
