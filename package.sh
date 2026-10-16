@@ -434,6 +434,17 @@ package_linux() {
         -exec objdump -T {} + 2>/dev/null | grep -oE 'GLIBC_[0-9]+\.[0-9]+' | sed 's/GLIBC_//' | sort -uV | tail -n1 || true)
     echo "🧬 Needs glibc >= ${glibc_min:-unknown} (set by the machine this was built on)"
 
+    # Apps that shell out to ffprobe/ffmpeg (this one reads tags with ffprobe
+    # on Linux) need it installed. The .rpm requires the file rather than a
+    # package so Fedora's ffmpeg-free and RPM Fusion's ffmpeg both satisfy it.
+    local NEEDS_FFMPEG=""
+    local rpm_requires=""
+    if grep -rqsE "'ffprobe'|\"ffprobe\"" lib 2>/dev/null; then
+        NEEDS_FFMPEG=1
+        rpm_requires="Requires:       /usr/bin/ffprobe"
+        echo "🎞️  App runs ffprobe — packages depend on ffmpeg"
+    fi
+
     # mpv_audio_kit ships its own libmpv in the bundle; only depend on the
     # distro's when it doesn't.
     local deb_depends="$DEB_DEPENDS"
@@ -442,6 +453,7 @@ package_linux() {
             deb_depends="libgtk-3-0, libasound2, libpulse0, libpipewire-0.3-0"
         fi
         [[ -n "$glibc_min" ]] && deb_depends="libc6 (>= $glibc_min), $deb_depends"
+        [[ -n "$NEEDS_FFMPEG" ]] && deb_depends="$deb_depends, ffmpeg"
     fi
 
     mkdir -p "$LINUX_DIST_DIR"
@@ -536,6 +548,7 @@ Release:        1
 Summary:        $DISPLAY_NAME
 License:        $RPM_LICENSE
 BuildArch:      x86_64
+$rpm_requires
 
 %description
 $DESCRIPTION

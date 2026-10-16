@@ -1,179 +1,365 @@
-name: Secure Build, Signing, and Unified CI Release Pipeline
+name: Build and Release
 
+# Runs only when started by hand: Actions tab -> "Build and Release" -> Run
+# workflow (or `gh workflow run release.yml`). Nothing triggers it on push,
+# tag or pull request.
+#
+# Leave "release_tag" empty to only build: the APKs and Linux packages are
+# downloadable from the run page. Fill it in (e.g. 2.8) to also publish them
+# as that GitHub release; the tag is created on the commit the run built.
 on:
-  push:
-    tags:
-      - 'v*'
+  workflow_dispatch:
+    inputs:
+      platforms:
+        description: 'What to build'
+        type: choice
+        options: [all, android, linux]
+        default: all
+      release_tag:
+        description: 'Release tag to publish to (empty = build only)'
+        type: string
+        required: false
+        default: ''
 
+# Read-only by default; only the publish job can write (create the release).
 permissions:
-  contents: write
+  contents: read
 
+# Never two release runs at once.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+env:
+  # Same Flutter as local release builds, so CI output matches package.sh.
+  FLUTTER_VERSION: '3.47.7'
+  # SHA-256 of the release signing certificate every published APK carries
+  # (2.5-2.7 included). The build fails if CI signs with anything else, since
+  # Android refuses to update an install signed by a different key.
+  SIGNING_CERT_SHA256: '3bd6ad7d7a9ebefadfec703800b40d76e397b10a305d1e0213c0c9c9f9d74976'
+
+# Every action is pinned to a commit so a moved tag cannot swap in code that
+# runs next to the keystore or the write token.
 jobs:
-  build-android:
+  # Checks the release tag before anything is built. Inputs are only ever
+  # read through env vars, never pasted into a script, so a crafted tag
+  # cannot inject shell commands.
+  prepare:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      version: ${{ steps.check.outputs.version }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - name: Check version and release tag
+        id: check
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          version=$(sed -n 's/^version: *\([^+ ]*\).*/\1/p' pubspec.yaml)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "pubspec version: $version"
+          [ -z "$RELEASE_TAG" ] && exit 0
+          if ! printf '%s' "$RELEASE_TAG" | grep -qE '^v?[0-9]+(\.[0-9]+){0,3}$'; then
+            echo "::error::release_tag must look like 2.8, 2.8.1 or v2.8"
+            exit 1
+          fi
+          # The in-app updater offers an update whenever the release tag is
+          # newer than the installed app's version. A tag ahead of pubspec's
+          # version would make every updated install offer the same update
+          # again, forever.
+          tag_version=${RELEASE_TAG#v}
+          newest=$(printf '%s\n%s\n' "$tag_version" "$version" | sort -V | tail -1)
+          if [ "$newest" != "$version" ]; then
+            echo "::error::release_tag $RELEASE_TAG is newer than the app version $version in pubspec.yaml; bump pubspec first"
+            exit 1
+          fi
+
+  # The signing secrets live in the `release` environment, not the repo: this
+  # job only gets them after the repo owner approves the run, so a workflow
+  # pushed or started by anyone else cannot read the keystore.
+  build-android:
+    needs: prepare
+    if: inputs.platforms == 'all' || inputs.platforms == 'android'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment: release
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
 
       - name: Set up Java 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
       - name: Set up Flutter
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           channel: 'stable'
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
 
+      # Secrets (environment `release`) come from the local
+      # android/key.properties + keystore (see key.properties.example).
+      # Without them Gradle would silently fall back to the debug key, so stop
+      # here instead.
       - name: Decode Keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
         run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/upload-keystore.jks
+          for name in KEYSTORE_BASE64 KEYSTORE_PASSWORD KEY_PASSWORD KEY_ALIAS; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Secret $name is not set in the release environment"
+              exit 1
+            fi
+          done
+          umask 077
+          echo "$KEYSTORE_BASE64" | base64 --decode > android/app/release.keystore
+          {
+            echo "storePassword=$KEYSTORE_PASSWORD"
+            echo "keyPassword=$KEY_PASSWORD"
+            echo "keyAlias=$KEY_ALIAS"
+            echo "storeFile=app/release.keystore"
+          } > android/key.properties
 
-      - name: Create key.properties
+      # Optional: the local env.json (AppAmbit key etc.), base64-encoded.
+      # Builds without it simply have AppAmbit reporting off.
+      - name: Create env.json
+        env:
+          ENV_JSON_BASE64: ${{ secrets.ENV_JSON_BASE64 }}
         run: |
-          echo "storePassword=${{ secrets.KEYSTORE_PASSWORD }}" > android/key.properties
-          echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> android/key.properties
-          echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> android/key.properties
-          echo "storeFile=app/upload-keystore.jks" >> android/key.properties
+          if [ -n "$ENV_JSON_BASE64" ]; then
+            umask 077
+            echo "$ENV_JSON_BASE64" | base64 --decode > env.json
+            echo "DART_DEFINES=--dart-define-from-file=env.json" >> "$GITHUB_ENV"
+          else
+            echo "::warning::ENV_JSON_BASE64 not set; building without env.json"
+          fi
 
       - name: Install dependencies
-        run: flutter pub get
+        run: flutter pub get --enforce-lockfile
 
       # The GitHub-release APKs use the `github` flavor: it checks GitHub for
       # updates and contains no Google Play code. The Play Store AAB (`play`
       # flavor) is built separately with `./package.sh android --build`.
-      - name: Build Android Release APK
-        run: flutter build apk --release --flavor github --split-per-abi
+      - name: Build Android Release APKs
+        run: |
+          flutter build apk --release --flavor github --split-per-abi $DART_DEFINES
+          flutter build apk --release --flavor github $DART_DEFINES
 
+      # Same names as package.sh. The in-app updater picks its APK by the
+      # `-<abi>-` part of the name (falling back to `universal`), so the
+      # dashes around the ABI matter.
+      #
       # Flutter's Gradle plugin names split APKs app-<abi>-<flavor>-release.apk
       # (ABI before flavor); the other order is accepted too so a tooling change
       # can't silently drop an APK. The job fails, listing what was built, if
       # one is missing.
       - name: Rename and Prepare APKs
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
         run: |
-          mkdir -p build/release-assets
+          out=build/release-assets
           dir=build/app/outputs/flutter-apk
+          mkdir -p "$out"
           ls -1 "$dir"/*.apk
-          for abi in arm64-v8a armeabi-v7a x86_64; do
+          for abi in arm64-v8a armeabi-v7a x86_64 universal; do
+            if [ "$abi" = universal ]; then
+              candidates="$dir/app-github-release.apk"
+            else
+              candidates="$dir/app-${abi}-github-release.apk $dir/app-github-${abi}-release.apk"
+            fi
             src=""
-            for f in "$dir/app-${abi}-github-release.apk" "$dir/app-github-${abi}-release.apk"; do
+            for f in $candidates; do
               if [ -f "$f" ]; then src="$f"; break; fi
             done
             if [ -z "$src" ]; then
               echo "::error::No $abi APK found in $dir (see listing above)"
               exit 1
             fi
-            cp "$src" "build/release-assets/looper-player-${abi}.apk"
+            cp "$src" "$out/looper-player-v${VERSION}-${abi}-release.apk"
           done
 
+      - name: Verify APK Signatures
+        run: |
+          apksigner=$(ls -d "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+          for apk in build/release-assets/*.apk; do
+            cert=$("$apksigner" verify --print-certs "$apk" 2>/dev/null |
+              sed -n 's/^Signer #1 certificate SHA-256 digest: //p')
+            if [ "$cert" != "$SIGNING_CERT_SHA256" ]; then
+              echo "::error::$apk is signed with '$cert', expected $SIGNING_CERT_SHA256"
+              exit 1
+            fi
+            echo "✓ $(basename "$apk")"
+          done
+
+      - name: Remove Signing Material
+        if: always()
+        run: rm -f android/app/release.keystore android/key.properties env.json
+
       - name: Upload Android Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: android-apks
           path: build/release-assets/*.apk
+          if-no-files-found: error
+          retention-days: 14
 
+  # Built with package.sh, the same script as local releases (the old
+  # flutter_distributor configs produced packages that would not install).
+  # Ubuntu 22.04 links against glibc 2.35, so the packages also run on
+  # Ubuntu 22.04 / Debian 12 and newer, not just distros as new as the
+  # build machine. Needs no secrets.
   build-linux:
-    runs-on: ubuntu-latest
+    needs: prepare
+    if: inputs.platforms == 'all' || inputs.platforms == 'linux'
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
     env:
+      # appimagetool is itself an AppImage; this runs it without FUSE.
       APPIMAGE_EXTRACT_AND_RUN: 1
+      # Debian/RPM maintainer field (package.sh would otherwise read the
+      # runner's empty git config). Override with a repository variable.
+      MAINTAINER: ${{ vars.LINUX_MAINTAINER || 'sthrnilshaaa <sthrnilshaaa@users.noreply.github.com>' }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
 
+      # libstdc++-12-dev: clang on 22.04 cannot link Flutter's runner without
+      # it. rpm/imagemagick/desktop-file-utils are package.sh's packagers.
+      # Rust (for metadata_god) is preinstalled on GitHub's Ubuntu images.
       - name: Install Linux Build Dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y \
             clang cmake ninja-build pkg-config \
-            libgtk-3-dev libblkid-dev liblzma-dev \
-            libgcrypt20-dev libmpv-dev libnotify-dev \
-            rpm
+            libgtk-3-dev liblzma-dev libstdc++-12-dev \
+            rpm imagemagick desktop-file-utils binutils file
 
-      - name: Install appimagetool for AppImage Packaging
+      # Pinned release, checked against GitHub's recorded SHA-256.
+      - name: Install appimagetool
         run: |
-          sudo wget -q -O /usr/local/bin/appimagetool https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
-          sudo chmod +x /usr/local/bin/appimagetool
+          mkdir -p "$HOME/.local/bin"
+          tool="$HOME/.local/bin/appimagetool"
+          curl -fsSL -o "$tool" https://github.com/AppImage/appimagetool/releases/download/1.9.1/appimagetool-x86_64.AppImage
+          echo "ed4ce84f0d9caff66f50bcca6ff6f35aae54ce8135408b3fa33abfc3cb384eb0  $tool" | sha256sum -c -
+          chmod +x "$tool"
 
       - name: Set up Flutter
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           channel: 'stable'
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
 
-      - name: Enable Linux Platform Support
-        run: flutter config --enable-linux-desktop
-
-      - name: Install Flutter Distributor
-        run: flutter pub global activate flutter_distributor
-
-      - name: Add Pub global bin to PATH
-        run: echo "$HOME/.pub-cache/bin" >> $GITHUB_PATH
-
       - name: Install Project Dependencies
-        run: flutter pub get
+        run: flutter pub get --enforce-lockfile
 
-      - name: Package Linux Distributors (DEB, RPM, AppImage, Archive)
+      # package.sh skips a format whose tool is missing, so check all four
+      # were made.
+      - name: Build Linux Packages
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
         run: |
-          flutter_distributor release --name dev --package linux-deb
-          flutter_distributor release --name dev --package linux-rpm
-          flutter_distributor release --name dev --package linux-appimage
-          flutter_distributor release --name dev --package linux-archive
-
-      - name: Organize Linux Distribution Artifacts
-        run: |
-          mkdir -p build/linux-release-assets
-          find dist/ -type f \( -name "*.deb" -o -name "*.rpm" -o -name "*.AppImage" -o -name "*.tar.gz" \) -exec cp {} build/linux-release-assets/ \;
-          ls -la build/linux-release-assets/
+          ./package.sh linux --build
+          cd dist/linux
+          for f in "looper-player_${VERSION}_amd64.deb" \
+                   "looper-player-${VERSION}-1.x86_64.rpm" \
+                   "looper-player_${VERSION}_linux_x64.tar.gz" \
+                   "looper-player_${VERSION}_x86_64.AppImage"; do
+            if [ ! -f "$f" ]; then
+              echo "::error::$f was not built"; ls -l; exit 1
+            fi
+          done
+          rm -f SHA256SUMS-*.txt
 
       - name: Upload Linux Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: linux-packages
-          path: build/linux-release-assets/*
+          path: dist/linux/*
+          if-no-files-found: error
+          retention-days: 14
 
+  # Only when a release_tag was given and every selected build succeeded.
+  # Also in the `release` environment, so publishing needs the owner's
+  # approval too: the write token never runs for anyone else's run.
   publish-release:
-    needs: [build-android, build-linux]
+    needs: [prepare, build-android, build-linux]
+    if: >-
+      always() && inputs.release_tag != '' &&
+      needs.prepare.result == 'success' &&
+      !contains(needs.*.result, 'failure') &&
+      !contains(needs.*.result, 'cancelled')
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: release
+    permissions:
+      contents: write
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
       - name: Download Android Artifacts
-        uses: actions/download-artifact@v4
+        if: needs.build-android.result == 'success'
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: android-apks
           path: release-binaries
 
       - name: Download Linux Artifacts
-        uses: actions/download-artifact@v4
+        if: needs.build-linux.result == 'success'
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: linux-packages
           path: release-binaries
 
-      - name: List Downloaded Binaries
-        run: ls -lh release-binaries
-
-      - name: Generate Premium Release
+      # One checksum file covering every attached binary.
+      - name: Write Checksums
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ needs.prepare.outputs.version }}
         run: |
-          TAG_NAME="${{ github.ref_name }}"
-          
-          # Create automated premium release notes using GitHub CLI
-          gh release create "$TAG_NAME" \
-            release-binaries/* \
+          cd release-binaries
+          sha256sum -- * > "SHA256SUMS-v${VERSION}.txt"
+          ls -lh
+          cat "SHA256SUMS-v${VERSION}.txt"
+
+      # A release that already exists for this tag (made by hand, draft or
+      # published) gets the files added, replacing same-named ones; otherwise
+      # a new release and tag are created on the commit this run built.
+      - name: Publish Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          TAG_NAME: ${{ inputs.release_tag }}
+        run: |
+          if gh release view "$TAG_NAME" >/dev/null 2>&1; then
+            gh release upload "$TAG_NAME" release-binaries/* --clobber
+            exit 0
+          fi
+
+          gh release create "$TAG_NAME" release-binaries/* \
+            --target "$GITHUB_SHA" \
             --title "Looper Player $TAG_NAME" \
             --notes "### 🚀 Welcome to Looper Player $TAG_NAME!
-            
-            We are excited to present **Looper Player $TAG_NAME**—the ultimate offline-first, high-fidelity local music player for Android and Linux!
-            
-            This release features secure, cryptographically signed production builds for Android and complete Linux packages (Debian, RedHat, AppImage, and portable Archive formats) built directly through our automated CI/CD pipelines.
-            
-            #### 📱 Platforms Supported
-            - **Android**: Signed production APKs supporting modern `arm64-v8a`, `armeabi-v7a`, and `x86_64` architectures.
-            - **Linux**: High-compatibility Native packages for Debian/Ubuntu (`.deb`), RedHat/Fedora (`.rpm`), platform-agnostic standalone (`.AppImage`), and portable (`.tar.gz`) archives.
-            
-            ---
-            *Looper Player is 100% offline-first, private, and telemetry-free. Enjoy your local high-fidelity audio with beautifully synchronized interactive lyrics.*"
+
+          We are excited to present **Looper Player $TAG_NAME**—the ultimate offline-first, high-fidelity local music player for Android and Linux!
+
+          This release features secure, cryptographically signed production builds for Android and complete Linux packages (Debian, RedHat, AppImage, and portable Archive formats) built directly through our automated CI/CD pipelines.
+
+          #### 📱 Platforms Supported
+          - **Android**: Signed production APKs supporting modern \`arm64-v8a\`, \`armeabi-v7a\`, and \`x86_64\` architectures, plus a universal APK.
+          - **Linux**: Native packages for Debian/Ubuntu (\`.deb\`), RedHat/Fedora (\`.rpm\`), standalone \`.AppImage\`, and a portable \`.tar.gz\` archive with an install script.
+
+          ---
+          *Looper Player is 100% offline-first, private, and telemetry-free. Enjoy your local high-fidelity audio with beautifully synchronized interactive lyrics.*"
