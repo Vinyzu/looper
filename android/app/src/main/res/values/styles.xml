@@ -21,6 +21,16 @@
         <item name="android:windowIsFloating">true</item>
         <item name="android:backgroundDimEnabled">true</item>
         <item name="android:windowCloseOnTouchOutside">true</item>
-        <item name="android:windowAnimationStyle">@android:style/Animation.Dialog</item>
+        <item name="android:windowAnimationStyle">@style/QuickPlayAnimation</item>
+    </style>
+
+    <!-- Slide up to open, slide down to close (window and activity both). -->
+    <style name="QuickPlayAnimation" parent="@android:style/Animation.Dialog">
+        <item name="android:windowEnterAnimation">@anim/quick_play_enter</item>
+        <item name="android:windowExitAnimation">@anim/quick_play_exit</item>
+        <item name="android:activityOpenEnterAnimation">@anim/quick_play_enter</item>
+        <item name="android:activityCloseExitAnimation">@anim/quick_play_exit</item>
+        <item name="android:taskOpenEnterAnimation">@anim/quick_play_enter</item>
+        <item name="android:taskCloseExitAnimation">@anim/quick_play_exit</item>
     </style>
 </resources>
