@@ -458,18 +458,78 @@ class Playback extends _$Playback {
     }
   }
 
+  /// Starts a collection, or continues its current track without seeking.
+  Future<void> playCollection(
+    List<Song> songs, {
+    bool shuffle = false,
+    int? sourcePlaylistId,
+  }) async {
+    if (songs.isEmpty) return;
+    // Enabling shuffle rearranges the old queue. Preserve its manual entries
+    // before that rearrangement changes which songs follow the current one.
+    final manualSongs = _manualQueueSongs;
+    if (shuffle && !state.isShuffle) await toggleShuffle();
+
+    final currentIndex = songs.indexWhere(
+      (song) => song.path == state.currentSong?.path,
+    );
+    _setPlaylist(
+      songs,
+      manualSongs: manualSongs,
+      initialIndex: shuffle
+          ? math.Random().nextInt(songs.length)
+          : math.max(0, currentIndex),
+      continueCurrent: !shuffle && currentIndex != -1,
+      sourcePlaylistId: sourcePlaylistId,
+    );
+  }
+
+  Future<void> toggleCollectionShuffle(
+    List<Song> songs, {
+    int? sourcePlaylistId,
+  }) async {
+    if (songs.isEmpty) return;
+    if (state.isShuffle) {
+      await toggleShuffle();
+    } else {
+      await playCollection(
+        songs,
+        shuffle: true,
+        sourcePlaylistId: sourcePlaylistId,
+      );
+    }
+  }
+
   void setPlaylist(
     List<Song> songs, {
     int initialIndex = 0,
+    bool continueCurrent = false,
     int? sourcePlaylistId,
   }) {
-    // Extract manual queue songs before replacing the playlist
+    _setPlaylist(
+      songs,
+      manualSongs: _manualQueueSongs,
+      initialIndex: initialIndex,
+      continueCurrent: continueCurrent,
+      sourcePlaylistId: sourcePlaylistId,
+    );
+  }
+
+  List<Song> get _manualQueueSongs {
     final start = _currentIndex + 1;
     final end = (start + _manualQueueCount).clamp(0, _playlist.length);
-    final manualSongs = (start < _playlist.length)
+    return (start < _playlist.length)
         ? _playlist.sublist(start, end)
         : <Song>[];
+  }
 
+  void _setPlaylist(
+    List<Song> songs, {
+    required List<Song> manualSongs,
+    int initialIndex = 0,
+    bool continueCurrent = false,
+    int? sourcePlaylistId,
+  }) {
     _originalPlaylist = List.from(songs);
 
     if (state.isShuffle) {
@@ -507,8 +567,25 @@ class Playback extends _$Playback {
 
     state = state.copyWith(queue: List.from(_playlist));
     if (_playlist.isNotEmpty && _currentIndex != -1) {
-      play(_playlist[_currentIndex], sourcePlaylistId: sourcePlaylistId);
+      if (continueCurrent &&
+          _playlist[_currentIndex].path == state.currentSong?.path) {
+        unawaited(_saveQueueState());
+        unawaited(_continueCollection(sourcePlaylistId));
+      } else {
+        play(_playlist[_currentIndex], sourcePlaylistId: sourcePlaylistId);
+      }
     }
+  }
+
+  Future<void> _continueCollection(int? sourcePlaylistId) async {
+    if (!state.isPlaying) await togglePlay();
+    if (!state.isPlaying || sourcePlaylistId == null) return;
+    await DbService.isar.writeTxn(() async {
+      final playlist = await DbService.isar.playlists.get(sourcePlaylistId);
+      if (playlist == null) return;
+      playlist.lastPlayed = DateTime.now();
+      await DbService.isar.playlists.put(playlist);
+    });
   }
 
   /// [immediate] skips the wait for the UI position to catch up with the

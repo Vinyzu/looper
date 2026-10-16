@@ -1,4 +1,6 @@
 import 'dart:ui';
+
+import 'package:looper_player/core/utils/song_metadata.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:looper_player/ui/widgets/common/app_loading_indicator.dart';
@@ -6,7 +8,7 @@ import 'package:looper_player/core/theme/app_fonts.dart';
 import 'package:looper_player/features/playback/presentation/providers/playback/playback_notifier.dart';
 import 'package:looper_player/features/library/presentation/providers/library/library_notifier.dart';
 import 'package:looper_player/features/playlists/presentation/screens/playlist_view.dart';
-import 'package:looper_player/ui/widgets/common/optimized_image.dart';
+import 'package:looper_player/ui/widgets/common/song_artwork.dart';
 import 'package:looper_player/ui/android/widgets/song_details_bottom_sheet.dart';
 import 'package:looper_player/ui/android/song_info/song_info_screen.dart';
 import 'package:looper_player/l10n/app_localizations.dart';
@@ -243,10 +245,9 @@ class _SongOptionsSheetContent extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(24, 16, 16, 16),
             child: Row(
               children: [
-                OptimizedImage(
-                  imagePath: song.artPath,
-                  width: 52,
-                  height: 52,
+                SongArtwork(
+                  song: song,
+                  size: 52,
                   borderRadius: BorderRadius.circular(12),
                   placeholder: Container(
                     decoration: BoxDecoration(
@@ -273,9 +274,9 @@ class _SongOptionsSheetContent extends ConsumerWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        song.artist ?? l10n.unknownArtist,
+                        artistAlbumLabel(song, l10n),
                         style: AppFonts.jostStyle(
-                          fontSize: 13,
+                          fontSize: 12,
                           color: Colors.white54,
                         ),
                         maxLines: 1,

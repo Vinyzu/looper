@@ -13,7 +13,7 @@ import 'package:looper_player/features/settings/presentation/providers/settings_
 import 'package:looper_player/core/theme/app_fonts.dart';
 import 'package:looper_player/core/utils/responsive.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:looper_player/ui/widgets/common/optimized_image.dart';
+import 'package:looper_player/ui/widgets/common/song_artwork.dart';
 import 'package:intl/intl.dart';
 import 'package:looper_player/ui/android/widgets/audio_analysis/audio_analysis_widget.dart';
 import 'package:looper_player/ui/android/widgets/premium_section.dart';
@@ -339,12 +339,7 @@ class _SongInfoScreenState extends ConsumerState<SongInfoScreen> {
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(20),
-            child: OptimizedImage(
-              imagePath: widget.song.artPath,
-              width: 120,
-              height: 120,
-              fit: BoxFit.cover,
-            ),
+            child: SongArtwork(song: widget.song, size: 120),
           ),
         ),
         const SizedBox(width: 20),

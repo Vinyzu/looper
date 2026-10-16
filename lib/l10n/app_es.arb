@@ -184,6 +184,7 @@
   "permanentFocusChangePause": "Pausa por pérdida permanente de enfoque",
   "permanentFocusChangePauseDesc": "Pausa automáticamente la reproducción al perder el enfoque de audio permanentemente",
   "plainTimestamps": "Marcas de tiempo simples",
+  "scrollToEnd": "Ir al final",
   "play": "Reproducir",
   "playAll": "Reproducir todo",
   "playbackAudio": "Reproducción e idioma",

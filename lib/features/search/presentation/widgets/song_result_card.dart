@@ -49,7 +49,7 @@ class _SongResultCard extends ConsumerWidget {
                   const SizedBox(height: 4),
                   Text(
                     song.artist ?? l10n.unknownArtist,
-                    style: AppFonts.jostStyle(fontSize: 14, color: Colors.grey),
+                    style: AppFonts.jostStyle(fontSize: 13, color: Colors.grey),
                   ),
                   if (lyricSnippet == null) ...[
                     const SizedBox(height: 2),

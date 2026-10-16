@@ -11,6 +11,7 @@ import 'package:looper_player/features/settings/presentation/providers/settings_
 import 'package:looper_player/features/library/presentation/widgets/songs/songs_list.dart';
 import 'package:looper_player/features/playback/presentation/providers/playback/playback_notifier.dart';
 import 'package:looper_player/core/theme/app_fonts.dart';
+import 'package:looper_player/ui/widgets/common/momentum_scroll_controller.dart';
 
 import '../../widgets/premium_section.dart';
 import '../../widgets/empty_library_view.dart';
@@ -34,7 +35,7 @@ class _AndroidSongsTabState extends ConsumerState<AndroidSongsTab> {
   @override
   void initState() {
     super.initState();
-    _scrollController = ScrollController();
+    _scrollController = MomentumScrollController();
     _scrollController.addListener(_scrollListener);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       // All three tabs mount together at app launch now (see

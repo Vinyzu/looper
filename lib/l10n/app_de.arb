@@ -184,6 +184,7 @@
   "permanentFocusChangePause": "Pause bei dauerhaftem Fokusverlust",
   "permanentFocusChangePauseDesc": "Wiedergabe bei dauerhaftem Audio-Fokusverlust automatisch pausieren",
   "plainTimestamps": "Einfache Zeitstempel",
+  "scrollToEnd": "Zum Ende scrollen",
   "play": "Spielen",
   "playAll": "Alle abspielen",
   "playbackAudio": "Wiedergabe & Sprache",

@@ -184,6 +184,7 @@
   "permanentFocusChangePause": "Пауза при постоянной потере фокуса",
   "permanentFocusChangePauseDesc": "Автоматически ставить на паузу при постоянной потере аудиофокуса",
   "plainTimestamps": "Простые временные метки",
+  "scrollToEnd": "Прокрутить до конца",
   "play": "Играть",
   "playAll": "Воспроизвести все",
   "playbackAudio": "Воспроизведение и язык",

@@ -184,6 +184,7 @@
   "permanentFocusChangePause": "Pauzeren bij permanent focusverlies",
   "permanentFocusChangePauseDesc": "Pauzeer het afspelen automatisch bij permanent verlies van audiofocus",
   "plainTimestamps": "Duidelijke tijdstempels",
+  "scrollToEnd": "Naar het einde scrollen",
   "play": "Spelen",
   "playAll": "Alles afspelen",
   "playbackAudio": "Afspelen en taal",

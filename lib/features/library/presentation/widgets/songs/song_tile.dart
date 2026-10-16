@@ -1,8 +1,12 @@
 import 'package:looper_player/core/theme/app_fonts.dart';
+import 'package:looper_player/core/utils/song_metadata.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:looper_player/ui/widgets/common/highlighted_text.dart';
 import 'package:looper_player/ui/widgets/common/optimized_image.dart';
+import 'package:looper_player/ui/widgets/common/song_favorite_button.dart';
+import 'package:looper_player/ui/widgets/common/playlist_reorderable_listener.dart';
+import 'package:looper_player/ui/widgets/common/song_playback_overlay.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:looper_player/features/playback/presentation/providers/playback/playback_notifier.dart';
 import 'package:looper_player/core/providers/navigation_provider.dart';
@@ -10,7 +14,6 @@ import 'package:looper_player/core/services/storage/db_service.dart';
 import 'package:isar_community/isar.dart';
 import 'package:looper_player/l10n/app_localizations.dart';
 import 'package:looper_player/ui/widgets/sheets/song_options_bottom_sheet.dart';
-import 'package:looper_player/core/theme/app_assets.dart';
 import 'package:looper_player/core/services/haptics/app_haptics.dart';
 import 'package:looper_player/features/search/domain/lyric_snippet.dart'
     as search
@@ -22,13 +25,13 @@ class SongTile extends ConsumerWidget {
   final AppLocalizations l10n;
   final String? searchQuery;
   final Playlist? playlist;
+  final bool showAlbum;
   final bool selectionMode;
   final bool selected;
   final VoidCallback? onToggleSelect;
   final VoidCallback? onEnterSelection;
-  // Non-null only when this tile is rendered inside a SliverReorderableList
-  // (a playlist showing its own saved order) - its presence is what decides
-  // whether the drag-handle grip icon shows up at all.
+  // A displayed position is independent of whether sorting permits reordering.
+  final int? collectionIndex;
   final int? reorderIndex;
   // Search-only extras: highlight the [searchQuery] match in the title, and
   // get told when a tap starts playback (not when it toggles a selection).
@@ -41,65 +44,85 @@ class SongTile extends ConsumerWidget {
     required this.l10n,
     this.searchQuery,
     this.playlist,
+    this.showAlbum = false,
     this.selectionMode = false,
     this.selected = false,
     this.onToggleSelect,
     this.onEnterSelection,
+    this.collectionIndex,
     this.reorderIndex,
     this.highlightTitle = false,
     this.onPlay,
     super.key,
   });
 
+  Future<void> _openArtist(BuildContext context, WidgetRef ref) async {
+    final artistName = song.artist;
+    if (artistName == null || artistName.trim().isEmpty) return;
+    final artistSongs = await DbService.isar.songs
+        .filter()
+        .artistEqualTo(artistName)
+        .findAll();
+    final artist = await DbService.isar.artists
+        .filter()
+        .nameEqualTo(artistName)
+        .findFirst();
+    if (!context.mounted) return;
+    ref
+        .read(appNavigationProvider.notifier)
+        .showCollection(
+          title: artistName,
+          subtitle: l10n.artists,
+          art: artist?.artPath ?? song.artPath,
+          imageUrl: artist?.artistImageUrl,
+          songs: artistSongs,
+        );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isCurrent = ref.watch(
       playbackProvider.select((s) => s.currentSong?.path == song.path),
     );
-    final isPlaying = ref.watch(playbackProvider.select((s) => s.isPlaying));
+    final isPlaying =
+        isCurrent && ref.watch(playbackProvider.select((s) => s.isPlaying));
+    final isCollection = collectionIndex != null || playlist != null;
+    final songSubtitle = showAlbum || isCollection
+        ? artistAlbumLabel(song, l10n)
+        : song.artist ?? l10n.unknownArtist;
+
+    // The ListTile subtitle fills its column. Loosen those constraints so the
+    // link only covers the smaller text, leaving row taps around it for Play.
+    final subtitle = Align(
+      alignment: Alignment.centerLeft,
+      heightFactor: 1,
+      child: InkWell(
+        onTap: !selectionMode && song.artist?.trim().isNotEmpty == true
+            ? () => _openArtist(context, ref)
+            : null,
+        child: Text(
+          songSubtitle,
+          style: AppFonts.jostStyle(
+            color: Colors.white.withValues(alpha: 0.5),
+            fontSize: 12,
+            height: 1.15,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
+    );
 
     String? lyricSnippet;
     if (searchQuery != null && searchQuery!.isNotEmpty && song.lyrics != null) {
       lyricSnippet = search.lyricSnippet(song.lyrics!, searchQuery!);
     }
 
-    final artistLink = InkWell(
-      onTap: () async {
-        if (song.artist != null) {
-          final artistSongs = await DbService.isar.songs
-              .filter()
-              .artistEqualTo(song.artist!)
-              .findAll();
-          final artist = await DbService.isar.artists
-              .filter()
-              .nameEqualTo(song.artist!)
-              .findFirst();
-          ref
-              .read(appNavigationProvider.notifier)
-              .showCollection(
-                title: song.artist!,
-                subtitle: l10n.artists,
-                art: artist?.artPath ?? song.artPath,
-                imageUrl: artist?.artistImageUrl,
-                songs: artistSongs,
-              );
-        }
-      },
-      child: Text(
-        song.artist ?? l10n.unknownArtist,
-        style: AppFonts.jostStyle(
-          color: Colors.white.withValues(alpha: 0.5),
-          fontSize: 13,
-        ),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
-    );
-
-    return Material(
+    final tile = Material(
+      type: selected ? MaterialType.canvas : MaterialType.transparency,
       color: selected
           ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.08)
-          : Colors.transparent,
+          : null,
       child: _SongTileBouncyTap(
         onTap: () {
           if (selectionMode) {
@@ -107,7 +130,8 @@ class SongTile extends ConsumerWidget {
             return;
           }
           onPlay?.call();
-          final index = songs.indexWhere((s) => s.path == song.path);
+          final index =
+              collectionIndex ?? songs.indexWhere((s) => s.path == song.path);
           if (index != -1) {
             ref
                 .read(playbackProvider.notifier)
@@ -127,78 +151,68 @@ class SongTile extends ConsumerWidget {
         // there's nowhere else in this list a batch action could live.
         onLongPress: selectionMode ? null : onEnterSelection,
         child: ListTile(
-          contentPadding: const EdgeInsets.only(
-            left: 16,
+          contentPadding: EdgeInsets.only(
+            left: collectionIndex != null ? 8 : 16,
             right: 4,
             top: 0,
             bottom: 0,
           ),
-          leading: ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: Stack(
-              children: [
-                isCurrent
-                    ? Stack(
-                        children: [
-                          OptimizedImage(
-                            imagePath: song.artPath,
-                            width: 52,
-                            height: 52,
-                            fit: BoxFit.cover,
-                          ),
-                          Positioned.fill(
-                            child: AnimatedOpacity(
-                              duration: const Duration(milliseconds: 300),
-                              opacity: isPlaying ? 1.0 : 0.0,
-                              child: Container(
-                                color: Colors.black.withValues(alpha: 0.4),
-                                child: Center(
-                                  // Animated GIF frame decoding doesn't respect
-                                  // TickerMode - an Image.asset(.gif) keeps
-                                  // ticking on its own Timer even while offstage
-                                  // (e.g. this tab sitting inactive behind
-                                  // another one - see AndroidMainScreen). Skip
-                                  // mounting it entirely while offstage, where
-                                  // it wouldn't be visible anyway.
-                                  child: TickerMode.of(context)
-                                      ? Image.asset(
-                                          AppAssets.playingGif,
-                                          width: 24,
-                                          height: 24,
-                                          color: Colors.white,
-                                        )
-                                      : const SizedBox.shrink(),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      )
-                    : OptimizedImage(
-                        imagePath: song.artPath,
-                        width: 52,
-                        height: 52,
-                        fit: BoxFit.cover,
+          leading: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (collectionIndex != null) ...[
+                SizedBox(
+                  width: 20,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.center,
+                    child: Text(
+                      '${collectionIndex! + 1}',
+                      maxLines: 1,
+                      style: AppFonts.jostStyle(
+                        color: Colors.white.withValues(alpha: 0.5),
+                        fontSize: 11,
                       ),
-                if (selectionMode)
-                  Positioned.fill(
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 150),
-                      curve: Curves.easeOutCubic,
-                      color: selected
-                          ? Colors.black.withValues(alpha: 0.35)
-                          : Colors.transparent,
-                      child: selected
-                          ? Icon(
-                              LucideIcons.checkCircle2,
-                              color: Theme.of(context).colorScheme.primary,
-                              size: 24,
-                            )
-                          : null,
                     ),
                   ),
+                ),
+                const SizedBox(width: 12),
               ],
-            ),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: Stack(
+                  children: [
+                    OptimizedImage(
+                      imagePath: song.artPath,
+                      width: 52,
+                      height: 52,
+                      fit: BoxFit.cover,
+                    ),
+                    if (isCurrent)
+                      Positioned.fill(
+                        child: SongPlaybackOverlay(isPlaying: isPlaying),
+                      ),
+                    if (selectionMode)
+                      Positioned.fill(
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 150),
+                          curve: Curves.easeOutCubic,
+                          color: selected
+                              ? Colors.black.withValues(alpha: 0.35)
+                              : Colors.transparent,
+                          child: selected
+                              ? Icon(
+                                  LucideIcons.checkCircle2,
+                                  color: Theme.of(context).colorScheme.primary,
+                                  size: 24,
+                                )
+                              : null,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
           ),
           title: highlightTitle && !isCurrent
               ? highlightedText(
@@ -230,7 +244,7 @@ class SongTile extends ConsumerWidget {
               ? Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    artistLink,
+                    subtitle,
                     const SizedBox(height: 6),
                     Container(
                       padding: const EdgeInsets.symmetric(
@@ -279,24 +293,26 @@ class SongTile extends ConsumerWidget {
                     ),
                   ],
                 )
-              : artistLink,
+              : subtitle,
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (reorderIndex != null)
-                ReorderableDragStartListener(
-                  index: reorderIndex!,
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 4),
-                    child: Icon(
-                      LucideIcons.gripVertical,
-                      size: 20,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ),
+              if (isCollection) SongFavoriteButton(song: song),
               IconButton(
-                icon: const Icon(Icons.more_vert, color: Colors.grey),
+                padding: isCollection ? EdgeInsets.zero : null,
+                constraints: isCollection
+                    ? const BoxConstraints.tightFor(width: 32, height: 36)
+                    : null,
+                style: isCollection
+                    ? IconButton.styleFrom(
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      )
+                    : null,
+                icon: Icon(
+                  Icons.more_vert,
+                  size: isCollection ? 20 : 24,
+                  color: Colors.grey,
+                ),
                 onPressed: () => showSongOptionsBottomSheet(
                   context: context,
                   ref: ref,
@@ -310,6 +326,13 @@ class SongTile extends ConsumerWidget {
         ),
       ),
     );
+    return reorderIndex == null
+        ? tile
+        : PlaylistReorderableListener(
+            index: reorderIndex!,
+            enabled: !selectionMode,
+            child: tile,
+          );
   }
 }
 

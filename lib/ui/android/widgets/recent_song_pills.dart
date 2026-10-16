@@ -4,7 +4,7 @@ import 'package:looper_player/core/services/haptics/app_haptics.dart';
 import 'package:looper_player/core/theme/app_fonts.dart';
 import 'package:looper_player/features/library/domain/models/models.dart';
 import 'package:looper_player/features/playback/presentation/providers/playback/playback_notifier.dart';
-import 'package:looper_player/ui/widgets/common/optimized_image.dart';
+import 'package:looper_player/ui/widgets/common/song_artwork.dart';
 
 import 'premium_section.dart';
 
@@ -77,16 +77,11 @@ class RecentSongPills extends ConsumerWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ClipRRect(
+            SongArtwork(
+              song: song,
+              size: 24,
               borderRadius: BorderRadius.circular(4),
-              child: SizedBox(
-                width: 24,
-                height: 24,
-                child: OptimizedImage(
-                  imagePath: song.artPath,
-                  fit: BoxFit.cover,
-                ),
-              ),
+              indicatorSize: 16,
             ),
             const SizedBox(width: 6),
             Text(

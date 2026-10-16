@@ -23,6 +23,7 @@ import 'package:looper_player/features/playlists/presentation/screens/playlist_v
     show playlistProvider;
 import 'package:looper_player/features/library/domain/song_full_plays.dart';
 import 'package:looper_player/ui/widgets/common/fast_scroller.dart';
+import 'package:looper_player/ui/widgets/common/momentum_scroll_controller.dart';
 
 import 'song_tile.dart';
 
@@ -72,7 +73,7 @@ class _SongsListState extends ConsumerState<SongsList> {
   // one get their own.
   ScrollController? _ownController;
   ScrollController get _scrollController =>
-      widget.controller ?? (_ownController ??= ScrollController());
+      widget.controller ?? (_ownController ??= MomentumScrollController());
 
   @override
   void dispose() {
@@ -326,6 +327,7 @@ class _SongsListState extends ConsumerState<SongsList> {
 
   /// One real, inert row for a list's `prototypeItem` to measure.
   Widget _buildPrototypeRow(AppLocalizations l10n) => SongTile(
+    showAlbum: true,
     song: widget.songs.first,
     l10n: l10n,
     songs: widget.songs,
@@ -340,6 +342,7 @@ class _SongsListState extends ConsumerState<SongsList> {
   Widget _buildRow(int index, AppLocalizations l10n) {
     final song = widget.songs[index];
     return SongTile(
+      showAlbum: true,
       key: ValueKey(song.path),
       song: song,
       l10n: l10n,

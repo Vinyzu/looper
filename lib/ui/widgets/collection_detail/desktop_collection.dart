@@ -19,18 +19,15 @@ extension _DesktopCollection on CollectionDetailView {
     required String? activePath,
   }) {
     final l10n = AppLocalizations.of(context)!;
-    final totalMs = songs.fold<int>(0, (sum, s) => sum + (s.duration ?? 0));
-    final totalMinutes = (totalMs / 60000).round();
-    final durationLabel = totalMinutes >= 60
-        ? l10n.durationHoursMinutes(totalMinutes ~/ 60, totalMinutes % 60)
-        : l10n.minutesShort(totalMinutes);
+    final isShuffle = ref.watch(playbackProvider.select((s) => s.isShuffle));
 
     Widget row(int index, {int? reorderIndex}) {
       final song = songs[index];
       return _DesktopSongRow(
-        key: ValueKey(song.path),
+        key: ValueKey((song.path, index)),
         song: song,
         songs: songs,
+        index: index,
         playlist: reactivePlaylist,
         isCurrent: song.path == activePath,
         reorderIndex: reorderIndex,
@@ -39,212 +36,211 @@ extension _DesktopCollection on CollectionDetailView {
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: CustomScrollView(
-        physics: const BouncingScrollPhysics(),
-        slivers: [
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(24, 28, 24, 0),
-            sliver: SliverToBoxAdapter(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (reactivePlaylist != null)
-                        PlaylistArtwork(
-                          songPaths: reactivePlaylist.songPaths,
-                          size: 140,
-                          borderRadius: BorderRadius.circular(6),
-                        )
-                      else
-                        OptimizedImage(
-                          imagePath: art,
-                          imageUrl: imageUrl,
-                          width: 140,
-                          height: 140,
-                          borderRadius: BorderRadius.circular(6),
-                          placeholder: Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.05),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: const Icon(
-                              LucideIcons.music,
-                              size: 48,
-                              color: Colors.grey,
+      body: CollectionScrollToEnd(
+        bottomPadding: activePath != null ? 100 : 16,
+        builder: (controller) => CustomScrollView(
+          controller: controller,
+          physics: const BouncingScrollPhysics(),
+          slivers: [
+            _buildScrollHeader(
+              context,
+              ref,
+              title: title,
+              art: art,
+              playlist: reactivePlaylist,
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(24, 28, 24, 0),
+              sliver: SliverToBoxAdapter(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (reactivePlaylist != null)
+                          PlaylistArtwork(
+                            songPaths: reactivePlaylist.songPaths,
+                            size: 140,
+                            borderRadius: BorderRadius.circular(6),
+                          )
+                        else
+                          OptimizedImage(
+                            imagePath: art,
+                            imageUrl: imageUrl,
+                            width: 140,
+                            height: 140,
+                            borderRadius: BorderRadius.circular(6),
+                            placeholder: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.05),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: const Icon(
+                                LucideIcons.music,
+                                size: 48,
+                                color: Colors.grey,
+                              ),
                             ),
                           ),
-                        ),
-                      const SizedBox(width: 22),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const SizedBox(height: 4),
-                            Text(
-                              title,
-                              style: AppFonts.jostStyle(
-                                fontSize: 34,
-                                height: 1.15,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.white,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            if (subtitle != null) ...[
+                        const SizedBox(width: 22),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
                               const SizedBox(height: 4),
                               Text(
-                                subtitle,
+                                title,
                                 style: AppFonts.jostStyle(
-                                  fontSize: 22,
-                                  color: Colors.white.withValues(alpha: 0.45),
+                                  fontSize: 34,
+                                  height: 1.15,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.white,
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
-                            ],
-                            const SizedBox(height: 16),
-                            Row(
-                              children: [
-                                _DesktopPill(
-                                  onTap: () => ref
-                                      .read(playbackProvider.notifier)
-                                      .setPlaylist(
+                              const SizedBox(height: 4),
+                              _buildCollectionSubtitle(
+                                reactivePlaylist != null
+                                    ? l10n.playlist
+                                    : subtitle,
+                                songs,
+                                l10n,
+                                fontSize: 22,
+                                color: Colors.white.withValues(alpha: 0.45),
+                              ),
+                              const SizedBox(height: 16),
+                              Row(
+                                children: [
+                                  _DesktopPill(
+                                    onTap: () {
+                                      final playback = ref.read(
+                                        playbackProvider.notifier,
+                                      );
+                                      playback.playCollection(
                                         songs,
                                         sourcePlaylistId: reactivePlaylist?.id,
-                                      ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Icon(
-                                        Icons.play_arrow_rounded,
-                                        color: Colors.white,
-                                        size: 20,
-                                      ),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        l10n.playAll,
-                                        style: AppFonts.jostStyle(
+                                      );
+                                    },
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(
+                                          Icons.play_arrow_rounded,
                                           color: Colors.white,
-                                          fontSize: 14,
+                                          size: 20,
                                         ),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          l10n.play,
+                                          style: AppFonts.jostStyle(
+                                            color: Colors.white,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  _DesktopPill.icon(
+                                    icon: LucideIcons.shuffle,
+                                    iconColor: isShuffle
+                                        ? Colors.white
+                                        : Colors.white.withValues(alpha: 0.5),
+                                    backgroundColor: isShuffle
+                                        ? Colors.white.withValues(alpha: 0.10)
+                                        : null,
+                                    tooltip: l10n.shuffleTitle,
+                                    onTap: () {
+                                      ref
+                                          .read(playbackProvider.notifier)
+                                          .toggleCollectionShuffle(
+                                            songs,
+                                            sourcePlaylistId:
+                                                reactivePlaylist?.id,
+                                          );
+                                    },
+                                  ),
+                                  if (reactivePlaylist != null) ...[
+                                    const SizedBox(width: 10),
+                                    _DesktopPill.icon(
+                                      icon: LucideIcons.plus,
+                                      tooltip: l10n.addSongsToPlaylistTitle,
+                                      onTap: () => _showAddSongsHint(context),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    _DesktopPill.icon(
+                                      icon: LucideIcons.moreHorizontal,
+                                      onTap: () => _showPlaylistOptions(
+                                        context,
+                                        ref,
+                                        reactivePlaylist,
                                       ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(width: 10),
-                                _DesktopPill.icon(
-                                  icon: LucideIcons.shuffle,
-                                  tooltip: l10n.shuffleTitle,
-                                  onTap: () {
-                                    ref
-                                        .read(playbackProvider.notifier)
-                                        .toggleShuffle();
-                                    ref
-                                        .read(playbackProvider.notifier)
-                                        .setPlaylist(
-                                          songs,
-                                          sourcePlaylistId:
-                                              reactivePlaylist?.id,
-                                        );
-                                  },
-                                ),
-                                if (reactivePlaylist != null) ...[
-                                  const SizedBox(width: 10),
-                                  _DesktopPill.icon(
-                                    icon: LucideIcons.plus,
-                                    tooltip: l10n.addSongsToPlaylistTitle,
-                                    onTap: () => _showAddSongsHint(context),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  _DesktopPill.icon(
-                                    icon: LucideIcons.moreHorizontal,
-                                    onTap: () => _showPlaylistOptions(
-                                      context,
-                                      ref,
-                                      reactivePlaylist,
                                     ),
-                                  ),
-                                ] else if (reactiveAlbum != null) ...[
-                                  const SizedBox(width: 10),
-                                  _DesktopPill.icon(
-                                    icon: LucideIcons.edit2,
-                                    onTap: () => _showEditAlbumSheet(
-                                      context,
-                                      ref,
-                                      reactiveAlbum,
+                                  ] else if (reactiveAlbum != null) ...[
+                                    const SizedBox(width: 10),
+                                    _DesktopPill.icon(
+                                      icon: LucideIcons.edit2,
+                                      onTap: () => _showEditAlbumSheet(
+                                        context,
+                                        ref,
+                                        reactiveAlbum,
+                                      ),
                                     ),
-                                  ),
+                                  ],
                                 ],
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 38),
-                  Row(
-                    children: [
-                      _DesktopPill(
-                        child: Text(
-                          l10n.songsCountTitle(songs.length),
-                          style: AppFonts.jostStyle(
-                            color: Colors.white,
-                            fontSize: 14,
+                              ),
+                            ],
                           ),
                         ),
-                      ),
-                      const Spacer(),
-                      _DesktopPill.icon(
-                        icon: LucideIcons.arrowUpDown,
-                        onTap: () => _showSortBottomSheet(context, ref),
-                      ),
-                      const SizedBox(width: 12),
-                      _DesktopPill(
-                        child: Text(
-                          durationLabel,
-                          style: AppFonts.jostStyle(
-                            color: Colors.white.withValues(alpha: 0.45),
-                            fontSize: 14,
-                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 38),
+                    Row(
+                      children: [
+                        const Spacer(),
+                        _DesktopPill.icon(
+                          icon: LucideIcons.arrowUpDown,
+                          onTap: () => _showSortBottomSheet(context, ref),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                ],
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                ),
               ),
             ),
-          ),
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            // Dragging to reorder only applies to a playlist in its own saved
-            // order (see the mobile layout).
-            sliver: canReorder
-                ? SliverReorderableList(
-                    itemCount: songs.length,
-                    itemBuilder: (context, index) =>
-                        row(index, reorderIndex: index),
-                    onReorder: (oldIndex, newIndex) {
-                      PlaylistService.reorderSong(
-                        reactivePlaylist!,
-                        oldIndex,
-                        newIndex,
-                      );
-                    },
-                  )
-                : SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) => row(index),
-                      childCount: songs.length,
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              // Dragging to reorder only applies to a playlist in its own saved
+              // order (see the mobile layout).
+              sliver: canReorder
+                  ? SliverReorderableList(
+                      itemExtent: 56,
+                      itemCount: songs.length,
+                      onReorderStart: (_) => AppHaptics.medium(),
+                      itemBuilder: (context, index) =>
+                          row(index, reorderIndex: index),
+                      onReorder: (oldIndex, newIndex) {
+                        PlaylistService.reorderSong(
+                          reactivePlaylist!,
+                          oldIndex,
+                          newIndex,
+                        );
+                      },
+                    )
+                  : SliverFixedExtentList(
+                      itemExtent: 56,
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) => row(index),
+                        childCount: songs.length,
+                      ),
                     ),
-                  ),
-          ),
-          const SliverToBoxAdapter(child: SizedBox(height: 48)),
-        ],
+            ),
+            const SliverToBoxAdapter(child: SizedBox(height: 48)),
+          ],
+        ),
       ),
     );
   }
@@ -256,19 +252,26 @@ class _DesktopPill extends StatelessWidget {
   final VoidCallback? onTap;
   final String? tooltip;
   final bool circle;
+  final Color? backgroundColor;
 
   const _DesktopPill({required this.child, this.onTap})
     : tooltip = null,
-      circle = false;
+      circle = false,
+      backgroundColor = null;
 
-  _DesktopPill.icon({required IconData icon, this.onTap, this.tooltip})
-    : child = Icon(icon, size: 15, color: Colors.white),
-      circle = true;
+  _DesktopPill.icon({
+    required IconData icon,
+    Color iconColor = Colors.white,
+    this.backgroundColor,
+    this.onTap,
+    this.tooltip,
+  }) : child = Icon(icon, size: 15, color: iconColor),
+       circle = true;
 
   @override
   Widget build(BuildContext context) {
     final pill = Material(
-      color: _DesktopCollection._pillColor,
+      color: backgroundColor ?? _DesktopCollection._pillColor,
       shape: const StadiumBorder(),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -292,6 +295,7 @@ class _DesktopPill extends StatelessWidget {
 class _DesktopSongRow extends ConsumerStatefulWidget {
   final Song song;
   final List<Song> songs;
+  final int index;
   final Playlist? playlist;
   final bool isCurrent;
   final int? reorderIndex;
@@ -300,6 +304,7 @@ class _DesktopSongRow extends ConsumerStatefulWidget {
     super.key,
     required this.song,
     required this.songs,
+    required this.index,
     required this.isCurrent,
     this.playlist,
     this.reorderIndex,
@@ -311,28 +316,13 @@ class _DesktopSongRow extends ConsumerStatefulWidget {
 
 class _DesktopSongRowState extends ConsumerState<_DesktopSongRow> {
   bool _hovered = false;
-  late bool _favorite = widget.song.isFavorite;
-
-  @override
-  void didUpdateWidget(_DesktopSongRow oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (!identical(oldWidget.song, widget.song)) {
-      _favorite = widget.song.isFavorite;
-    }
-  }
-
   void _play() {
-    final index = widget.songs.indexWhere((s) => s.path == widget.song.path);
     final playback = ref.read(playbackProvider.notifier);
-    if (index != -1) {
-      playback.setPlaylist(
-        widget.songs,
-        initialIndex: index,
-        sourcePlaylistId: widget.playlist?.id,
-      );
-    } else {
-      playback.play(widget.song, sourcePlaylistId: widget.playlist?.id);
-    }
+    playback.setPlaylist(
+      widget.songs,
+      initialIndex: widget.index,
+      sourcePlaylistId: widget.playlist?.id,
+    );
   }
 
   void _showOptions() => showSongOptionsBottomSheet(
@@ -354,17 +344,9 @@ class _DesktopSongRowState extends ConsumerState<_DesktopSongRow> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final song = widget.song;
+    final isPlaying = ref.watch(playbackProvider.select((s) => s.isPlaying));
     final lit = _hovered || widget.isCurrent;
-    // The playing song's favourite state lives in the playback state.
-    final favorite = widget.isCurrent
-        ? ref.watch(
-            playbackProvider.select(
-              (s) => s.currentSong?.isFavorite ?? _favorite,
-            ),
-          )
-        : _favorite;
-
-    return MouseRegion(
+    final row = MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
@@ -375,7 +357,7 @@ class _DesktopSongRowState extends ConsumerState<_DesktopSongRow> {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 120),
           height: 56,
-          padding: const EdgeInsets.only(left: 8, right: 12),
+          padding: const EdgeInsets.only(right: 12),
           decoration: BoxDecoration(
             color: lit
                 ? Colors.white.withValues(alpha: 0.04)
@@ -384,18 +366,45 @@ class _DesktopSongRowState extends ConsumerState<_DesktopSongRow> {
           ),
           child: Row(
             children: [
-              OptimizedImage(
-                imagePath: song.artPath,
-                width: 42,
-                height: 42,
-                borderRadius: BorderRadius.circular(4),
-                placeholder: Container(
-                  color: Colors.white.withValues(alpha: 0.05),
-                  child: const Icon(
-                    LucideIcons.music,
-                    size: 16,
-                    color: Colors.white24,
+              SizedBox(
+                width: 20,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.center,
+                  child: Text(
+                    '${widget.index + 1}',
+                    maxLines: 1,
+                    style: AppFonts.jostStyle(
+                      color: Colors.white.withValues(alpha: 0.45),
+                      fontSize: 11,
+                    ),
                   ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: Stack(
+                  children: [
+                    OptimizedImage(
+                      imagePath: song.artPath,
+                      width: 42,
+                      height: 42,
+                      borderRadius: BorderRadius.circular(4),
+                      placeholder: Container(
+                        color: Colors.white.withValues(alpha: 0.05),
+                        child: const Icon(
+                          LucideIcons.music,
+                          size: 16,
+                          color: Colors.white24,
+                        ),
+                      ),
+                    ),
+                    if (widget.isCurrent)
+                      Positioned.fill(
+                        child: SongPlaybackOverlay(isPlaying: isPlaying),
+                      ),
+                  ],
                 ),
               ),
               const SizedBox(width: 8),
@@ -416,10 +425,10 @@ class _DesktopSongRowState extends ConsumerState<_DesktopSongRow> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      song.artist ?? l10n.unknownArtist,
+                      artistAlbumLabel(song, l10n),
                       style: AppFonts.jostStyle(
                         color: Colors.white.withValues(alpha: 0.45),
-                        fontSize: 12,
+                        fontSize: 11,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -427,22 +436,17 @@ class _DesktopSongRowState extends ConsumerState<_DesktopSongRow> {
                   ],
                 ),
               ),
-              if (widget.reorderIndex != null)
-                ReorderableDragStartListener(
-                  index: widget.reorderIndex!,
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 6),
-                    child: Icon(
-                      LucideIcons.gripVertical,
-                      size: 18,
-                      color: Colors.white38,
-                    ),
-                  ),
-                ),
               Opacity(
                 opacity: _hovered ? 1 : 0,
                 child: IconButton(
-                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints.tightFor(
+                    width: 32,
+                    height: 36,
+                  ),
+                  style: IconButton.styleFrom(
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
                   icon: const Icon(
                     Icons.more_vert,
                     size: 18,
@@ -451,23 +455,7 @@ class _DesktopSongRowState extends ConsumerState<_DesktopSongRow> {
                   onPressed: _showOptions,
                 ),
               ),
-              IconButton(
-                visualDensity: VisualDensity.compact,
-                tooltip: l10n.toggleFavorite,
-                icon: SvgPicture.asset(
-                  favorite ? AppAssets.desktopLiked : AppAssets.desktopLike,
-                  width: 16,
-                  height: 16,
-                  colorFilter: ColorFilter.mode(
-                    favorite ? Colors.red : Colors.white54,
-                    BlendMode.srcIn,
-                  ),
-                ),
-                onPressed: () {
-                  setState(() => _favorite = !favorite);
-                  ref.read(libraryProvider.notifier).toggleFavorite(song);
-                },
-              ),
+              SongFavoriteButton(song: song),
               const SizedBox(width: 12),
               SizedBox(
                 width: 48,
@@ -484,5 +472,8 @@ class _DesktopSongRowState extends ConsumerState<_DesktopSongRow> {
         ),
       ),
     );
+    return widget.reorderIndex == null
+        ? row
+        : PlaylistReorderableListener(index: widget.reorderIndex!, child: row);
   }
 }

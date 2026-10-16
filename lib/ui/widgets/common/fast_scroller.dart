@@ -91,17 +91,22 @@ class _FastScrollerState extends State<FastScroller> {
     return p.maxScrollExtent > p.viewportDimension * widget.minScreens;
   }
 
-  void _show() {
+  void _show({bool scheduleHide = true}) {
     if (!_longEnough) return;
     _visible.value = true;
     _hideTimer?.cancel();
-    if (!_dragging.value) {
+    if (scheduleHide && !_dragging.value) {
       _hideTimer = Timer(_hideDelay, () => _visible.value = false);
     }
   }
 
   bool _onScroll(ScrollNotification n) {
-    if (n.depth == 0 && n is ScrollUpdateNotification) _show();
+    if (n.depth != 0) return false;
+    if (n is ScrollUpdateNotification) {
+      _show(scheduleHide: false);
+    } else if (n is ScrollEndNotification) {
+      _show();
+    }
     return false;
   }
 

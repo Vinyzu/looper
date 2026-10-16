@@ -1,9 +1,12 @@
 import 'dart:ui';
 import 'dart:io';
+
+import 'package:looper_player/features/library/domain/models/models.dart';
+import 'package:looper_player/core/utils/song_metadata.dart';
 import 'package:looper_player/core/utils/ui_utils.dart';
 import 'package:flutter/material.dart' hide RepeatMode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:looper_player/ui/widgets/common/optimized_image.dart';
+import 'package:looper_player/ui/widgets/common/song_artwork.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:looper_player/core/providers/navigation_provider.dart';
 import '../../../../features/playback/presentation/providers/playback/playback_notifier.dart';
@@ -59,8 +62,7 @@ class _PremiumPlayerBar extends ConsumerWidget {
     );
 
     final title = song.title;
-    final artist = song.artist ?? AppLocalizations.of(context)!.unknownArtist;
-    final artPath = song.artPath;
+    final artist = artistAlbumLabel(song, AppLocalizations.of(context)!);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -102,7 +104,7 @@ class _PremiumPlayerBar extends ConsumerWidget {
                           context,
                           title,
                           artist,
-                          artPath,
+                          song,
                           isVeryNarrow,
                         ),
                       ),
@@ -200,7 +202,7 @@ class _PremiumPlayerBar extends ConsumerWidget {
     BuildContext context,
     String title,
     String artist,
-    String? artPath,
+    Song song,
     bool isVeryNarrow,
   ) {
     final artSize = (isVeryNarrow ? 40 : 56).s;
@@ -219,10 +221,10 @@ class _PremiumPlayerBar extends ConsumerWidget {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: OptimizedImage(
-                imagePath: artPath,
+              child: SongArtwork(
+                song: song,
+                size: art,
                 borderRadius: BorderRadius.circular(6),
-                fit: BoxFit.cover,
                 placeholder: Icon(
                   LucideIcons.music,
                   color: Colors.white24,
@@ -251,7 +253,7 @@ class _PremiumPlayerBar extends ConsumerWidget {
                       artist,
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.5),
-                        fontSize: (isVeryNarrow ? 10 : 12).ts,
+                        fontSize: (isVeryNarrow ? 10 : 11).ts,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,

@@ -1,7 +1,10 @@
 import 'package:looper_player/core/providers/collection_navigation.dart';
 import 'dart:math' as math;
 
+import 'package:looper_player/core/utils/song_metadata.dart';
+
 import 'package:flutter/material.dart';
+import 'package:looper_player/ui/widgets/common/song_artwork.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:isar_community/isar.dart';
@@ -31,7 +34,6 @@ import '../library/categories/library_categories_views.dart';
 import '../../widgets/genre_card.dart';
 import '../../widgets/recent_song_pills.dart';
 
-import 'package:looper_player/core/theme/app_assets.dart';
 import 'package:looper_player/core/services/haptics/app_haptics.dart';
 part 'home_sections.dart';
 
@@ -483,11 +485,10 @@ class _AndroidHomeTabState extends ConsumerState<AndroidHomeTab> {
                                     child: Stack(
                                       children: [
                                         Positioned.fill(
-                                          child: OptimizedImage(
-                                            imagePath: song.artPath,
-                                            width: itemWidth,
-                                            height: itemWidth,
-                                            fit: BoxFit.cover,
+                                          child: SongArtwork(
+                                            song: song,
+                                            size: itemWidth,
+                                            indicatorSize: 32,
                                           ),
                                         ),
                                         Positioned.fill(
@@ -509,57 +510,31 @@ class _AndroidHomeTabState extends ConsumerState<AndroidHomeTab> {
                                           left: 8,
                                           bottom: 8,
                                           right: 8,
-                                          child: Text(
-                                            song.title,
-                                            style: AppFonts.jostStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.w500,
-                                              fontSize: 13,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                        Positioned.fill(
-                                          child: Consumer(
-                                            builder: (context, ref, _) {
-                                              // Scoped watch: only this tile rebuilds on
-                                              // playback ticks, instead of the whole home
-                                              // tab (which also re-sorts the entire
-                                              // library) re-rendering on every play/pause.
-                                              final isNowPlayingHere = ref
-                                                  .watch(
-                                                    playbackProvider.select(
-                                                      (s) =>
-                                                          s.isPlaying &&
-                                                          s.currentSong?.path ==
-                                                              song.path,
-                                                    ),
-                                                  );
-                                              // Animated GIF frame decoding
-                                              // doesn't respect TickerMode - skip
-                                              // mounting it while this tab is
-                                              // offstage (see AndroidMainScreen),
-                                              // where it wouldn't be visible
-                                              // anyway.
-                                              if (!isNowPlayingHere ||
-                                                  !TickerMode.of(context)) {
-                                                return const SizedBox.shrink();
-                                              }
-                                              return Container(
-                                                color: Colors.black.withValues(
-                                                  alpha: 0.5,
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                song.title,
+                                                style: AppFonts.jostStyle(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.w500,
+                                                  fontSize: 13,
                                                 ),
-                                                child: Center(
-                                                  child: Image.asset(
-                                                    AppAssets.playingGif,
-                                                    width: 32,
-                                                    height: 32,
-                                                    color: Colors.white,
-                                                  ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                              Text(
+                                                artistAlbumLabel(song, l10n),
+                                                style: AppFonts.jostStyle(
+                                                  color: Colors.white
+                                                      .withValues(alpha: 0.6),
+                                                  fontSize: 10,
                                                 ),
-                                              );
-                                            },
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ],
                                           ),
                                         ),
                                       ],
@@ -661,6 +636,7 @@ class _AndroidHomeTabState extends ConsumerState<AndroidHomeTab> {
               (context, index) {
                 final song = dateAddedSongs[index];
                 return SongTile(
+                  showAlbum: true,
                   key: ValueKey(song.path),
                   song: song,
                   l10n: l10n,

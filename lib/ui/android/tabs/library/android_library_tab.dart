@@ -1,5 +1,6 @@
 import 'package:looper_player/ui/android/widgets/recent_song_pills.dart';
 import 'package:flutter/material.dart';
+import 'package:looper_player/ui/widgets/common/song_artwork.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:looper_player/core/providers/navigation_provider.dart';
 import 'package:looper_player/features/library/presentation/providers/library/library_notifier.dart';

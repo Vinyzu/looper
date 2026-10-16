@@ -5,6 +5,10 @@ import 'package:looper_player/core/utils/responsive.dart';
 import 'package:looper_player/ui/android/widgets/premium_section.dart';
 import 'package:looper_player/features/settings/presentation/providers/settings_notifier.dart';
 import 'package:looper_player/ui/widgets/common/optimized_image.dart';
+import 'package:looper_player/ui/widgets/common/song_favorite_button.dart';
+import 'package:looper_player/ui/widgets/common/playlist_reorderable_listener.dart';
+import 'package:looper_player/ui/widgets/common/song_playback_overlay.dart';
+import 'package:looper_player/ui/widgets/common/collection_scroll_to_end.dart';
 import 'package:looper_player/ui/widgets/sheets/app_bottom_sheet.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:looper_player/features/library/presentation/widgets/songs/songs_list.dart';
@@ -19,8 +23,7 @@ import 'package:looper_player/core/theme/app_fonts.dart';
 import 'package:looper_player/features/library/presentation/widgets/library_grids.dart';
 import 'package:looper_player/ui/widgets/sheets/edit_album_sheet.dart';
 import 'package:looper_player/core/services/haptics/app_haptics.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:looper_player/core/theme/app_assets.dart';
+import 'package:looper_player/core/utils/song_metadata.dart';
 import 'package:looper_player/core/utils/ui_utils.dart';
 import 'package:looper_player/features/library/presentation/providers/library/library_notifier.dart';
 import 'package:looper_player/ui/widgets/sheets/song_options_bottom_sheet.dart';
@@ -61,6 +64,34 @@ class CollectionDetailView extends ConsumerWidget {
     this.playlist,
     this.album,
   });
+
+  String _durationLabel(List<Song> songs, AppLocalizations l10n) {
+    final totalMs = songs.fold<int>(
+      0,
+      (sum, song) => sum + (song.duration ?? 0),
+    );
+    final minutes = (totalMs / 60000).round();
+    return minutes >= 60
+        ? l10n.durationHoursMinutes(minutes ~/ 60, minutes % 60)
+        : l10n.minutesShort(minutes);
+  }
+
+  Widget _buildCollectionSubtitle(
+    String? label,
+    List<Song> songs,
+    AppLocalizations l10n, {
+    required double fontSize,
+    required Color color,
+  }) {
+    final hasLabel = label?.trim().isNotEmpty == true;
+    final style = AppFonts.jostStyle(fontSize: fontSize, color: color);
+    // Keep all of the metadata readable when the header is narrow or text is
+    // enlarged. A single Text wraps within the column's available width.
+    return Text(
+      '${hasLabel ? '$label • ' : ''}${l10n.songsCount(songs.length)} • ${_durationLabel(songs, l10n)}',
+      style: style,
+    );
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -197,59 +228,36 @@ class CollectionDetailView extends ConsumerWidget {
             final isLandscape = Responsive.isLandscape(
               MediaQuery.sizeOf(context),
             );
-            final scrollView = CustomScrollView(
+            Widget songRow(int index, {int? reorderIndex}) => SongTile(
+              key: ValueKey((sortedSongs[index].path, index)),
+              song: sortedSongs[index],
+              l10n: AppLocalizations.of(context)!,
+              songs: sortedSongs,
+              playlist: reactivePlaylist,
+              collectionIndex: index,
+              reorderIndex: reorderIndex,
+            );
+            final songDelegate = SliverChildBuilderDelegate(
+              (context, index) => songRow(index),
+              childCount: sortedSongs.length,
+            );
+            Widget buildScrollView(
+              ScrollController controller,
+            ) => CustomScrollView(
+              controller: controller,
               physics: const BouncingScrollPhysics(),
               slivers: [
+                _buildScrollHeader(
+                  context,
+                  ref,
+                  title: titleToRender,
+                  art: artToRender,
+                  playlist: reactivePlaylist,
+                ),
                 SliverToBoxAdapter(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
-                        child: Row(
-                          children: [
-                            PremiumSection(
-                              useExpanded: false,
-                              borderRadius: const BorderRadius.only(
-                                topLeft: Radius.circular(32),
-                                bottomLeft: Radius.circular(32),
-                                topRight: Radius.circular(10),
-                                bottomRight: Radius.circular(10),
-                              ),
-                              width: 44,
-                              height: 44,
-                              onTap: () => ref
-                                  .read(appNavigationProvider.notifier)
-                                  .goBack(),
-                              child: const Icon(
-                                LucideIcons.chevronLeft,
-                                color: Colors.white,
-                                size: 20,
-                              ),
-                            ),
-                            if (reactivePlaylist != null) ...[
-                              const Spacer(),
-                              PremiumSection(
-                                useExpanded: false,
-                                borderRadius: const BorderRadius.only(
-                                  topLeft: Radius.circular(10),
-                                  bottomLeft: Radius.circular(10),
-                                  topRight: Radius.circular(32),
-                                  bottomRight: Radius.circular(32),
-                                ),
-                                width: 44,
-                                height: 44,
-                                onTap: () => _showAddSongsHint(context),
-                                child: const Icon(
-                                  LucideIcons.plus,
-                                  color: Colors.white,
-                                  size: 20,
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
                       // Header - Now always a Row for cover and name
                       Container(
                         padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
@@ -316,19 +324,16 @@ class CollectionDetailView extends ConsumerWidget {
                   // playlist.songPaths that dragging could sensibly write to.
                   if (canReorderPlaylist)
                     SliverReorderableList(
-                      itemBuilder: (context, index) {
-                        final song = sortedSongs[index];
-                        final l10n = AppLocalizations.of(context)!;
-                        return SongTile(
-                          key: ValueKey(song.path),
-                          song: song,
-                          l10n: l10n,
-                          songs: sortedSongs,
-                          playlist: reactivePlaylist,
-                          reorderIndex: index,
-                        );
-                      },
+                      // Equal-height rows let Flutter jump without laying out
+                      // every intervening song. Measure one for text scaling.
+                      prototypeItem: TickerMode(
+                        enabled: false,
+                        child: songRow(0),
+                      ),
+                      itemBuilder: (context, index) =>
+                          songRow(index, reorderIndex: index),
                       itemCount: sortedSongs.length,
+                      onReorderStart: (_) => AppHaptics.medium(),
                       onReorder: (oldIndex, newIndex) {
                         PlaylistService.reorderSong(
                           reactivePlaylist,
@@ -338,18 +343,12 @@ class CollectionDetailView extends ConsumerWidget {
                       },
                     )
                   else
-                    SliverList(
-                      delegate: SliverChildBuilderDelegate((context, index) {
-                        final song = sortedSongs[index];
-                        final l10n = AppLocalizations.of(context)!;
-                        return SongTile(
-                          key: ValueKey(song.path),
-                          song: song,
-                          l10n: l10n,
-                          songs: sortedSongs,
-                          playlist: reactivePlaylist,
-                        );
-                      }, childCount: sortedSongs.length),
+                    SliverPrototypeExtentList(
+                      prototypeItem: TickerMode(
+                        enabled: false,
+                        child: songRow(0),
+                      ),
+                      delegate: songDelegate,
                     ),
                 const SliverToBoxAdapter(
                   child: SizedBox(
@@ -360,14 +359,17 @@ class CollectionDetailView extends ConsumerWidget {
             );
             // In landscape, cap the reading width and center it instead of
             // stretching the song list edge-to-edge across the whole window.
-            return isLandscape
-                ? Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 700),
-                      child: scrollView,
-                    ),
-                  )
-                : scrollView;
+            return CollectionScrollToEnd(
+              bottomPadding: activeSong != null ? 100 : 16,
+              builder: (controller) => isLandscape
+                  ? Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 700),
+                        child: buildScrollView(controller),
+                      ),
+                    )
+                  : buildScrollView(controller),
+            );
           },
         ),
       ),

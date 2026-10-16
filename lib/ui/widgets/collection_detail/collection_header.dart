@@ -1,6 +1,77 @@
 part of 'collection_detail_view.dart';
 
 extension _CollectionHeader on CollectionDetailView {
+  Widget _buildScrollHeader(
+    BuildContext context,
+    WidgetRef ref, {
+    required String title,
+    required String? art,
+    Playlist? playlist,
+  }) => SliverLayoutBuilder(
+    builder: (context, constraints) => SliverAppBar(
+      primary: false,
+      floating: true,
+      snap: true,
+      toolbarHeight: 48,
+      leadingWidth: 48,
+      titleSpacing: 0,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      surfaceTintColor: Colors.transparent,
+      leading: IconButton(
+        tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+        icon: const Icon(
+          LucideIcons.chevronLeft,
+          size: 20,
+          color: Colors.white,
+        ),
+        onPressed: () => ref.read(appNavigationProvider.notifier).goBack(),
+      ),
+      title: constraints.scrollOffset > 0
+          ? Row(
+              children: [
+                if (playlist != null && playlist.songPaths.isNotEmpty)
+                  PlaylistArtwork(
+                    songPaths: playlist.songPaths,
+                    size: 28,
+                    borderRadius: BorderRadius.circular(4),
+                  )
+                else
+                  OptimizedImage(
+                    imagePath: art,
+                    imageUrl: imageUrl,
+                    width: 28,
+                    height: 28,
+                    borderRadius: BorderRadius.circular(4),
+                    placeholder: Icon(
+                      playlist != null
+                          ? LucideIcons.listMusic
+                          : LucideIcons.music,
+                      size: 16,
+                      color: Colors.white.withValues(alpha: 0.5),
+                    ),
+                  ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppFonts.jostStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+              ],
+            )
+          : null,
+    ),
+  );
+
   /// Songs join a playlist from their own options menu, so the playlist's +
   /// button explains where that is rather than opening a picker.
   void _showAddSongsHint(BuildContext context) {
@@ -62,31 +133,43 @@ extension _CollectionHeader on CollectionDetailView {
     String? subtitleToRender,
     List<Song> songsToRender,
   ) {
+    final l10n = AppLocalizations.of(context)!;
+    final isShuffle = ref.watch(playbackProvider.select((s) => s.isShuffle));
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          titleToRender,
-          style: AppFonts.jostStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-        ),
-        if (subtitleToRender != null) ...[
-          const SizedBox(height: 4),
-          Text(
-            subtitleToRender,
-            style: AppFonts.jostStyle(
-              fontSize: 16,
-              color: Colors.white.withValues(alpha: 0.5),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                titleToRender,
+                style: AppFonts.jostStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
+            if (reactivePlaylist != null) ...[
+              const SizedBox(width: 8),
+              IconButton(
+                tooltip: l10n.addSongsToPlaylistTitle,
+                onPressed: () => _showAddSongsHint(context),
+                icon: const Icon(LucideIcons.plus, size: 20),
+              ),
+            ],
+          ],
+        ),
+        const SizedBox(height: 4),
+        _buildCollectionSubtitle(
+          reactivePlaylist != null ? l10n.playlist : subtitleToRender,
+          songsToRender,
+          l10n,
+          fontSize: 16,
+          color: Colors.white.withValues(alpha: 0.5),
+        ),
         const SizedBox(height: 16),
         Row(
           mainAxisAlignment: MainAxisAlignment.start,
@@ -98,12 +181,11 @@ extension _CollectionHeader on CollectionDetailView {
               useExpanded: false,
               onTap: () {
                 AppHaptics.medium();
-                ref
-                    .read(playbackProvider.notifier)
-                    .setPlaylist(
-                      songsToRender,
-                      sourcePlaylistId: reactivePlaylist?.id,
-                    );
+                final playback = ref.read(playbackProvider.notifier);
+                playback.playCollection(
+                  songsToRender,
+                  sourcePlaylistId: reactivePlaylist?.id,
+                );
               },
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -115,7 +197,7 @@ extension _CollectionHeader on CollectionDetailView {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    AppLocalizations.of(context)!.playAll,
+                    l10n.play,
                     style: AppFonts.jostStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
@@ -131,20 +213,28 @@ extension _CollectionHeader on CollectionDetailView {
               width: 44,
               height: 44,
               useExpanded: false,
+              backgroundColor: isShuffle
+                  ? Colors.white.withValues(alpha: 0.10)
+                  : null,
               onTap: () {
                 AppHaptics.light();
-                ref.read(playbackProvider.notifier).toggleShuffle();
                 ref
                     .read(playbackProvider.notifier)
-                    .setPlaylist(
+                    .toggleCollectionShuffle(
                       songsToRender,
                       sourcePlaylistId: reactivePlaylist?.id,
                     );
               },
-              child: const Icon(
-                LucideIcons.shuffle,
-                size: 16,
-                color: Colors.white,
+              child: Semantics(
+                label: l10n.shuffleTitle,
+                toggled: isShuffle,
+                child: Icon(
+                  LucideIcons.shuffle,
+                  size: 16,
+                  color: isShuffle
+                      ? Colors.white
+                      : Colors.white.withValues(alpha: 0.5),
+                ),
               ),
             ),
             const SizedBox(width: 8),
